@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../webserv.hpp"
+#include "ExceptionMaker.hpp"
 
 class Server
 {
