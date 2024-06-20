@@ -21,14 +21,14 @@ The configuration file is similar to the server part of the NGINX configuration 
     Default error pages
     Client body size limit
     Routes (no regular expressions)
-        Accepted HTTP methods
-        HTTP redirection
-        Directory or file to serve
-        Directory listing
-        Default file for directories
-        CGI execution based on file extension
-        Support for POST and GET methods
-        Uploading files
+    Accepted HTTP methods
+    HTTP redirection
+    Directory or file to serve
+    Directory listing
+    Default file for directories
+    CGI execution based on file extension
+    Support for POST and GET methods
+    Uploading files
 
 webserv does not use any external libraries.
 
