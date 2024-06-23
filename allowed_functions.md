@@ -303,16 +303,6 @@
 - **Return**:
 	- `A pointer to a statically allocated protoent structure, or a null pointer if an error occurs or the end of the file is reached.`.
 
-## `fcntl`
-- **Library**: `fcntl.h`
-- **Description**: Performs various operations on a file descriptor.
-- **Arguments**:
-	- `int fd`: File descriptor.
-	- `int cmd`: Command to perform (e.g., `F_SETFL`).
-	- `...`: Additional arguments depending on the command.
-- **Return**:
-	- `For a successful call, the return value depends on the operation: F_DUPFD The new file descriptor; F_GETFD Value of file descriptor flags; F_GETFL Value of file status flags; F_GETLEASE Type of lease held on file descriptor; F_GETOWN Value of file descriptor owner; F_GETSIG Value of signal sent when read or write becomes possible; or zero for traditional SIGIO behavior; F_GETPIPE_SZ; F_SETPIPE_SZ The pipe capacity; F_GET_SEALS A bit mask identifying the seals that have been set for the inode referred to by fd; All other commands Zero. On error, -1 is returned, and errno is set.`.
-
 ## `close`
 - **Library**: `unistd.h`
 - **Description**: Closes a file descriptor.

@@ -2,6 +2,19 @@
 # define WEBSERV_HPP
 
 #include <iostream>
+#include <map>
+
+#include "classes/ExceptionMaker.hpp"
+#include "http.hpp"
+
+namespace std
+{ 
+	typedef basic_string<unsigned char>			ustring;
+}
+
+typedef std::map<std::ustring, std::ustring>	UStrUStrMap;
+
+typedef int										Socket;
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
@@ -22,4 +35,12 @@ class	Response;
 class	Request;
 class	Server;
 /**************************************************************************/
+
+// TESTING WHILE WAITING FOR SERVER CONFIG IMPLEMENTATION
+class ServerConfig
+{
+	public:
+		Socket	socket;
+};
+//----------------------------------------------------
 #endif

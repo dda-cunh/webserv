@@ -8,7 +8,7 @@ class Server
 		Server(void);
 		Server(Server const & src);
 		Server & operator=(Server const & rhs);
-		virtual ~Server(void);
+		~Server(void);
 
 	private:
         std::string _name;
