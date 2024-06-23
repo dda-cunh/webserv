@@ -1,5 +1,4 @@
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -12,7 +11,7 @@ namespace std
 	typedef basic_string<unsigned char>			ustring;
 }
 
-typedef std::map<std::ustring, std::ustring>	UStrUStrMap;
+typedef std::map<std::string, std::string>		StrStrMap;
 
 typedef int										Socket;
 
@@ -30,17 +29,25 @@ typedef int										Socket;
 
 /********************************  CLASSES  *******************************/
 class	ExceptionMaker;
+
+/*
+	@ServerManager
+	WAIT FOR ACCEPT
+	PLACE CLIENT_FD ON EPOLL FOR READ
+	GET REQUEST INSTANCE
+	PLACE CLIENT_FD ON EPOLL FOR WRITE
+	SEND RESPONSE
+*/
+class	ServerManager;
 class	ServerConfig;
 class	Response;
 class	Request;
-class	Server;
 /**************************************************************************/
 
+// TODO: Delete this
 // TESTING WHILE WAITING FOR SERVER CONFIG IMPLEMENTATION
 class ServerConfig
 {
 	public:
 		Socket	socket;
 };
-//----------------------------------------------------
-#endif

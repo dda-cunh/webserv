@@ -2,10 +2,15 @@
 
 #include "../webserv.hpp"
 
+/**
+ *	@brief Represents an HTTP request received by the server.
+ *	Depends on a ServerConfig instance and client_fd.
+ *	Should only be instanciated if client is ready to be read.
+ */
 class Request
 {
 	public:
-		~Request(void);
+		~Request();
 
 		Request(ServerConfig const&, Socket const&);
 
@@ -15,20 +20,24 @@ class Request
 		std::ustring const&	getUri()			const;
 		HTTP_METHOD const&	getMethod()			const;
 		Socket const&		getClientFD()		const;
-		std::ustring		getHeader()			const;
 
-		std::ustring		parseBody(std::ustring const&);
+		std::string const	getHeader(std::string);
+		void				read();
+		void				parseBody(std::ustring const&);
 
 	private:
 		ServerConfig const	_server_config;
-		HTTP_VERSION const	_version;
-		std::ustring const	_body;
-		std::ustring const	_uri;
-		UStrUStrMap const	_headers;
-		HTTP_METHOD const	_method;
 		Socket const		_client_fd;
 
-		Request(void);
+		HTTP_VERSION		_version;
+		std::ustring		_body;
+		std::ustring		_uri;
+		HTTP_METHOD			_method;
+		StrStrMap			_headers;
+
+		Request();
 		Request(Request const & src);
 		Request & operator=(Request const & rhs);
+
+		static void	lowerStr(std::string &);
 };
