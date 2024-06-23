@@ -1,16 +1,21 @@
-#ifndef HTTP_HPP
-# define HTTP_HPP
+#pragma once
 
-/*******************************  METHODS  ********************************/
+#define HTTP_LINE_SEP	"\r\n"
+
+typedef enum	e_HTTP_VERSION
+{
+	HTTP_V_UNHANDLED,
+	HTTP_V_1_1
+}	HTTP_VERSION;
+
 typedef enum	e_method
 {
 	HTTP_M_UNHANDLED,
 	HTTP_M_DELETE,
 	HTTP_M_POST,
 	HTTP_M_GET,
-	__LEN_HTTP_METHODS
-}	HTTP_METHODS;
-/**************************************************************************/
+	__LEN_HTTP_METHOD
+}	HTTP_METHOD;
 
 /****************************  RESPONSE CODES  ****************************/
 typedef enum	e_http_status_cides
@@ -30,5 +35,3 @@ typedef enum	e_http_status_cides
 	HTTP_SC_HTTP_VERSION_NOT_SUPPORTED = 505
 }	HTTP_STATUS_CODE;
 /**************************************************************************/
-
-#endif
