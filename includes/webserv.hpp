@@ -1,6 +1,10 @@
 #pragma once
 
+#include <unistd.h>
+#include <fcntl.h>
+
 #include <iostream>
+#include <cstring>
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
@@ -14,6 +18,9 @@ namespace std
 typedef std::map<std::string, std::string>		StrStrMap;
 
 typedef int										Socket;
+
+
+#define FILE_BUFFER_SIZE						1024
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
@@ -51,3 +58,6 @@ class ServerConfig
 	public:
 		Socket	socket;
 };
+
+/*********************************  UTILS  ********************************/
+char	*seek_line(char *buffer, char *line, long bytes_read, int fd);

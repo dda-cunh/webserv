@@ -2,6 +2,8 @@
 
 #include "../webserv.hpp"
 
+#define NO_SUCH_HEADER	""
+
 /**
  *	@brief Represents an HTTP request received by the server.
  *	Depends on a ServerConfig instance and client_fd.
@@ -17,7 +19,7 @@ class Request
 		ServerConfig const&	getServerConfig()	const;
 		HTTP_VERSION const&	getVersion()		const;
 		std::ustring const&	getBody()			const;
-		std::ustring const&	getUri()			const;
+		std::string const&	getUri()			const;
 		HTTP_METHOD const&	getMethod()			const;
 		Socket const&		getClientFD()		const;
 
@@ -25,13 +27,18 @@ class Request
 		void				read();
 		void				parseBody(std::ustring const&);
 
+		std::string			gNLClient();
+
 	private:
+		typedef std::map<long, std::string>	LongStrMap;
+
 		ServerConfig const	_server_config;
 		Socket const		_client_fd;
+		long const			_unique_id;
 
 		HTTP_VERSION		_version;
 		std::ustring		_body;
-		std::ustring		_uri;
+		std::string			_uri;
 		HTTP_METHOD			_method;
 		StrStrMap			_headers;
 
@@ -39,5 +46,9 @@ class Request
 		Request(Request const & src);
 		Request & operator=(Request const & rhs);
 
+		static char* const	_expected_version;
+		static LongStrMap	_client_buffers;
+
+		static long	genUniqueID(Socket const&);
 		static void	lowerStr(std::string &);
 };
