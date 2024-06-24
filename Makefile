@@ -13,9 +13,20 @@ SRC_DIR		=	sources/
 
 OBJ_DIR		=	temp/
 
-SRC			=	$(addprefix $(SRC_DIR),	main.cpp)
+UTILS_DIR	=	utils/
 
-OBJ 		= 	$(addprefix $(OBJ_DIR), $(notdir $(SRC:.cpp=.o)))
+CLASS_DIR	=	classes/
+
+SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
+					$(addprefix $(UTILS_DIR),	seek_line.cpp) \
+					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
+												Request.cpp \
+												ServerManager.cpp))
+
+OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(UTILS_DIR)) \
+								$(addprefix $(OBJ_DIR), $(CLASS_DIR))
+
+OBJ				=	$(SRC:$(SRC_DIR)%.cpp=$(OBJ_DIR)%.o)
 
 GREEN		= 	\033[0;32m
 
@@ -32,11 +43,13 @@ $(NAME):		$(OBJ)
 				$(CC) $(CFLAGS) $^ -o $@ -I $(INC_DIR)
 				make done
 
-$(OBJ_DIR)%.o:	$(SRC_DIR)%.cpp | $(OBJ_DIR)
+$(OBJ_DIR)%.o:	$(SRC_DIR)%.cpp | $(OBJ_DIRS)
+				printf '$(HAMMER)\t\n'
+				printf "$(GREEN)Compiling $(NAME) objects... $(RED)%-33.33s\r" $(notdir $@)
 				$(CC) $(CFLAGS) -c $< -o $@ -I $(INC_DIR)
 
-$(OBJ_DIR):
-				mkdir $(OBJ_DIR)
+$(OBJ_DIRS):
+				mkdir -p $@
 
 all: 			$(NAME)
 
