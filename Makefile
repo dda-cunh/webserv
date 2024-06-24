@@ -3,7 +3,7 @@ NAME		= 	webserv
 
 CC 			= 	c++
 
-CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g
+CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g -fsanitize=address
 
 RM 			= 	rm -rf
 
@@ -18,7 +18,6 @@ UTILS_DIR	=	utils/
 CLASS_DIR	=	classes/
 
 SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
-					$(addprefix $(UTILS_DIR),	seek_line.cpp) \
 					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
 												Request.cpp \
 												ServerManager.cpp))

@@ -20,7 +20,7 @@ typedef std::map<std::string, std::string>		StrStrMap;
 typedef int										Socket;
 
 
-#define FILE_BUFFER_SIZE						1024
+#define CLIENT_CHUNK_SIZE						2048
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
@@ -60,4 +60,4 @@ class ServerConfig
 };
 
 /*********************************  UTILS  ********************************/
-char	*seek_line(char *buffer, char *line, long bytes_read, int fd);
+
