@@ -24,14 +24,8 @@ class Request
 		Socket const&		getClientFD()		const;
 
 		std::string const	getHeader(std::string);
-		void				read();
-		void				parseBody(std::ustring const&);
-
-		std::string			gNLClient();
 
 	private:
-		typedef std::map<long, std::string>	LongStrMap;
-
 		ServerConfig const	_server_config;
 		Socket const		_client_fd;
 		long const			_unique_id;
@@ -46,9 +40,12 @@ class Request
 		Request(Request const & src);
 		Request & operator=(Request const & rhs);
 
-		static char* const	_expected_version;
-		static LongStrMap	_client_buffers;
+		std::ustring		getNextChunkClient();
+		void				readClient();
+		void				parseBody(std::ustring const&);
 
-		static long	genUniqueID(Socket const&);
-		static void	lowerStr(std::string &);
+		static char* const	_expected_version;
+
+		static long			genUniqueID(Socket const&);
+		static void			lowerStr(std::string &);
 };
