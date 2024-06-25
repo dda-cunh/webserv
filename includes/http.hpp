@@ -1,6 +1,6 @@
 #pragma once
 
-#define HTTP_LINE_SEP	"\r\n"
+#define CRLF	"\r\n"
 
 typedef enum	e_HTTP_VERSION
 {
@@ -18,7 +18,7 @@ typedef enum	e_method
 }	HTTP_METHOD;
 
 /****************************  RESPONSE CODES  ****************************/
-typedef enum	e_http_status_cides
+typedef enum	e_http_status_codes
 {
 	HTTP_SC_OK = 200,
 	HTTP_SC_CREATED = 201,

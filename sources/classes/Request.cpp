@@ -1,18 +1,14 @@
 #include "../../includes/classes/Request.hpp"
-#include <cstring>
-#include <ctime>
 
 /****************************  CANNONICAL FORM  ****************************/
 Request::Request(void)
 	:	_server_config(),
-		_client_fd(-1),
-		_unique_id()
+		_client_fd(-1)
 {}
 
 Request::Request(Request const & src)
 	:	_server_config(),
-		_client_fd(-1),
-		_unique_id()
+		_client_fd(-1)
 {
 	*this = src;
 }
@@ -31,7 +27,12 @@ Request::~Request(void)
 Request::Request(ServerConfig const& config, Socket const& clientFD)
 	:	_server_config(config),
 		_client_fd(clientFD),
-		_unique_id(genUniqueID(clientFD))
+		_version(HTTP_V_UNHANDLED),
+		_body(),
+		_flag(NO_FLAG),
+		_uri(),
+		_method(HTTP_M_UNHANDLED),
+		_headers()
 {
 	if (this->_client_fd <= STDERR_FILENO)
 		throw (ExceptionMaker("Bad client FD for request"));
@@ -42,18 +43,67 @@ Request::Request(ServerConfig const& config, Socket const& clientFD)
 /********************************  MEMBERS  *******************************/
 void	Request::readClient()
 {
-	std::ustring	body;
-	std::string		line;
+	std::ustring::size_type	request_i;
+	std::ustring			request;
+	std::ustring			chunk;
+	std::string				token;
 
-	//TODO: Read request
-	this->parseBody(body);
+	do
+	{
+		chunk = this->getNextChunkClient();
+		if (request.size() + chunk.size() > Request::_max_request_size)
+		{
+			this->_flag = _400; 
+			// Also add logging
+			return ;
+		};
+		request += chunk;
+	} while (!chunk.empty());
+	request_i = 0;
+	{
+		std::stringstream	ss(seekCRLF(request, request_i));
+
+		for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
+		{
+			if (i == 0)
+				this->_method = Request::identifyMethod(token);
+			else if (i == 1)
+				this->_uri = token;
+			else if (i == 2)
+				this->_version = Request::identifyHTTPVersion(token);
+		}
+	}
+	while (request_i < request.size())
+	{
+		std::stringstream	ss(seekCRLF(request, request_i));
+		if (ss.str() == CRLF)
+			break ;
+		this->parseHeaderLine(ss);
+	}
+	this->parseBody(request.substr(request_i));
 }
 
-void	Request::parseBody(std::ustring const& unparsed)
+void	Request::parseBody(std::ustring const& body)
 {
-	(void) unparsed;
-	//TODO:
-	// this->_body = unparsed;
+	std::string	content_length_val;
+
+	if (this->getMethod() == HTTP_M_POST)
+	{
+		if (this->getHeader("content-type") != NO_SUCH_HEADER)
+		{
+			content_length_val = this->getHeader("content-length");
+			if (content_length_val != NO_SUCH_HEADER)
+			{
+				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
+				{
+					this->_flag = _400;
+					// Also add logging
+					return ;
+				}
+			}
+			this->_body = body;
+		}
+	}
 }
 
 std::ustring	Request::getNextChunkClient()
@@ -63,7 +113,9 @@ std::ustring	Request::getNextChunkClient()
 	long			r;
 
 	r = read(this->getClientFD(), buff, CLIENT_CHUNK_SIZE);
-	if (r <= 0)
+	if (r < 0)
+		throw (ExceptionMaker(strerror(errno)));
+	if (r == 0)
 		return (std::ustring());
 	chunk.assign(buff, buff + r);
 	return (chunk);
@@ -99,30 +151,88 @@ Socket const&	Request::getClientFD()	const
 	return (this->_client_fd);
 }
 
-std::string const	Request::getHeader(std::string header)
+std::string const	Request::getHeader(std::string const& header)
 {
 	StrStrMap::iterator	it;
 
-	Request::lowerStr(header);
-	it = this->_headers.find(header);
+	it = this->_headers.find(Request::lowerStr(header));
 	if (it != this->_headers.end())
 		return (it->second);
 	return (NO_SUCH_HEADER);
 }
+
+void	Request::putHeader(std::string const& header, std::string const& val)
+{
+	this->_headers[Request::lowerStr(header)] = val;
+}
+
 /**************************************************************************/
 
 /*****************************  STATIC MEMBERS  ***************************/
-std::string const	_expected_version = "HTTP/1.1";
+unsigned int const	Request::_max_request_size = CLIENT_CHUNK_SIZE * 2000;
 
-long	Request::genUniqueID(Socket const& client_fd)
+std::string const Request::_expected_version = "http/1.1";
+
+std::string	const	Request::seekCRLF(std::ustring const& request,
+	std::ustring::size_type & index)
 {
-	return (client_fd + std::clock());
+	std::string s;
+
+	while (index < request.size())
+	{
+		if (request[index] < 32 || request[index] > 126)
+			throw (ExceptionMaker("Invalid request-line"));
+		if (index + 1 < request.size()
+			&& request[index] == '\r'
+			&& request[index + 1] == '\n')
+		{
+			index += 2;
+			break ;
+		}
+		s += request[index];
+	}
+	return (s);
 }
 
-void	Request::lowerStr(std::string &str)
+void	Request::parseHeaderLine(std::stringstream & headerLine)
 {
-	for (std::string::size_type i = 0; i < str.size(); i++)
-		if (str[i] >= 'A' && str[i] <= 'Z')
-			str[i] += 32;
+	std::string	key;
+	std::string	val;
+
+	std::getline(headerLine, key, ':');
+	if (key.empty())
+		return ;
+	headerLine.ignore(key.size() + 1);
+	headerLine >> val;
+	this->putHeader(key, val);
+}
+
+std::string	Request::lowerStr(std::string const &str)
+{
+	std::string	lower;
+
+	lower = str;
+	for (std::string::size_type i = 0; i < lower.size(); i++)
+		if (lower[i] >= 'A' && lower[i] <= 'Z')
+			lower[i] += 32;
+	return (lower);
+}
+
+HTTP_VERSION	Request::identifyHTTPVersion(std::string const& version)
+{
+	if (version == "http/1.1")
+		return (HTTP_V_1_1);
+	return (HTTP_V_UNHANDLED);
+}
+
+HTTP_METHOD	Request::identifyMethod(std::string const& method)
+{
+	if (method == "DELETE")
+		return (HTTP_M_DELETE);
+	if (method == "GET")
+		return (HTTP_M_GET);
+	if (method == "POST")
+		return (HTTP_M_POST);
+	return (HTTP_M_UNHANDLED);
 }
 /**************************************************************************/

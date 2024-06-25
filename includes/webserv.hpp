@@ -2,9 +2,13 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <iostream>
 #include <cstring>
+#include <string>
+#include <cstdlib>
+#include <sstream>
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
@@ -19,8 +23,7 @@ typedef std::map<std::string, std::string>		StrStrMap;
 
 typedef int										Socket;
 
-
-#define CLIENT_CHUNK_SIZE						2048
+#define CLIENT_CHUNK_SIZE						4096
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
