@@ -12,6 +12,7 @@
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
+#include "namespaces/Utils.hpp"
 #include "http.hpp"
 
 namespace std

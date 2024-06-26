@@ -60,6 +60,5 @@ class Request
 		static HTTP_VERSION			identifyHTTPVersion(std::string const&);
 		static std::string const	seekCRLF(std::ustring const&,
 										std::ustring::size_type &);
-		static std::string			lowerStr(std::string const&);
 		static HTTP_METHOD			identifyMethod(std::string const&);
 };

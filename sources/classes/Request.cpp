@@ -155,7 +155,7 @@ std::string const	Request::getHeader(std::string const& header)
 {
 	StrStrMap::iterator	it;
 
-	it = this->_headers.find(Request::lowerStr(header));
+	it = this->_headers.find(Utils::lowerStr(header));
 	if (it != this->_headers.end())
 		return (it->second);
 	return (NO_SUCH_HEADER);
@@ -163,7 +163,7 @@ std::string const	Request::getHeader(std::string const& header)
 
 void	Request::putHeader(std::string const& header, std::string const& val)
 {
-	this->_headers[Request::lowerStr(header)] = val;
+	this->_headers[Utils::lowerStr(header)] = val;
 }
 
 /**************************************************************************/
@@ -205,17 +205,6 @@ void	Request::parseHeaderLine(std::stringstream & headerLine)
 	headerLine.ignore(key.size() + 1);
 	headerLine >> val;
 	this->putHeader(key, val);
-}
-
-std::string	Request::lowerStr(std::string const &str)
-{
-	std::string	lower;
-
-	lower = str;
-	for (std::string::size_type i = 0; i < lower.size(); i++)
-		if (lower[i] >= 'A' && lower[i] <= 'Z')
-			lower[i] += 32;
-	return (lower);
 }
 
 HTTP_VERSION	Request::identifyHTTPVersion(std::string const& version)
