@@ -21,7 +21,8 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
 												Request.cpp \
 												ServerManager.cpp) \
-					$(addprefix $(NAMES_DIR),	Utils.cpp))
+					$(addprefix $(NAMES_DIR),	Utils.cpp \
+												Http.cpp))
 
 OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(CLASS_DIR)) \
 								$(addprefix $(OBJ_DIR), $(NAMES_DIR))

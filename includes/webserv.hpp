@@ -13,7 +13,7 @@
 
 #include "classes/ExceptionMaker.hpp"
 #include "namespaces/Utils.hpp"
-#include "http.hpp"
+#include "namespaces/Http.hpp"
 
 namespace std
 { 

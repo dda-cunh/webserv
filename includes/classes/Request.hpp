@@ -22,12 +22,12 @@ class Request
 
 		Request(ServerConfig const&, Socket const&);
 
+		Http::VERSION const&		getVersion()		const;
 		ServerConfig const&			getServerConfig()	const;
-		HTTP_VERSION const&			getVersion()		const;
+		Http::METHOD const&			getMethod()			const;
 		std::ustring const&			getBody()			const;
 		ResponseFlag const&			getFlag()			const;
 		std::string const&			getUri()			const;
-		HTTP_METHOD const&			getMethod()			const;
 		Socket const&				getClientFD()		const;
 
 		std::string const			getHeader(std::string const&);
@@ -36,16 +36,16 @@ class Request
 		ServerConfig const			_server_config;
 		Socket const				_client_fd;
 
-		HTTP_VERSION				_version;
+		Http::VERSION				_version;
+		Http::METHOD				_method;
 		std::ustring				_body;
 		ResponseFlag				_flag;
 		std::string					_uri;
-		HTTP_METHOD					_method;
 		StrStrMap					_headers;
 
-		Request();
-		Request(Request const & src);
 		Request & operator=(Request const & rhs);
+		Request(Request const & src);
+		Request();
 
 		std::ustring				getNextChunkClient();
 		void						putHeader(std::string const&,
@@ -55,10 +55,7 @@ class Request
 		void						readClient();
 
 		static unsigned int const	_max_request_size;
-		static std::string const	_expected_version;
 
-		static HTTP_VERSION			identifyHTTPVersion(std::string const&);
-		static std::string const	seekCRLF(std::ustring const&,
+		static std::string			seekCRLF(std::ustring const&,
 										std::ustring::size_type &);
-		static HTTP_METHOD			identifyMethod(std::string const&);
 };
