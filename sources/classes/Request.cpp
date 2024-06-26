@@ -27,11 +27,11 @@ Request::~Request(void)
 Request::Request(ServerConfig const& config, Socket const& clientFD)
 	:	_server_config(config),
 		_client_fd(clientFD),
-		_version(HTTP_V_UNHANDLED),
+		_version(Http::V_UNHANDLED),
+		_method(Http::M_UNHANDLED),
 		_body(),
 		_flag(NO_FLAG),
 		_uri(),
-		_method(HTTP_M_UNHANDLED),
 		_headers()
 {
 	if (this->_client_fd <= STDERR_FILENO)
@@ -66,11 +66,11 @@ void	Request::readClient()
 		for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
 		{
 			if (i == 0)
-				this->_method = Request::identifyMethod(token);
+				this->_method = Http::sToMethod(token);
 			else if (i == 1)
 				this->_uri = token;
 			else if (i == 2)
-				this->_version = Request::identifyHTTPVersion(token);
+				this->_version = Http::sToVersion(token);
 		}
 	}
 	while (request_i < request.size())
@@ -87,7 +87,7 @@ void	Request::parseBody(std::ustring const& body)
 {
 	std::string	content_length_val;
 
-	if (this->getMethod() == HTTP_M_POST)
+	if (this->getMethod() == Http::M_POST)
 	{
 		if (this->getHeader("content-type") != NO_SUCH_HEADER)
 		{
@@ -126,7 +126,7 @@ ServerConfig const&	Request::getServerConfig()	const
 	return (this->_server_config);
 }
 
-HTTP_VERSION const&	Request::getVersion()	const
+Http::VERSION const&	Request::getVersion()	const
 {
 	return (this->_version);
 }
@@ -141,7 +141,7 @@ std::string const&	Request::getUri()	const
 	return (this->_uri);
 }
 
-HTTP_METHOD const&	Request::getMethod()	const
+Http::METHOD const&	Request::getMethod()	const
 {
 	return (this->_method);
 }
@@ -171,9 +171,7 @@ void	Request::putHeader(std::string const& header, std::string const& val)
 /*****************************  STATIC MEMBERS  ***************************/
 unsigned int const	Request::_max_request_size = CLIENT_CHUNK_SIZE * 2000;
 
-std::string const Request::_expected_version = "http/1.1";
-
-std::string	const	Request::seekCRLF(std::ustring const& request,
+std::string	Request::seekCRLF(std::ustring const& request,
 	std::ustring::size_type & index)
 {
 	std::string s;
@@ -205,23 +203,5 @@ void	Request::parseHeaderLine(std::stringstream & headerLine)
 	headerLine.ignore(key.size() + 1);
 	headerLine >> val;
 	this->putHeader(key, val);
-}
-
-HTTP_VERSION	Request::identifyHTTPVersion(std::string const& version)
-{
-	if (version == "http/1.1")
-		return (HTTP_V_1_1);
-	return (HTTP_V_UNHANDLED);
-}
-
-HTTP_METHOD	Request::identifyMethod(std::string const& method)
-{
-	if (method == "DELETE")
-		return (HTTP_M_DELETE);
-	if (method == "GET")
-		return (HTTP_M_GET);
-	if (method == "POST")
-		return (HTTP_M_POST);
-	return (HTTP_M_UNHANDLED);
 }
 /**************************************************************************/
