@@ -13,17 +13,18 @@ SRC_DIR		=	sources/
 
 OBJ_DIR		=	temp/
 
-UTILS_DIR	=	utils/
+NAMES_DIR	=	namespaces/
 
 CLASS_DIR	=	classes/
 
 SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
 												Request.cpp \
-												ServerManager.cpp))
+												ServerManager.cpp) \
+					$(addprefix $(NAMES_DIR),	Utils.cpp))
 
-OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(UTILS_DIR)) \
-								$(addprefix $(OBJ_DIR), $(CLASS_DIR))
+OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(CLASS_DIR)) \
+								$(addprefix $(OBJ_DIR), $(NAMES_DIR))
 
 OBJ				=	$(SRC:$(SRC_DIR)%.cpp=$(OBJ_DIR)%.o)
 
@@ -38,13 +39,13 @@ HAMMER		=	\U0001F528
 BROOM		=	\U0001F9F9
 
 $(NAME):		$(OBJ)
-				printf '$(HAMMER)\n\t$(GREEN)Compiling	$(NAME)$(RESET)\n'
+				printf '$(HAMMER)\n\t$(GREEN)Compiling $(NAME)$(RESET)\n'
 				$(CC) $(CFLAGS) $^ -o $@ -I $(INC_DIR)
-				make done
+				make compiled
 
 $(OBJ_DIR)%.o:	$(SRC_DIR)%.cpp | $(OBJ_DIRS)
-				printf '$(HAMMER)\t\n'
-				printf "$(GREEN)Compiling $(NAME) objects... $(RED)%-33.33s\r" $(notdir $@)
+				printf '$(HAMMER)\n\t'
+				printf "$(GREEN)Compiling $(NAME) object $(RED)%-33.33s\r" $(notdir $@)
 				$(CC) $(CFLAGS) -c $< -o $@ -I $(INC_DIR)
 
 $(OBJ_DIRS):
@@ -62,9 +63,6 @@ fclean:			clean
 
 re:				fclean	all
 
-done:
-				clear
-				make compiled
 compiled:
 				printf "															 	\n"
 				printf "$(GREEN)	$(NAME)							 			$(RESET)\n"
