@@ -2,6 +2,17 @@
 
 namespace Utils
 {
+	std::string::size_type	sCountChar(std::string const& str, char const& c)
+	{
+		std::string::size_type count;
+
+		count = 0;
+		for (std::string::size_type i = 0; i < str.size(); i++)
+			if (str[i] == c)
+				count++;
+		return (count);
+	}
+
 	std::string	lowerStr(std::string const& str)
 	{
 		std::string	lower_str(str);
@@ -18,8 +29,8 @@ namespace Utils
 		switch (level)
 		{
 			case LOG_INFO:
-				level_str = CLI_COLORS_GREEN "INFO" CLI_COLORS_RESET;
-				break ;
+				std::cout << CLI_COLORS_GREEN "INFO" CLI_COLORS_RESET ": " << message << std::endl;
+				return ;
 			case LOG_WARNING:
 				level_str = CLI_COLORS_YELLOW "WARNING" CLI_COLORS_RESET;
 				break ;
