@@ -2,8 +2,6 @@
 
 #include "../webserv.hpp"
 
-#define NO_SUCH_HEADER	""
-
 typedef enum	e_response_flag
 {
 	NO_FLAG,
@@ -31,6 +29,8 @@ class Request
 		Socket const&				getClientFD()		const;
 
 		std::string const			getHeader(std::string const&);
+
+		static std::string const	_no_such_header;
 
 	private:
 		ServerConfig const			_server_config;
