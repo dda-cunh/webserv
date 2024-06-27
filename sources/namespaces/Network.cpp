@@ -2,6 +2,13 @@
 
 namespace Network
 {
+	std::string	iPV4PackedTos(uint32_t const& packed)		throw()
+	{
+		std::stringstream	ss(std::string);
+		//TODO
+		ss << packed;
+	}
+
 	static uint8_t	sOctectToByte(std::string const& octect)
 	{
 		char	*end_ptr;
@@ -15,7 +22,7 @@ namespace Network
 		return (value);
 	}
 
-	uint32_t	sToIPV4Packed(std::string const& ipv4S)
+	uint32_t	sToIPV4Packed(std::string const& ipv4S)	throw()
 	{
 		std::stringstream	ss(ipv4S);
 		std::string			octect;
