@@ -54,7 +54,7 @@ void	Request::readClient()
 		if (request.size() + chunk.size() > Request::_max_request_size)
 		{
 			this->_flag = _400; 
-			// Also add logging
+			Utils::log("Request is too big", Utils::LOG_WARNING);
 			return ;
 		};
 		request += chunk;
@@ -89,15 +89,15 @@ void	Request::parseBody(std::ustring const& body)
 
 	if (this->getMethod() == Http::M_POST)
 	{
-		if (this->getHeader("content-type") != NO_SUCH_HEADER)
+		if (this->getHeader("content-type") != Request::_no_such_header)
 		{
 			content_length_val = this->getHeader("content-length");
-			if (content_length_val != NO_SUCH_HEADER)
+			if (content_length_val != Request::_no_such_header)
 			{
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
 				{
 					this->_flag = _400;
-					// Also add logging
+					Utils::log("Content length doesn't match body length", Utils::LOG_WARNING);
 					return ;
 				}
 			}
@@ -158,7 +158,7 @@ std::string const	Request::getHeader(std::string const& header)
 	it = this->_headers.find(Utils::lowerStr(header));
 	if (it != this->_headers.end())
 		return (it->second);
-	return (NO_SUCH_HEADER);
+	return (Request::_no_such_header);
 }
 
 void	Request::putHeader(std::string const& header, std::string const& val)
@@ -170,6 +170,7 @@ void	Request::putHeader(std::string const& header, std::string const& val)
 
 /*****************************  STATIC MEMBERS  ***************************/
 unsigned int const	Request::_max_request_size = CLIENT_CHUNK_SIZE * 2000;
+std::string const	Request::_no_such_header = std::string();
 
 std::string	Request::seekCRLF(std::ustring const& request,
 	std::ustring::size_type & index)
