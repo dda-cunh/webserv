@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <stdint.h>
 
 #include <ostream>
@@ -12,10 +13,13 @@ class TCPSocket
 		TCPSocket(uint64_t const&, uint32_t const&,
 				int const&)	throw();
 
-		bool	operator=(TCPSocket const & rhs) const;
+		bool	operator==(TCPSocket const & rhs)	const;
 
-		int const&	fd()	const;
-		void		connect();
+		std::string const	address()				const;
+		uint16_t const		port()					const;
+		int const			fd()					const;
+		void				badSyscallThrow();
+		void				connect();
 
 	private:
 		uint64_t const	_address;

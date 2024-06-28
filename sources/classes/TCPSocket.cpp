@@ -1,3 +1,5 @@
+#include <cerrno>
+#include <cstring>
 #include <limits>
 
 #include "../../includes/classes/TCPSocket.hpp"
@@ -44,7 +46,17 @@ TCPSocket::TCPSocket(uint64_t const& packed, uint32_t const& port,
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-int const&	TCPSocket::fd()	const
+std::string const	TCPSocket::address()				const
+{
+	return (Network::iPV4PackedTos(this->_address));
+}
+
+uint16_t const		TCPSocket::port()					const
+{
+	return (this->_port);
+}
+
+int const	TCPSocket::fd()	const
 {
 	return (this->_fd);
 }
@@ -53,6 +65,7 @@ void	TCPSocket::connect()
 {
 	struct sockaddr_in	address;
 	int					addrlen;
+	int					val;    
 
 	if (this->_address > std::numeric_limits<uint32_t>::max())
 		throw(ExceptionMaker("Bad adress for socket"));
@@ -60,36 +73,50 @@ void	TCPSocket::connect()
 		throw(ExceptionMaker("Bad adress for socket"));
 	if (this->_fd != -1)
 		close (this->_fd);
-	this->_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->_fd == -1)
-		throw(ExceptionMaker("Socket creation failed"));
+	if ((this->_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		this->badSyscallThrow();
+	val = 1;
+	if ((setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &val,
+			sizeof(val))) == -1)
+		this->badSyscallThrow();
 	addrlen = sizeof(address);
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = htonl(this->_address);
 	address.sin_port = htons(this->_port);
 	if (bind(this->_fd, (struct sockaddr *)&address, sizeof(address)) == -1)
-	{
-		close(this->_fd);
-		this->_fd = -1;
-		throw(ExceptionMaker("bind() failed on TCPSocket"));
-	}
+		this->badSyscallThrow();
 	if (listen(this->_fd, this->_backlog) == -1)
+		this->badSyscallThrow();
+}
+
+void	TCPSocket::badSyscallThrow()
+{
+	if (this->fd() != -1)
 	{
 		close(this->_fd);
 		this->_fd = -1;
-		throw(ExceptionMaker("listen() failed on TCPSocket"));
 	}
+	throw(ExceptionMaker(strerror(errno)));
 }
 /**************************************************************************/
 
 /*****************************  OP OVERLOADS  *****************************/
-bool	TCPSocket::operator=(TCPSocket const & rhs) const
+bool	TCPSocket::operator==(TCPSocket const & rhs) const
 {
 	return (this->_address == rhs._address && this->_port == rhs._port);
 }
 /**************************************************************************/
 
+/****************************  STATIC MEMBERS  ****************************/
+
+/**************************************************************************/
+
 /*****************************  NON MEMBERS  ******************************/
 
-std::ostream &	operator<<(std::ostream &, TCPSocket const&);
+std::ostream &	operator<<(std::ostream & o, TCPSocket const& i)
+{
+	o << "TCPSocket: " << i.fd() << " (" << i.address();
+	o << ":" << i.port() << ")";
+	return (o);
+}
 /**************************************************************************/
