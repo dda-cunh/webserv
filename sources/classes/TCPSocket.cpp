@@ -6,71 +6,79 @@
 #include "../../includes/webserv.hpp"
 
 /****************************  CANNONICAL FORM  ****************************/
-TCPSocket::TCPSocket(void)
+TCPSocket::TCPSocket(void)	throw()
 :	_address(),
 	_port(),
 	_backlog(),
 	_fd(-1)
 {}
 
-TCPSocket::TCPSocket(TCPSocket const & src)
+TCPSocket::TCPSocket(TCPSocket const & src)	throw()
 :	_address(src._address),
 	_port(src._port),
-	_backlog(src._backlog),
-	_fd(-1)
+	_backlog(src._backlog)
 {
 	*this = src;
 }
 
-TCPSocket & TCPSocket::operator=(TCPSocket const & rhs)
+TCPSocket & TCPSocket::operator=(TCPSocket const & rhs)	throw()
 {
-	(void) rhs;
+	this->_fd = rhs.fd();
 	return (*this);
 }
 
-TCPSocket::~TCPSocket(void)
+TCPSocket::~TCPSocket(void)	throw()
 {
-	if (this->_fd != -1)
-		close (this->_fd);
+	this->disconnect();
 }
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
-TCPSocket::TCPSocket(uint64_t const& packed, uint32_t const& port,
+TCPSocket::TCPSocket(uint32_t const& packed, uint16_t const& port,
 							int const& backlog)	throw()
 :	_address(packed),
 	_port(port),
-	_fd(-1),
-	_backlog(backlog)
+	_backlog(backlog),
+	_fd(-1)
 {}
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-std::string const	TCPSocket::address()				const
+std::string	TCPSocket::address()	const	throw()
 {
 	return (Network::iPV4PackedTos(this->_address));
 }
 
-uint16_t const		TCPSocket::port()					const
+std::string	TCPSocket::str()	const	throw()
+{
+	std::stringstream ss;
+
+	ss << *this;
+	return (ss.str());
+}
+
+uint16_t	TCPSocket::port()	const	throw()
 {
 	return (this->_port);
 }
 
-int const	TCPSocket::fd()	const
+int	TCPSocket::fd()	const	throw()
 {
 	return (this->_fd);
+}
+
+void	TCPSocket::disconnect()	throw()
+{
+	if (this->_fd != -1)
+		close(this->_fd);
+	this->_fd = -1;
 }
 
 void	TCPSocket::connect()
 {
 	struct sockaddr_in	address;
-	int					addrlen;
 	int					val;    
 
-	if (this->_address > std::numeric_limits<uint32_t>::max())
-		throw(ExceptionMaker("Bad adress for socket"));
-	if (this->_port > std::numeric_limits<uint16_t>::max())
-		throw(ExceptionMaker("Bad adress for socket"));
 	if (this->_fd != -1)
 		close (this->_fd);
 	if ((this->_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -78,8 +86,7 @@ void	TCPSocket::connect()
 	val = 1;
 	if ((setsockopt(this->fd(), SOL_SOCKET, SO_REUSEADDR, &val,
 			sizeof(val))) == -1)
-		this->badSyscallThrow();
-	addrlen = sizeof(address);
+		this->badSyscallThrow();	
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = htonl(this->_address);
 	address.sin_port = htons(this->_port);
@@ -101,19 +108,15 @@ void	TCPSocket::badSyscallThrow()
 /**************************************************************************/
 
 /*****************************  OP OVERLOADS  *****************************/
-bool	TCPSocket::operator==(TCPSocket const & rhs) const
+bool	TCPSocket::operator==(TCPSocket const & rhs)	const	throw()
 {
 	return (this->_address == rhs._address && this->_port == rhs._port);
 }
 /**************************************************************************/
 
-/****************************  STATIC MEMBERS  ****************************/
-
-/**************************************************************************/
-
 /*****************************  NON MEMBERS  ******************************/
 
-std::ostream &	operator<<(std::ostream & o, TCPSocket const& i)
+std::ostream &	operator<<(std::ostream & o, TCPSocket const& i)	throw()
 {
 	o << "TCPSocket: " << i.fd() << " (" << i.address();
 	o << ":" << i.port() << ")";

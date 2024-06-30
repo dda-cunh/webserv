@@ -41,5 +41,7 @@ namespace Http
 
 	Http::VERSION	sToVersion(std::string const&);
 	Http::METHOD	sToMethod(std::string const&);
+	std::string		versionToString(Http::VERSION const&);
+	std::string		methodToString(Http::METHOD const&);
 	/**************************************************************************/
 }

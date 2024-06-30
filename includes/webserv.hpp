@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/epoll.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -39,15 +40,14 @@ class	Socket;
 
 typedef std::map<std::string, std::string>		StrStrMap;
 typedef std::vector<unsigned char>				ByteArr;
-typedef std::vector<ServerConfig>				ServerBlocks;
-
 
 #define CLIENT_CHUNK_SIZE						4096
 
 //TODO: REMOVE PLACEHOLDER WHEN CLASS GETS IMPLEMENTED
-class ServerConfig
+struct ServerConfig
 {
-
+	uint32_t	ipv4;
+	uint16_t	port;
 };
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"

@@ -22,6 +22,21 @@ namespace Utils
 		return (lower_str);
 	}
 
+	std::string				sTrim(std::string const& str)
+	{
+		std::string::size_type	start;
+		std::string::size_type	end;
+
+		start = 0;
+		end = str.size();
+		while (str[start] == ' ' || str[start] == '\t')
+			start++;
+		while (str[end - 1] == ' ' || str[end - 1] == '\t')
+			end--;
+		return (str.substr(start, end - start));
+	
+	}
+
 	void	log(std::string const& message, LogLevel const& level)
 	{
 		std::string	level_str;
@@ -29,15 +44,23 @@ namespace Utils
 		switch (level)
 		{
 			case LOG_INFO:
-				std::cout << CLI_COLORS_GREEN "INFO" CLI_COLORS_RESET ": " << message << std::endl;
+			{
+				std::cout << CLI_COLORS_GREEN "INFO\t<-- " CLI_COLORS_RESET;
+				std::cout << message << CLI_COLORS_GREEN " -->" CLI_COLORS_RESET << '\n';
 				return ;
+			}
 			case LOG_WARNING:
-				level_str = CLI_COLORS_YELLOW "WARNING" CLI_COLORS_RESET;
+			{
+				std::cerr << CLI_COLORS_YELLOW "WARNING\t<-- " CLI_COLORS_RESET;
+				std::cerr << message << CLI_COLORS_YELLOW " -->" CLI_COLORS_RESET << '\n';
 				break ;
+			}
 			case LOG_ERROR:
-				level_str = CLI_COLORS_RED "ERROR" CLI_COLORS_RESET;
+			{
+				std::cerr << CLI_COLORS_RED "ERROR\t<-- " CLI_COLORS_RESET;
+				std::cerr << message << CLI_COLORS_RED " -->" CLI_COLORS_RESET << '\n';
 				break ;
+			}
 		}
-		std::cerr << level_str << ": " << message << std::endl;
 	}
 }
