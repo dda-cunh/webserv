@@ -18,44 +18,42 @@ class Request
 	public:
 		~Request();
 
-		Request(ServerConfig const&, Socket const&);
+		Request(int const&);
 
-		Http::VERSION const&		getVersion()		const;
-		ServerConfig const&			getServerConfig()	const;
-		Http::METHOD const&			getMethod()			const;
-		std::ustring const&			getBody()			const;
-		ResponseFlag const&			getFlag()			const;
-		std::string const&			getUri()			const;
-		Socket const&				getClientFD()		const;
+		Http::VERSION const&		version()		const;
+		Http::METHOD const&			method()		const;
+		ResponseFlag const&			flag()			const;
+		std::string const&			uri()			const;
+		ByteArr const&				body()			const;
+		int const&					clientFD()		const;
 
-		std::string const			getHeader(std::string const&);
+		std::string const			header(std::string const&);
 
 		static std::string const	_no_such_header;
 
 	private:
-		ServerConfig const			_server_config;
-		Socket const				_client_fd;
+		int const					_client_fd;
 
 		Http::VERSION				_version;
 		Http::METHOD				_method;
-		std::ustring				_body;
 		ResponseFlag				_flag;
 		std::string					_uri;
 		StrStrMap					_headers;
+		ByteArr						_body;
 
 		Request & operator=(Request const & rhs);
 		Request(Request const & src);
 		Request();
 
-		std::ustring				getNextChunkClient();
+		ByteArr						getNextChunkClient();
 		void						putHeader(std::string const&,
 										std::string const&);
 		void						parseHeaderLine(std::stringstream &);
-		void						parseBody(std::ustring const&);
+		void						parseBody(ByteArr const&);
 		void						readClient();
 
 		static unsigned int const	_max_request_size;
 
-		static std::string			seekCRLF(std::ustring const&,
-										std::ustring::size_type &);
+		static std::string			seekCRLF(ByteArr const&,
+										ByteArr::size_type &);
 };

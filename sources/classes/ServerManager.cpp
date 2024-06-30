@@ -29,7 +29,7 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)
 	:	_server_blocks(server_blocks),
 		_is_up(false)
 {
-	std::vector<int>	unique_addr;
+	std::vector<int>	unique_endpoints;
 
 	for (ServerBlocks::size_type i = 0; i < server_blocks.size(); i++)
 	{

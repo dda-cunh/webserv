@@ -1,7 +1,6 @@
 #pragma once
 
 #include <sys/epoll.h>
-#include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -15,6 +14,7 @@
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
+#include "namespaces/Network.hpp"
 #include "namespaces/Utils.hpp"
 #include "namespaces/Http.hpp"
 
@@ -33,21 +33,22 @@ class	ServerManager;
 class	ServerConfig;
 class	Response;
 class	Request;
+class	Socket;
 /**************************************************************************/
 
-namespace std
-{ 
-	typedef basic_string<unsigned char>			ustring;
-}
 
 typedef std::map<std::string, std::string>		StrStrMap;
-
+typedef std::vector<unsigned char>				ByteArr;
 typedef std::vector<ServerConfig>				ServerBlocks;
 
-typedef int										Socket;
 
 #define CLIENT_CHUNK_SIZE						4096
 
+//TODO: REMOVE PLACEHOLDER WHEN CLASS GETS IMPLEMENTED
+class ServerConfig
+{
+
+};
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
 #define CLI_COLORS_YELLOW	"\033[33m"
@@ -59,14 +60,3 @@ typedef int										Socket;
 #define CLI_COLORS_CYAN		"\033[36m"
 #define CLI_COLORS_RED		"\033[31m"
 /**************************************************************************/
-
-// TODO: Delete this
-// TESTING WHILE WAITING FOR SERVER CONFIG IMPLEMENTATION
-class ServerConfig
-{
-	public:
-		Socket	socket;
-};
-
-/*********************************  UTILS  ********************************/
-
