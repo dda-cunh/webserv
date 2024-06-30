@@ -24,15 +24,15 @@ Request::~Request(void)
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
-Request::Request(ServerConfig const& config, Socket const& clientFD)
+Request::Request(ServerConfig const& config, int const& clientFD)
 	:	_server_config(config),
 		_client_fd(clientFD),
 		_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
-		_body(),
 		_flag(NO_FLAG),
 		_uri(),
-		_headers()
+		_headers(),
+		_body()
 {
 	if (this->_client_fd <= STDERR_FILENO)
 		throw (ExceptionMaker("Bad client FD for request"));
@@ -43,10 +43,10 @@ Request::Request(ServerConfig const& config, Socket const& clientFD)
 /********************************  MEMBERS  *******************************/
 void	Request::readClient()
 {
-	std::ustring::size_type	request_i;
-	std::ustring			request;
-	std::ustring			chunk;
-	std::string				token;
+	ByteArr::size_type	request_i;
+	std::string			token;
+	ByteArr				request;
+	ByteArr				chunk;
 
 	do
 	{
@@ -57,7 +57,7 @@ void	Request::readClient()
 			Utils::log("Request is too big", Utils::LOG_WARNING);
 			return ;
 		};
-		request += chunk;
+		request.insert(request.end(), chunk.begin(), chunk.end());
 	} while (!chunk.empty());
 	request_i = 0;
 	{
@@ -76,22 +76,22 @@ void	Request::readClient()
 	while (request_i < request.size())
 	{
 		std::stringstream	ss(seekCRLF(request, request_i));
-		if (ss.str() == CRLF)
+		if (ss.str().empty())
 			break ;
 		this->parseHeaderLine(ss);
 	}
-	this->parseBody(request.substr(request_i));
+	this->parseBody(ByteArr(request.begin() + request_i, request.end()));
 }
 
-void	Request::parseBody(std::ustring const& body)
+void	Request::parseBody(ByteArr const& body)
 {
 	std::string	content_length_val;
 
-	if (this->getMethod() == Http::M_POST)
+	if (this->method() == Http::M_POST)
 	{
-		if (this->getHeader("content-type") != Request::_no_such_header)
+		if (this->header("content-type") != Request::_no_such_header)
 		{
-			content_length_val = this->getHeader("content-length");
+			content_length_val = this->header("content-length");
 			if (content_length_val != Request::_no_such_header)
 			{
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
@@ -106,52 +106,58 @@ void	Request::parseBody(std::ustring const& body)
 	}
 }
 
-std::ustring	Request::getNextChunkClient()
+ByteArr	Request::getNextChunkClient()
 {
 	unsigned char	buff[CLIENT_CHUNK_SIZE];
-	std::ustring	chunk;
+	ByteArr			chunk;
 	long			r;
 
-	r = read(this->getClientFD(), buff, CLIENT_CHUNK_SIZE);
+	r = read(this->clientFD(), buff, CLIENT_CHUNK_SIZE);
 	if (r < 0)
 		throw (ExceptionMaker(strerror(errno)));
 	if (r == 0)
-		return (std::ustring());
+		return (ByteArr());
 	chunk.assign(buff, buff + r);
 	return (chunk);
 }
 
-ServerConfig const&	Request::getServerConfig()	const
+ServerConfig const&	Request::serverConfig()	const
 {
 	return (this->_server_config);
 }
 
-Http::VERSION const&	Request::getVersion()	const
+Http::VERSION const&	Request::version()	const
 {
 	return (this->_version);
 }
 
-std::ustring const&	Request::getBody()	const
+ByteArr const&	Request::body()	const
 {
 	return (this->_body);
 }
 
-std::string const&	Request::getUri()	const
+ResponseFlag const&			Request::flag()	const
+{
+	return (this->_flag);
+}
+
+
+std::string const&	Request::uri()	const
 {
 	return (this->_uri);
 }
 
-Http::METHOD const&	Request::getMethod()	const
+Http::METHOD const&	Request::method()	const
 {
 	return (this->_method);
 }
 
-Socket const&	Request::getClientFD()	const
+int const&	Request::clientFD()	const
 {
 	return (this->_client_fd);
 }
 
-std::string const	Request::getHeader(std::string const& header)
+std::string const	Request::header(std::string const& header)
 {
 	StrStrMap::iterator	it;
 
@@ -172,8 +178,8 @@ void	Request::putHeader(std::string const& header, std::string const& val)
 unsigned int const	Request::_max_request_size = CLIENT_CHUNK_SIZE * 2000;
 std::string const	Request::_no_such_header = std::string();
 
-std::string	Request::seekCRLF(std::ustring const& request,
-	std::ustring::size_type & index)
+std::string	Request::seekCRLF(ByteArr const& request,
+	ByteArr::size_type & index)
 {
 	std::string s;
 

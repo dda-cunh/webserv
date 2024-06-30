@@ -36,17 +36,19 @@ class	Request;
 class	Socket;
 /**************************************************************************/
 
-namespace std
-{ 
-	typedef basic_string<unsigned char>			ustring;
-}
 
 typedef std::map<std::string, std::string>		StrStrMap;
-
+typedef std::vector<unsigned char>				ByteArr;
 typedef std::vector<ServerConfig>				ServerBlocks;
+
 
 #define CLIENT_CHUNK_SIZE						4096
 
+//TODO: REMOVE PLACEHOLDER WHEN CLASS GETS IMPLEMENTED
+class ServerConfig
+{
+
+};
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
 #define CLI_COLORS_YELLOW	"\033[33m"
