@@ -18,16 +18,20 @@ class Request
 	public:
 		~Request();
 
+		Request(Request const & src);
 		Request(int const&);
 
-		Http::VERSION const&		version()		const;
-		Http::METHOD const&			method()		const;
-		ResponseFlag const&			flag()			const;
-		std::string const&			uri()			const;
-		ByteArr const&				body()			const;
-		int const&					clientFD()		const;
+		Http::VERSION const&		version()					const;
+		Http::METHOD const&			method()					const;
+		ResponseFlag const&			flag()						const;
+		std::string const&			uri()						const;
+		ByteArr const&				body()						const;
+		int const&					clientFD()					const;
+		std::string 				header(std::string const&)	const;
+		std::string					str()						const;
 
-		std::string const			header(std::string const&);
+		std::string					seekCRLF(ByteArr const&,
+										ByteArr::size_type &);
 
 		static std::string const	_no_such_header;
 
@@ -42,18 +46,14 @@ class Request
 		ByteArr						_body;
 
 		Request & operator=(Request const & rhs);
-		Request(Request const & src);
 		Request();
 
 		ByteArr						getNextChunkClient();
 		void						putHeader(std::string const&,
 										std::string const&);
-		void						parseHeaderLine(std::stringstream &);
+		void						parseHeaderLine(std::string const&);
 		void						parseBody(ByteArr const&);
 		void						readClient();
 
 		static unsigned int const	_max_request_size;
-
-		static std::string			seekCRLF(ByteArr const&,
-										ByteArr::size_type &);
 };

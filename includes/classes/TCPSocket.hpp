@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <stdint.h>
 
 #include <ostream>
@@ -8,28 +7,32 @@
 class TCPSocket
 {
 	public:
-		~TCPSocket();
+		TCPSocket & operator=(TCPSocket const& rhs)				throw();
+		TCPSocket(TCPSocket const& src)							throw();
+		~TCPSocket()											throw();
 
-		TCPSocket(uint64_t const&, uint32_t const&,
-				int const&)	throw();
+		TCPSocket(uint32_t const& ipv4, uint16_t const& port,
+				int const& backlog)								throw();
 
-		bool	operator==(TCPSocket const & rhs)	const;
+		bool	operator==(TCPSocket const & rhs)	const		throw();
 
-		std::string const	address()				const;
-		uint16_t const		port()					const;
-		int const			fd()					const;
+		std::string			address()				const		throw();
+		std::string			str()					const		throw();
+		uint16_t 			port()					const		throw();
+		int 				fd()					const		throw();
+
 		void				badSyscallThrow();
+		void				disconnect()						throw();
 		void				connect();
 
 	private:
-		uint64_t const	_address;
-		uint32_t const	_port;
+		uint32_t const	_address;
+		uint16_t const	_port;
 		int const		_backlog;
 		int				_fd;
 
-		TCPSocket();
-		TCPSocket(TCPSocket const& src);
-		TCPSocket & operator=(TCPSocket const& rhs);
+
+		TCPSocket()												throw();
 };
 
-std::ostream &	operator<<(std::ostream &, TCPSocket const&);
+std::ostream &	operator<<(std::ostream &, TCPSocket const&)	throw();

@@ -3,7 +3,7 @@ NAME		= 	webserv
 
 CC 			= 	c++
 
-CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g -fsanitize=address
+CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g #-fsanitize=address
 
 RM 			= 	rm -rf
 
@@ -20,6 +20,7 @@ CLASS_DIR	=	classes/
 SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
 												Request.cpp \
+												TCPSocket.cpp \
 												ServerManager.cpp) \
 					$(addprefix $(NAMES_DIR),	Utils.cpp \
 												Http.cpp \

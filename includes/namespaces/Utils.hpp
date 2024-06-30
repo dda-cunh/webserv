@@ -13,5 +13,6 @@ namespace	Utils
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
 	std::string				lowerStr(std::string const&);
+	std::string				sTrim(std::string const&);
 	void					log(std::string const&, LogLevel const&);
 }
