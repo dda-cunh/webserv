@@ -1,14 +1,13 @@
 #include "../../includes/classes/Request.hpp"
+#include <sstream>
 
 /****************************  CANNONICAL FORM  ****************************/
 Request::Request(void)
-	:	_server_config(),
-		_client_fd(-1)
+	:	_client_fd(-1)
 {}
 
 Request::Request(Request const & src)
-	:	_server_config(),
-		_client_fd(-1)
+	:	_client_fd(-1)
 {
 	*this = src;
 }
@@ -24,9 +23,8 @@ Request::~Request(void)
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
-Request::Request(ServerConfig const& config, int const& clientFD)
-	:	_server_config(config),
-		_client_fd(clientFD),
+Request::Request(int const& clientFD)
+	:	_client_fd(clientFD),
 		_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
@@ -44,6 +42,7 @@ Request::Request(ServerConfig const& config, int const& clientFD)
 void	Request::readClient()
 {
 	ByteArr::size_type	request_i;
+	std::stringstream	ss;
 	std::string			token;
 	ByteArr				request;
 	ByteArr				chunk;
@@ -60,25 +59,27 @@ void	Request::readClient()
 		request.insert(request.end(), chunk.begin(), chunk.end());
 	} while (!chunk.empty());
 	request_i = 0;
+	ss << seekCRLF(request, request_i);
+	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
 	{
-		std::stringstream	ss(seekCRLF(request, request_i));
-
-		for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
-		{
-			if (i == 0)
-				this->_method = Http::sToMethod(token);
-			else if (i == 1)
-				this->_uri = token;
-			else if (i == 2)
-				this->_version = Http::sToVersion(token);
-		}
+		if (i == 0)
+			this->_method = Http::sToMethod(token);
+		else if (i == 1)
+			this->_uri = token;
+		else if (i == 2)
+			this->_version = Http::sToVersion(token);
 	}
+	ss.str(std::string());
 	while (request_i < request.size())
 	{
-		std::stringstream	ss(seekCRLF(request, request_i));
-		if (ss.str().empty())
+		std::string	line;
+
+		line = seekCRLF(request, request_i);
+		if (line.empty())
 			break ;
+		ss << line;
 		this->parseHeaderLine(ss);
+		ss.str(std::string());
 	}
 	this->parseBody(ByteArr(request.begin() + request_i, request.end()));
 }
@@ -121,11 +122,6 @@ ByteArr	Request::getNextChunkClient()
 	return (chunk);
 }
 
-ServerConfig const&	Request::serverConfig()	const
-{
-	return (this->_server_config);
-}
-
 Http::VERSION const&	Request::version()	const
 {
 	return (this->_version);
@@ -140,7 +136,6 @@ ResponseFlag const&			Request::flag()	const
 {
 	return (this->_flag);
 }
-
 
 std::string const&	Request::uri()	const
 {

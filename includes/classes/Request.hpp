@@ -18,10 +18,9 @@ class Request
 	public:
 		~Request();
 
-		Request(ServerConfig const&, int const&);
+		Request(int const&);
 
 		Http::VERSION const&		version()		const;
-		ServerConfig const&			serverConfig()	const;
 		Http::METHOD const&			method()		const;
 		ResponseFlag const&			flag()			const;
 		std::string const&			uri()			const;
@@ -33,7 +32,6 @@ class Request
 		static std::string const	_no_such_header;
 
 	private:
-		ServerConfig const			_server_config;
 		int const					_client_fd;
 
 		Http::VERSION				_version;
@@ -47,7 +45,7 @@ class Request
 		Request(Request const & src);
 		Request();
 
-		ByteArr				getNextChunkClient();
+		ByteArr						getNextChunkClient();
 		void						putHeader(std::string const&,
 										std::string const&);
 		void						parseHeaderLine(std::stringstream &);
