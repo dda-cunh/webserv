@@ -20,6 +20,7 @@ CLASS_DIR	=	classes/
 SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
 												Request.cpp \
+												Response.cpp \
 												TCPSocket.cpp \
 												ServerManager.cpp) \
 					$(addprefix $(NAMES_DIR),	Utils.cpp \
