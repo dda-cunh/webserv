@@ -1,60 +1,59 @@
 #include "../../includes/classes/ServerManager.hpp"
-#include "../../includes/classes/Request.hpp"
 #include "../../includes/classes/Response.hpp"
-#include <cstring>
-#include <sys/epoll.h>
+#include "../../includes/classes/Request.hpp"
 
-#define syscall_kill(epoll_fd)                         \
-	{                                                  \
-		if (epoll_fd != -1)                            \
-			close(epoll_fd);                           \
-		Utils::log(strerror(errno), Utils::LOG_ERROR); \
-		this->down();                                  \
-		return;                                        \
+#define syscall_kill()										\
+	{														\
+		if (errno != 0)										\
+			Utils::log(strerror(errno), Utils::LOG_ERROR);	\
+		this->down();										\
+		return;												\
 	}
 
 /****************************  CANNONICAL FORM  ***************************/
-ServerManager::ServerManager()
-	: _server_blocks(),
-	  _is_up(false)
-{
-}
+ServerManager::ServerManager()	throw()
+	:	_server_blocks(),
+		_is_up(false),
+		_epoll_fd(-1)
+{}
 
-ServerManager::ServerManager(ServerManager const &src)
-	: _server_blocks(),
-	  _is_up(false)
+ServerManager::ServerManager(ServerManager const& src)	throw()
+	:	_server_blocks(),
+		_is_up(false),
+		_epoll_fd(-1)
 {
 	*this = src;
 }
 
-ServerManager &ServerManager::operator=(ServerManager const &rhs)
+ServerManager &ServerManager::operator=(ServerManager const &rhs)	throw()
 {
-	(void)rhs;
+	(void) rhs;
 	return (*this);
 }
 
-ServerManager::~ServerManager()
+ServerManager::~ServerManager()	throw()
 {
 	this->down();
 }
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
-ServerManager::ServerManager(ServerBlocks const &server_blocks)
-	: _server_blocks(server_blocks),
-	  _is_up(false)
+ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
+	:	_server_blocks(server_blocks),
+		_is_up(false),
+		_epoll_fd(-1)
 {
-	SocketArr::size_type unique_i;
+	SocketArr::size_type	unique_i;
 
 	for (ServerBlocks::size_type i = 0; i < server_blocks.size(); i++)
 	{
 		try
 		{
-			TCPSocket socket(server_blocks[i].ipv4, server_blocks[i].port, 5);
+			TCPSocket	socket(server_blocks[i].ipv4, server_blocks[i].port, 5);
 
 			for (unique_i = 0; unique_i < this->_sockets.size(); unique_i++)
 				if (this->_sockets[unique_i] == socket)
-					break;
+					break ;
 			if (unique_i == this->_sockets.size())
 			{
 				this->_sockets.push_back(socket);
@@ -65,50 +64,56 @@ ServerManager::ServerManager(ServerBlocks const &server_blocks)
 		catch (ExceptionMaker const &ex)
 		{
 			Utils::log(ex.what(), Utils::LOG_ERROR);
-			return;
+			return ;
 		}
 	}
 	if (this->_sockets.empty())
-		return;
+		return ;
 	this->up();
 }
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-void ServerManager::down()
+void ServerManager::down()	throw()
 {
-	this->_is_up = false;
 	for (SocketArr::size_type i = 0; i < this->_sockets.size(); i++)
 		this->_sockets[i].disconnect();
+	if (this->_epoll_fd != -1)
+		close(this->_epoll_fd);
+	this->_epoll_fd = -1;
+	this->_is_up = false;
 	Utils::log("ServerManager is down", Utils::LOG_INFO);
 }
 
-void ServerManager::up()
+void ServerManager::up()	throw()
 {
-	unsigned long const events_size = ServerManager::_max_events * this->_sockets.size();
-	epoll_event events[events_size];
-	epoll_event event;
-	int client_fd;
-	int epoll_fd;
-	int n_fds;
+	unsigned long const	events_size = ServerManager::_max_events
+										* this->_sockets.size();
 
-	this->_is_up = true;
-	epoll_fd = epoll_create(events_size);
-	if (epoll_fd == -1)
-		syscall_kill(epoll_fd);
-	for (SocketArr::size_type i = 0; i < this->_sockets.size(); i++)
+	epoll_event			events[events_size];
+	epoll_event			event;
+	int					n_fds;
+
+	if (this->_epoll_fd == -1)
 	{
-		event.events = EPOLLIN;
-		event.data.fd = this->_sockets[i].fd();
-		if (!doEpollCtl(epoll_fd, EPOLL_CTL_ADD, event))
-			syscall_kill(epoll_fd);
+		this->_epoll_fd = epoll_create(events_size);
+		if (this->_epoll_fd == -1)
+			syscall_kill();
+		for (SocketArr::size_type i = 0; i < this->_sockets.size(); i++)
+		{
+			event.events = EPOLLIN;
+			event.data.fd = this->_sockets[i].fd();
+			if (!doEpollCtl(EPOLL_CTL_ADD, event))
+				syscall_kill();
+		}
 	}
+	this->_is_up = true;
 	Utils::log("ServerManager is up", Utils::LOG_INFO);
 	while (this->_is_up)
 	{
-		n_fds = epoll_wait(epoll_fd, events, events_size, -1);
+		n_fds = epoll_wait(this->_epoll_fd, events, events_size, -1);
 		if (n_fds == -1)
-			syscall_kill(epoll_fd);
+			syscall_kill();
 		for (int i = 0; i < n_fds; i++)
 		{
 			try
@@ -117,14 +122,16 @@ void ServerManager::up()
 				{
 					if (this->isServerSocket(events[i].data.fd))
 					{
+						int	client_fd;
+
 						client_fd = accept(events[i].data.fd, NULL, NULL);
 						if (client_fd == -1)
-							syscall_kill(epoll_fd);
+							syscall_kill();
 						Utils::log("New client connected", Utils::LOG_INFO);
 						event.events = EPOLLIN | EPOLLET;
 						event.data.fd = client_fd;
-						if (!doEpollCtl(epoll_fd, EPOLL_CTL_ADD, event))
-							syscall_kill(epoll_fd);
+						if (!doEpollCtl(EPOLL_CTL_ADD, event))
+							syscall_kill();
 					}
 					else
 					{
@@ -133,10 +140,10 @@ void ServerManager::up()
 						event.data.fd = events[i].data.fd;
 						Utils::log("Request received", Utils::LOG_INFO);
 						Utils::log(req.str(), Utils::LOG_INFO);
-						if (!doEpollCtl(epoll_fd, EPOLL_CTL_MOD, event))
+						if (!doEpollCtl(EPOLL_CTL_MOD, event))
 						{
 							Utils::log(strerror(errno),
-									   Utils::LOG_WARNING);
+										Utils::LOG_WARNING);
 							close(event.data.fd);
 							continue;
 						}
@@ -145,20 +152,25 @@ void ServerManager::up()
 				}
 				else if (events[i].events & EPOLLOUT)
 				{
-					RequestFeed::iterator it;
+					RequestFeed::iterator	it;
 					it = this->_req_feed.find(events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						Response response;
+						Response	response;
 						response.dispatchRequestMethod(it->second);
 						std::string responseStr = response.response();
 						Utils::log(responseStr, Utils::LOG_INFO);
 						send(events[i].data.fd, responseStr.c_str(), responseStr.length(), 0);
-						if (it->second.header("connection") == "keep-alive")
-						{
+						if (it->second.header("connection") != "keep-alive")
 							close(events[i].data.fd);
-							this->_req_feed.erase(it);
+						else
+						{
+							event.events = EPOLLIN | EPOLLET;
+							event.data.fd = events[i].data.fd;
+							if (!doEpollCtl(EPOLL_CTL_MOD, event))
+								syscall_kill();
 						}
+						this->_req_feed.erase(it);
 						Utils::log("Response sent", Utils::LOG_INFO);
 					}
 					else
@@ -166,7 +178,7 @@ void ServerManager::up()
 						if (events[i].data.fd != -1)
 							close(events[i].data.fd);
 						Utils::log("Couldn't find request for client",
-								   Utils::LOG_WARNING);
+									Utils::LOG_WARNING);
 					}
 				}
 			}
@@ -176,7 +188,7 @@ void ServerManager::up()
 			}
 		}
 	}
-	close(epoll_fd);
+	this->down();
 }
 
 bool ServerManager::isServerSocket(int const &fd) throw()
@@ -186,16 +198,17 @@ bool ServerManager::isServerSocket(int const &fd) throw()
 			return (true);
 	return (false);
 }
+
+bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
+{
+	if (this->_epoll_fd == -1)
+		return (false);
+	if (epoll_ctl(this->_epoll_fd, op, ev.data.fd, &ev) == -1)
+		return (false);
+	return (true);
+}
 /**************************************************************************/
 
 /*****************************  STATIC MEMBERS  ***************************/
 unsigned long const ServerManager::_max_events = 93;
-
-bool ServerManager::doEpollCtl(int const &epoll_fd, int const &op,
-							   epoll_event &ev)
-{
-	if (epoll_ctl(epoll_fd, op, ev.data.fd, &ev) == -1)
-		return (false);
-	return (true);
-}
 /**************************************************************************/

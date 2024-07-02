@@ -29,12 +29,11 @@ namespace Utils
 
 		start = 0;
 		end = str.size();
-		while (str[start] == ' ' || str[start] == '\t')
+		while (std::isspace(str[start]))
 			start++;
-		while (str[end - 1] == ' ' || str[end - 1] == '\t')
+		while (std::isspace(str[end - 1]))
 			end--;
 		return (str.substr(start, end - start));
-	
 	}
 
 	void	log(std::string const& message, LogLevel const& level)
