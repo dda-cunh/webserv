@@ -156,10 +156,8 @@ void ServerManager::up()	throw()
 					it = this->_req_feed.find(events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						Response	response;
-						response.dispatchRequestMethod(it->second);
+						Response response(it->second);
 						std::string responseStr = response.response();
-						Utils::log(responseStr, Utils::LOG_INFO);
 						send(events[i].data.fd, responseStr.c_str(), responseStr.length(), 0);
 						if (it->second.header("connection") != "keep-alive")
 							close(events[i].data.fd);

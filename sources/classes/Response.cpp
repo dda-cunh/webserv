@@ -6,7 +6,9 @@ Response::Response(void)
 	: _statusCode(200),
 	  _headers(),
 	  _body(),
-	  _response()
+	  _response(),
+	  _request(Request(0)),
+	  _error_pages()
 {
 }
 
@@ -14,7 +16,9 @@ Response::Response(Response const &src)
 	: _statusCode(200),
 	  _headers(),
 	  _body(),
-	  _response()
+	  _response(),
+	  _request(Request(0)),
+	  _error_pages()
 {
 	*this = src;
 }
@@ -28,6 +32,22 @@ Response &Response::operator=(Response const &rhs)
 Response::~Response(void)
 {
 }
+/**************************************************************************/
+
+/*****************************  CONSTRUCTORS  *****************************/
+
+
+Response::Response(Request const &request)
+	: _statusCode(200),
+	  _headers(),
+	  _body(),
+	  _response(),
+	  _request(request)
+{
+	setErrorPages();
+	dispatchRequestMethod();
+}
+
 /**************************************************************************/
 
 /********************************  HELPERS  *******************************/
@@ -45,12 +65,7 @@ bool resourceExists(std::string uri)
 	return file.good();
 }
 
-std::string readResource(std::string uri)
-{
-	std::ifstream file(uri.c_str());
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	return content;
-}
+
 
 std::string getResourceContentType(std::string uri)
 {
@@ -75,6 +90,29 @@ std::string getCurrentDate()
 	return buf;
 }
 
+
+// TODO: Remove this dummy function once config can be extracted from elsewhere
+IntStrMap dummyGetErrorPages()
+{
+	IntStrMap error_pages;
+
+	error_pages[Http::SC_OK] = "tests/error_pages/200.html";
+	error_pages[Http::SC_CREATED] = "tests/error_pages/201.html";
+	error_pages[Http::SC_NO_CONTENT] = "tests/error_pages/204.html";
+	error_pages[Http::SC_BAD_REQUEST] = "tests/error_pages/400.html";
+	error_pages[Http::SC_FORBIDDEN] = "tests/error_pages/403.html";
+	error_pages[Http::SC_NOT_FOUND] = "tests/error_pages/404.html";
+	error_pages[Http::SC_METHOD_NOT_ALLOWED] = "tests/error_pages/405.html";
+	error_pages[Http::SC_CONFLICT] = "tests/error_pages/409.html";
+	error_pages[Http::SC_INTERNAL_SERVER_ERROR] = "tests/error_pages/500.html";
+	error_pages[Http::SC_NOT_IMPLEMENTED] = "tests/error_pages/501.html";
+	error_pages[Http::SC_BAD_GATEWAY] = "tests/error_pages/502.html";
+	error_pages[Http::SC_SERVICE_UNAVAILABLE] = "tests/error_pages/503.html";
+	error_pages[Http::SC_VERSION_NOT_SUPPORTED] = "tests/error_pages/505.html";
+
+	return error_pages;
+}
+
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
@@ -86,29 +124,28 @@ std::string getCurrentDate()
  * calls the relevant method handler and sets response string.
  * @param request The request to dispatch.
  */
-void Response::dispatchRequestMethod(Request const &request)
+void Response::dispatchRequestMethod()
 {
-	if (request.flag() == _400)
+	if (_request.flag() == _400)
 	{
 		_statusCode = Http::SC_BAD_REQUEST;
-		setHeader("Content-Type", "text/plain");
-		_body = getHTTPStatus(_statusCode); // Eventually html error pages
+		readResource(_error_pages[_statusCode]);
 	}
 	else
 	{
-		if (request.method() == Http::M_GET)
-			this->handleGETMethod(request);
+		if (_request.method() == Http::M_GET)
+			this->handleGETMethod(_request);
 		// more methods...
 		else
 		{
 			_statusCode = Http::SC_METHOD_NOT_ALLOWED;
 			setHeader("Allow", "GET");
-			setHeader("Content-Type", "text/plain");
-			_body = getHTTPStatus(_statusCode); // Eventually html error pages
+			readResource(_error_pages[_statusCode]);
 		}
 	}
 	setCommonHeaders();
 	setResponse();
+	Utils::log(response(), Utils::LOG_INFO);
 }
 
 void Response::handleGETMethod(Request const &request)
@@ -121,14 +158,12 @@ void Response::handleGETMethod(Request const &request)
 	if (resourceExists(uri))
 	{
 		_statusCode = Http::SC_OK;
-		_body = readResource(uri);
-		setHeader("Content-Type", getResourceContentType(uri));
+		readResource(uri);
 	}
 	else
 	{
 		_statusCode = Http::SC_NOT_FOUND;
-		setHeader("Content-Type", "text/plain");
-		_body = getHTTPStatus(_statusCode);
+		readResource(_error_pages[_statusCode]);
 	}
 }
 
@@ -152,6 +187,11 @@ void Response::setResponse()
 	_response += CRLF + _body;
 }
 
+void Response::setErrorPages()
+{
+	_error_pages = dummyGetErrorPages();
+}
+
 std::string Response::getHTTPStatus(int statusCode) const
 {
 	switch (statusCode)
@@ -167,6 +207,14 @@ std::string Response::getHTTPStatus(int statusCode) const
 	default:
 		return "Internal Server Error";
 	}
+}
+
+void Response::readResource(std::string uri)
+{
+	std::ifstream file(uri.c_str());
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	setHeader("Content-Type", getResourceContentType(uri));
+	_body = content;
 }
 
 std::string const &Response::response() const
