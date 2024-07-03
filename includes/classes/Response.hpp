@@ -12,29 +12,36 @@
 class Response
 {
 	public:
-		Response();
 		~Response();
 
 		std::string 			const &response() const;
 
-		void 					dispatchRequestMethod(Request const &);
+		Response(Request const &);
 
 	private:
 		int 					_statusCode;
 		StrStrMap 				_headers;
 		std::string 			_body;
 		std::string 			_response;
+		Request					_request;
+		IntStrMap				_error_pages;
 
+		Response();
 		Response(Response const &src);
 		Response &operator=(Response const &rhs);
+
+		void 					dispatchRequestMethod();
 
 		void 					handleGETMethod(Request const &);
 		void 					handlePOSTMethod(Request const &);
 		void 					handleDELETEMethod(Request const &);
 
-		std::					string getHTTPStatus(int statusCode) const;
+		std::string				getHTTPStatus(int statusCode) const;
+		void					setErrorPages();
 
 		void 					setHeader(const std::string &, const std::string &);
 		void 					setCommonHeaders();
 		void 					setResponse();
+
+		void					readResource(std::string uri);
 };
