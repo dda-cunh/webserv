@@ -1,9 +1,11 @@
 #include "../../includes/classes/Response.hpp"
 
+/**************************************************************************/
+
 /****************************  CANNONICAL FORM  ****************************/
 
 Response::Response(void)
-	: _statusCode(200),
+	: _statusCode(Http::SC_OK),
 	  _headers(),
 	  _body(),
 	  _response(),
@@ -13,7 +15,7 @@ Response::Response(void)
 }
 
 Response::Response(Response const &src)
-	: _statusCode(200),
+	: _statusCode(Http::SC_OK),
 	  _headers(),
 	  _body(),
 	  _response(),
@@ -32,21 +34,6 @@ Response &Response::operator=(Response const &rhs)
 Response::~Response(void)
 {
 }
-/**************************************************************************/
-
-/*****************************  CONSTRUCTORS  *****************************/
-
-
-Response::Response(Request const &request)
-	: _statusCode(200),
-	  _headers(),
-	  _body(),
-	  _response(),
-	  _request(request)
-{
-	setErrorPages();
-	dispatchRequestMethod();
-}
 
 /**************************************************************************/
 
@@ -64,8 +51,6 @@ bool resourceExists(std::string uri)
 	std::ifstream file(uri.c_str());
 	return file.good();
 }
-
-
 
 std::string getResourceContentType(std::string uri)
 {
@@ -89,7 +74,6 @@ std::string getCurrentDate()
 	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tstruct);
 	return buf;
 }
-
 
 // TODO: Remove this dummy function once config can be extracted from elsewhere
 IntStrMap dummyGetErrorPages()
@@ -115,6 +99,21 @@ IntStrMap dummyGetErrorPages()
 
 /**************************************************************************/
 
+/*****************************  CONSTRUCTORS  *****************************/
+
+Response::Response(Request const &request)
+	: _statusCode(Http::SC_OK),
+	  _headers(),
+	  _body(),
+	  _response(),
+	  _request(request)
+{
+	setErrorPages();
+	dispatchRequestMethod();
+}
+
+/**************************************************************************/
+
 /********************************  MEMBERS  *******************************/
 
 /**
@@ -135,7 +134,8 @@ void Response::dispatchRequestMethod()
 	{
 		if (_request.method() == Http::M_GET)
 			this->handleGETMethod(_request);
-		// more methods...
+		else if (_request.method() == Http::M_POST)
+			this->handlePOSTMethod(_request);
 		else
 		{
 			_statusCode = Http::SC_METHOD_NOT_ALLOWED;
@@ -148,6 +148,50 @@ void Response::dispatchRequestMethod()
 	Utils::log(response(), Utils::LOG_INFO);
 }
 
+// TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
+void Response::handlePOSTMethod(Request const &request)
+{
+	if (request.header("content-type").find("multipart/form-data") == std::string::npos)
+	{
+		_statusCode = Http::SC_BAD_REQUEST;
+		readResource(_error_pages[_statusCode]);
+		return;
+	}
+
+	std::string fileName;
+	std::string fileContent;
+	if (!request.parseFileContent(fileName, fileContent))
+	{
+		_statusCode = Http::SC_BAD_REQUEST;
+		readResource(_error_pages[_statusCode]);
+		return;
+	}
+
+	std::string filePath = "./uploaded_files/" + fileName; //TODO: Get this from config
+
+	std::ofstream outFile(filePath.c_str(), std::ios::binary);
+	if (!outFile)
+	{
+		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+		readResource(_error_pages[_statusCode]);
+		return;
+	}
+
+	outFile.write(fileContent.data(), fileContent.size());
+	outFile.close();
+
+	if (!outFile)
+	{
+		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+		readResource(_error_pages[_statusCode]);
+		return;
+	}
+
+	_statusCode = Http::SC_CREATED;
+	setHeader("Location", filePath);
+	_body = "File uploaded successfully"; //TODO: Return HTML in the body
+}
+
 void Response::handleGETMethod(Request const &request)
 {
 	std::string uri = request.uri();
@@ -155,17 +199,34 @@ void Response::handleGETMethod(Request const &request)
 	if (!uri.empty() && uri[0] == '/')
 		uri = uri.substr(1);
 
-	if (resourceExists(uri))
-	{
-		_statusCode = Http::SC_OK;
-		readResource(uri);
-	}
-	else
+	if (!resourceExists(uri))
 	{
 		_statusCode = Http::SC_NOT_FOUND;
-		readResource(_error_pages[_statusCode]);
+		uri = _error_pages[_statusCode];
 	}
+	readResource(uri);
 }
+
+void Response::readResource(std::string uri)
+{
+	std::ifstream file(uri.c_str());
+	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	setHeader("Content-Type", getResourceContentType(uri));
+	_body = content;
+}
+
+/**************************************************************************/
+
+/********************************  GETTERS  *******************************/
+
+std::string const &Response::response() const
+{
+	return _response;
+}
+
+/**************************************************************************/
+
+/********************************  SETTERS  *******************************/
 
 void Response::setCommonHeaders()
 {
@@ -181,7 +242,7 @@ void Response::setHeader(const std::string &key, const std::string &value)
 
 void Response::setResponse()
 {
-	_response += "HTTP/1.1 " + to_string(_statusCode) + " " + getHTTPStatus(_statusCode) + CRLF;
+	_response += "HTTP/1.1 " + to_string(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
 	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
 		_response += it->first + ": " + it->second + CRLF;
 	_response += CRLF + _body;
@@ -190,34 +251,4 @@ void Response::setResponse()
 void Response::setErrorPages()
 {
 	_error_pages = dummyGetErrorPages();
-}
-
-std::string Response::getHTTPStatus(int statusCode) const
-{
-	switch (statusCode)
-	{
-	case Http::SC_OK:
-		return "OK";
-	case Http::SC_BAD_REQUEST:
-		return "Bad Request";
-	case Http::SC_NOT_FOUND:
-		return "Not Found";
-	case Http::SC_METHOD_NOT_ALLOWED:
-		return "Method Not Allowed";
-	default:
-		return "Internal Server Error";
-	}
-}
-
-void Response::readResource(std::string uri)
-{
-	std::ifstream file(uri.c_str());
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	setHeader("Content-Type", getResourceContentType(uri));
-	_body = content;
-}
-
-std::string const &Response::response() const
-{
-	return _response;
 }
