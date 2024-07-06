@@ -1,0 +1,5 @@
+.vscode/
+temp/
+*.o
+webserv
+TODO.md
