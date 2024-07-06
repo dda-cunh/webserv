@@ -80,19 +80,19 @@ IntStrMap dummyGetErrorPages()
 {
 	IntStrMap error_pages;
 
-	error_pages[Http::SC_OK] = "tests/error_pages/200.html";
-	error_pages[Http::SC_CREATED] = "tests/error_pages/201.html";
-	error_pages[Http::SC_NO_CONTENT] = "tests/error_pages/204.html";
-	error_pages[Http::SC_BAD_REQUEST] = "tests/error_pages/400.html";
-	error_pages[Http::SC_FORBIDDEN] = "tests/error_pages/403.html";
-	error_pages[Http::SC_NOT_FOUND] = "tests/error_pages/404.html";
-	error_pages[Http::SC_METHOD_NOT_ALLOWED] = "tests/error_pages/405.html";
-	error_pages[Http::SC_CONFLICT] = "tests/error_pages/409.html";
-	error_pages[Http::SC_INTERNAL_SERVER_ERROR] = "tests/error_pages/500.html";
-	error_pages[Http::SC_NOT_IMPLEMENTED] = "tests/error_pages/501.html";
-	error_pages[Http::SC_BAD_GATEWAY] = "tests/error_pages/502.html";
-	error_pages[Http::SC_SERVICE_UNAVAILABLE] = "tests/error_pages/503.html";
-	error_pages[Http::SC_VERSION_NOT_SUPPORTED] = "tests/error_pages/505.html";
+	error_pages[Http::SC_OK] = "test_files/error_pages/200.html";
+	error_pages[Http::SC_CREATED] = "test_files/error_pages/201.html";
+	error_pages[Http::SC_NO_CONTENT] = "test_files/error_pages/204.html";
+	error_pages[Http::SC_BAD_REQUEST] = "test_files/error_pages/400.html";
+	error_pages[Http::SC_FORBIDDEN] = "test_files/error_pages/403.html";
+	error_pages[Http::SC_NOT_FOUND] = "test_files/error_pages/404.html";
+	error_pages[Http::SC_METHOD_NOT_ALLOWED] = "test_files/error_pages/405.html";
+	error_pages[Http::SC_CONFLICT] = "test_files/error_pages/409.html";
+	error_pages[Http::SC_INTERNAL_SERVER_ERROR] = "test_files/error_pages/500.html";
+	error_pages[Http::SC_NOT_IMPLEMENTED] = "test_files/error_pages/501.html";
+	error_pages[Http::SC_BAD_GATEWAY] = "test_files/error_pages/502.html";
+	error_pages[Http::SC_SERVICE_UNAVAILABLE] = "test_files/error_pages/503.html";
+	error_pages[Http::SC_VERSION_NOT_SUPPORTED] = "test_files/error_pages/505.html";
 
 	return error_pages;
 }
