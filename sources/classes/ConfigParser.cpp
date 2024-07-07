@@ -4,11 +4,21 @@ unsigned int	ConfigParser::_lineNr = 1;
 
 void	ConfigParser::parseConfigs(std::string fileName)
 {
-	if (!this->syntaxCheck(fileName))
-		//	throw exception
-	this->loadConfigs(fileName, /* CONFIGS CONTAINER */);
+	std::ifstream	configFile;
+	configFile.open(fileName.c_str());
+	if (!configFile.is_open())
+		//	THROW EXCEPTION
+
+	//	LOAD FILE INTO STRUCT
+	if (!this->serverContectOK(configFile))
+		//	THROW EXCEPTION
+	if (!this->syntaxCheck(this->_strServerBlock))
+		//	THROW EXCEPTION
+	this->loadConfigs(fileName, this->_strServerBlock);
+	//	REPEAT UNTIL EOF
+
 	if (!this->configsCheck(/* CONFIGS CONTAINER */))
-		//	throw exception
+		//	THROW EXCEPTION
 }
 
 bool	ConfigParser::syntaxCheck(std::string fileName)
@@ -16,9 +26,6 @@ bool	ConfigParser::syntaxCheck(std::string fileName)
 	std::ifstream	configFile;
 	std::string		configLine;
 
-	configFile.open(fileName.c_str());
-	if (!configFile.is_open())
-		//	throw exception
 	while (std::getline(configFile, configLine))
 	{
 		//	check for valid keywords, syntax, context, configs, etc
