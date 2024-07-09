@@ -5,6 +5,9 @@
 		into memory.
 	Finally, it will parse through the loaded configurations and check if they
 		are valid for the program to run.
+
+
+	HMM... MAYBE CREATE A CHECKER OBJECT THAT USES FUNCTIONS FROM PARSER TO CHECK CONFIG FILE
 */
 
 #pragma once
@@ -15,8 +18,8 @@
 #include "../webserv.hpp"
 
 //	DEFINE STRING ARRAYS FOR KEYWORDS SO THE PARSER CAN VERIFY WITH SWITCH/CASE
-# define SERVER_KEYWORDS {"listen", "server_name", "root", "client_max_body_size", "error_page"}
-# define LOCATION_KEYWORDS {"root", "index", "autoindex", "allow_methods", "proxy_pass" /* and whatever will be used for CGI */} 
+# define SERVER_KEYWORDS {"listen", "server_name", "root", "client_max_body_size", "error_page", NULL}
+# define LOCATION_KEYWORDS {"root", "index", "autoindex", "allow_methods", "proxy_pass" /* and whatever will be used for CGI */, NULL} 
 
 typedef std::vector<ServerConfig>		ServerBlocks;
 typedef std::vector<AServerLocation*>	LocationBlocks;
@@ -36,7 +39,7 @@ class	ConfigParser
 
 		/*	To be called by parseConfigs()	*/
 			//	check if current server context is OK and load it to memory
-		static bool	serverContextOK(std::ifstream configFile);
+		static bool	serverBlockOK(std::ifstream configFile);
 			//	create a new server block
 		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	check syntax in block
@@ -47,6 +50,16 @@ class	ConfigParser
 		static bool	configsCheck(ServerBlocks &serverBlocks);
 		/*	==============================	*/
 
+		/*	To be called by serverBlockOK()	*/
+		static void		trimConfigLine(std::string &configLine);
+		static bool		serverBlockHeaderOK(std::string configLine);
+		static void		copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock);
+		/*	==============================	*/
+
+		/*	To be called by serverBlockHeaderOK()	*/
+		static int		wordCount(std::string configLine);
+		/*	==============================	*/
+
 		/*	To be called by syntaxCheck()	*/
 			//	check if current location context is OK
 		static bool	locationContextOK(std::ifstream configFile);
@@ -54,9 +67,9 @@ class	ConfigParser
 		static bool	directiveOK(std::string configLine);
 		/*	==============================	*/
 
-		/*	To be called by loadConfigs()	*/	/*|	is this copying right?|	*/
-		static ServerConfig		&loadServerConfig(std::ifstream configFile, ServerBlocks &serverBlocks);
-		static ServerLocation	&loadServerLocation(std::ifstream configFile, LocationBlocks &locationBlocks);
+		/*	To be called by loadConfigs()	*/
+		static ServerConfig		&loadServerConfig(/* struct goes here */, ServerBlocks &serverBlocks);
+		static ServerLocation	&loadServerLocation(/* struct goes here */, LocationBlocks &locationBlocks);
 		/*	==============================	*/
 
 			// to display in case of error in config file
@@ -68,8 +81,6 @@ class	ConfigParser
 };
 
 //	THESE ARE UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE
-int		wordCount(std::string configLine);
-void	trimConfigLine(std::string &configLine); // not a util, put back in class
 
 /*
 	keywords to accept for directives in each context
