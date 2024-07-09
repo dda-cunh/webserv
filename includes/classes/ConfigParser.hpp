@@ -63,13 +63,14 @@ class	ConfigParser
 			// initialize to 1 and increment after reading each line
 		static unsigned int		_lineNr;
 		static std::vector<std::string>	_strServerBlock;
-		static std::vector<std::string>	_locationRaw;
+		static std::vector<std::string>	_strLocationBlock;
 
 		//	DON'T FORGET DO ADD EXCEPTIONS
 };
 
 //	THESE ARE UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE
-int	wordCount(std::string configLine);
+int		wordCount(std::string configLine);
+void	trimConfigLine(std::string &configLine); // not a util, put back in class
 
 /*
 	keywords to accept for directives in each context

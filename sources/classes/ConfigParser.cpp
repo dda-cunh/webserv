@@ -10,6 +10,7 @@ void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfig
 	if (!configFile.is_open())
 		//	THROW EXCEPTION
 
+//	LINENR MUST BE UPDATED IN CASE OF EXCEPTION
 	while (!configFile.eof())
 	{
 		//	CHECK IF SERVER CONTEXT IS OK & LOAD IT TO MEMORY
@@ -31,17 +32,21 @@ void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfig
 
 }
 
-bool	ConfigParser::serverContectOK(std::ifstream configFile)
+bool	ConfigParser::serverContextOK(std::ifstream configFile)
 {
 	std::string	configLine;
 
 	while (std::getline(configFile, configLine))
 	{
-		//	trim comments + blank spaces
-		//	keep reading until a line with "server {" is found
-		//	copy to this->_strServerBlock until closing bracket is found
-		//	if no closing bracket found, clear vector & return false
+		if (!configLine.empty())
+		{
+			//	trim comments + blank spaces
+			trimConfigLine(configLine);
+			//	keep reading until a line with "server {" is found and
+			//		copy to this->_strServerBlock until closing bracket is found
+		}
 	}
+	//	if no closing bracket was found, clear vector & return false
 
 	return (true);
 }
@@ -81,6 +86,7 @@ ConfigParser::~ConfigParser(void)
 	return ;
 }
 
+
 //	UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE
 int	wordCount(std::string configLine)
 {
@@ -92,4 +98,31 @@ int	wordCount(std::string configLine)
 	while (strStream >> word)
 		wordsCounted++;
 	return (wordsCounted);
+}
+
+void	trimConfigLine(std::string &configLine) // not util, put this in class scope
+{
+	size_t	pos;
+
+	if (configLine.empty())
+		return ;
+
+	//	REMOVE COMMENTS
+	pos = configLine.find("#");
+	if (pos != configLine.npos)
+		configLine.erase(pos, configLine.size());
+	if (configLine.empty())
+		return ;
+
+	//	REMOVE ' ' AND '\t' FROM LEFT
+	pos = configLine.find_first_not_of(" \t");
+	if (pos != configLine.npos)
+		configLine.erase(0, pos);
+	if (configLine.empty())
+		return ;
+
+	//	REMOVE ' ' AND '\t' FROM RIGHT
+	pos = configLine.find_last_not_of(" \t");
+	if (pos != configLine.npos)
+		configLine.erase(pos + 1, configLine.size());
 }
