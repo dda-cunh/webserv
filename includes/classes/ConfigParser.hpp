@@ -18,7 +18,7 @@
 # define SERVER_KEYWORDS {"listen", "server_name", "root", "client_max_body_size", "error_page"}
 # define LOCATION_KEYWORDS {"root", "index", "autoindex", "allow_methods", "proxy_pass" /* and whatever will be used for CGI */} 
 
-typedef std::vector<ServerConfig>	ServerBlocks;
+typedef std::vector<ServerConfig>		ServerBlocks;
 typedef std::vector<AServerLocation*>	LocationBlocks;
 
 //	OPEN THE FILE AND WRITE IT ALL AT ONCE INTO MEMORY FOR EASIER INDEXING
@@ -28,7 +28,7 @@ class	ConfigParser
 {
 	public:
 
-		static void	parseConfigs(std::string *fileName);
+		static void	parseConfigs(std::string *fileName, ServerBlocks &serverConfigs);
 
 	private:
 		ConfigParser(void);
@@ -44,7 +44,7 @@ class	ConfigParser
 			//	load configs into object
 		static void	loadConfigs(std::string fileName, &serverBlocks); 
 			//	check if configs loaded are OK
-		static bool	configsCheck(&serverBlocks);
+		static bool	configsCheck(ServerBlocks &serverBlocks);
 		/*	==============================	*/
 
 		/*	To be called by syntaxCheck()	*/
