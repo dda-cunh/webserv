@@ -1,5 +1,6 @@
 .vscode/
 temp/
+test_files/uploaded_files/
 *.o
 webserv
 TODO.md
