@@ -1,7 +1,5 @@
 #include "../../includes/classes/ConfigParser.hpp"
 
-unsigned int	ConfigParser::_lineNr = 1;
-
 void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfigs)
 {
 	std::ifstream	configFile;
@@ -10,15 +8,14 @@ void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfig
 	if (!configFile.is_open())
 		//	THROW EXCEPTION
 
-//	LINENR MUST BE UPDATED IN CASE OF EXCEPTION
 	while (!configFile.eof())
 	{
 		//	CHECK IF SERVER CONTEXT IS OK & LOAD IT TO MEMORY
 		if (!this->serverContextOK(configFile))
-			//	THROW EXCEPTION
+			//	CLOSE FILE, THROW EXCEPTION
 		//	CHECK IF SYNTAX IS OK FOR CURRENT SERVER CONTEXT LOADED INTO RAM
 		if (!this->syntaxCheck(this->_strServerBlock))
-			//	THROW EXCEPTION
+			//	CLOSE FILE, THROW EXCEPTION
 		//	LOAD FROM STRINGS TO STRUCT & PASS AS ARGUMENT TO CONFIG CLASS CONSTRUCTOR
 		this->loadConfigs(this->_strServerBlock, serverConfigs);
 	//	RESET this->_strServerBlock
@@ -42,12 +39,14 @@ bool	ConfigParser::serverContextOK(std::ifstream configFile)
 		{
 			//	trim comments + blank spaces
 			trimConfigLine(configLine);
-			//	keep reading until a line with "server {" is found and
-			//		copy to this->_strServerBlock until closing bracket is found
+			if (configLine.empty())
+				continue ;	//	empty lines are to be ignored
+			else if (configLine.substr("server") == 0)
+				//	load into RAM and return true if block syntax OK; false otherwise
+			else
+				return (false);	//	nonempty line with anything other than "server" is not valid config
 		}
 	}
-	//	if no closing bracket was found, clear vector & return false
-
 	return (true);
 }
 

@@ -61,7 +61,6 @@ class	ConfigParser
 
 			// to display in case of error in config file
 			// initialize to 1 and increment after reading each line
-		static unsigned int		_lineNr;
 		static std::vector<std::string>	_strServerBlock;
 		static std::vector<std::string>	_strLocationBlock;
 
@@ -87,5 +86,5 @@ void	trimConfigLine(std::string &configLine); // not a util, put back in class
 			autoindex
 			allow_methods
 			proxy_pass
-			- how are we gonna handle CGI?
+			- whatever we'll use to handle CGI; check with the team
 */
