@@ -21,7 +21,7 @@ class Response
 		Response(Request const &);
 
 	private:
-		int 					_statusCode;
+		Http::STATUS_CODE		_statusCode;
 		StrStrMap 				_headers;
 		std::string 			_body;
 		std::string 			_response;
@@ -38,7 +38,6 @@ class Response
 		void 					handlePOSTMethod(Request const &);
 		void 					handleDELETEMethod(Request const &);
 
-		std::string				getHTTPStatus(int statusCode) const;
 		void					setErrorPages();
 
 		void 					setHeader(const std::string &, const std::string &);
@@ -47,7 +46,7 @@ class Response
 
 		void					readResource(std::string uri);
 		void					listDirectory(std::string &uri);
-		std::string 			getResponseWithoutBody() const; // Debug function, to be removed
+		std::string 			getResponseWithoutBody(); // Debug function, to be removed
 
         void					handleDirectory(std::string uri, bool is_directory_listing_enabled);
         void					handleDirectoryDefaultFile(std::string uri);

@@ -35,6 +35,8 @@ class Request
 
 		static std::string const	_no_such_header;
 
+		bool						parseFileContent(std::string &fileName, std::string &fileContent) const;
+
 	private:
 		int const					_client_fd;
 
@@ -56,4 +58,5 @@ class Request
 		void						readClient();
 
 		static unsigned int const	_max_request_size;
+
 };
