@@ -19,7 +19,7 @@ class Response
 		Response(Request const &);
 
 	private:
-		int 					_statusCode;
+		Http::STATUS_CODE		_statusCode;
 		StrStrMap 				_headers;
 		std::string 			_body;
 		std::string 			_response;
@@ -36,7 +36,6 @@ class Response
 		void 					handlePOSTMethod(Request const &);
 		void 					handleDELETEMethod(Request const &);
 
-		std::string				getHTTPStatus(int statusCode) const;
 		void					setErrorPages();
 
 		void 					setHeader(const std::string &, const std::string &);

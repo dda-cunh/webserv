@@ -20,6 +20,38 @@ namespace Http
 		return (Http::M_UNHANDLED);
 	}
 
+	std::string sToReasonPhrase(Http::STATUS_CODE & statusCode)
+	{
+		if (statusCode == Http::SC_OK)
+			return "OK";
+		else if (statusCode == Http::SC_CREATED)
+			return "Created";
+		else if (statusCode == Http::SC_NO_CONTENT)
+			return "No Content";
+		else if (statusCode == Http::SC_BAD_REQUEST)
+			return "Bad Request";
+		else if (statusCode == Http::SC_FORBIDDEN)
+			return "Forbidden";
+		else if (statusCode == Http::SC_NOT_FOUND)
+			return "Not Found";
+		else if (statusCode == Http::SC_METHOD_NOT_ALLOWED)
+			return "Method Not Allowed";
+		else if (statusCode == Http::SC_CONFLICT)
+			return "Conflict";
+		else if (statusCode == Http::SC_INTERNAL_SERVER_ERROR)
+			return "Internal Server Error";
+		else if (statusCode == Http::SC_NOT_IMPLEMENTED)
+			return "Not Implemented";
+		else if (statusCode == Http::SC_BAD_GATEWAY)
+			return "Bad Gateway";
+		else if (statusCode == Http::SC_SERVICE_UNAVAILABLE)
+			return "Service Unavailable";
+		else if (statusCode == Http::SC_VERSION_NOT_SUPPORTED)
+			return "HTTP Version Not Supported";
+		else
+			return "Unknown Status";
+	}
+
 	std::string		versionToString(Http::VERSION const& version)
 	{
 		if (version == Http::V_1_1)
