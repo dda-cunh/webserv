@@ -37,7 +37,7 @@ Response::~Response(void)
 
 /**************************************************************************/
 
-/********************************  HELPERS  *******************************/
+/**************************  HELPERS  / DEBUG  ****************************/
 
 std::string to_string(int value)
 {
@@ -46,7 +46,7 @@ std::string to_string(int value)
 	return ss.str();
 }
 
-bool resourceExists(std::string uri)
+bool resourceExists(std::string const &uri)
 {
 	std::ifstream file(uri.c_str());
 	return file.good();
@@ -61,6 +61,14 @@ std::string getResourceContentType(std::string uri)
 		return "text/css";
 	else if (extension == "js")
 		return "text/javascript";
+	else if (extension == "jpg" || extension == "jpeg")
+		return "image/jpeg";
+	else if (extension == "png")
+		return "image/png";
+	else if (extension == "gif")
+		return "image/gif";
+	else if (extension == "svg")
+		return "image/svg+xml";
 	else
 		return "text/plain";
 }
@@ -112,6 +120,31 @@ Response::Response(Request const &request)
 	dispatchRequestMethod();
 }
 
+std::string Response::getResponseWithoutBody() // Debug function, to be removed
+{
+	std::string responseWithoutBody;
+	responseWithoutBody += "HTTP/1.1 " + to_string(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
+	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
+		responseWithoutBody += it->first + ": " + it->second + CRLF;
+	responseWithoutBody += CRLF;
+	return responseWithoutBody;
+}
+
+bool is_directory(std::string uri)
+{
+	struct stat path_stat;
+	stat(uri.c_str(), &path_stat);
+	return S_ISDIR(path_stat.st_mode);
+}
+
+std::string constructUri(std::string uri, std::string root)
+{
+	if (uri == "/")
+		return root;
+	else
+		return root + "/" + uri;
+}
+
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
@@ -132,6 +165,7 @@ void Response::dispatchRequestMethod()
 	}
 	else
 	{
+		//TODO: get allowed methods from config, return 405 if not allowed
 		if (_request.method() == Http::M_GET)
 			this->handleGETMethod(_request);
 		else if (_request.method() == Http::M_POST)
@@ -145,7 +179,8 @@ void Response::dispatchRequestMethod()
 	}
 	setCommonHeaders();
 	setResponse();
-	Utils::log(response(), Utils::LOG_INFO);
+	Utils::log("Response:", Utils::LOG_INFO);
+	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
 }
 
 // TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
@@ -162,16 +197,18 @@ void Response::handlePOSTMethod(Request const &request)
 	std::string fileContent;
 	if (!request.parseFileContent(fileName, fileContent))
 	{
+		Utils::log("Error parsing file content", Utils::LOG_ERROR);	\
 		_statusCode = Http::SC_BAD_REQUEST;
 		readResource(_error_pages[_statusCode]);
 		return;
 	}
 
-	std::string filePath = "./uploaded_files/" + fileName; //TODO: Get this from config
+	std::string filePath = "test_files/uploaded_files/" + fileName; //TODO: Get this from config
 
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
 	{
+		Utils::log("Error opening file for writing", Utils::LOG_ERROR);	\
 		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
 		readResource(_error_pages[_statusCode]);
 		return;
@@ -182,6 +219,7 @@ void Response::handlePOSTMethod(Request const &request)
 
 	if (!outFile)
 	{
+		Utils::log("Error writing to file", Utils::LOG_ERROR);	\
 		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
 		readResource(_error_pages[_statusCode]);
 		return;
@@ -195,21 +233,79 @@ void Response::handlePOSTMethod(Request const &request)
 void Response::handleGETMethod(Request const &request)
 {
 	std::string uri = request.uri();
+	std::string root = "test_files/www";	  // TODO: get this from config
+	bool autoindex = true; // TODO: get this from config
 
-	if (!uri.empty() && uri[0] == '/')
-		uri = uri.substr(1);
+	uri = constructUri(uri, root);
 
-	if (!resourceExists(uri))
+	if (is_directory(uri))
+		handleDirectory(uri, autoindex);
+	else if (resourceExists(uri))
+		readResource(uri);
+	else
+		handleNotFound(uri);
+}
+
+void Response::handleDirectory(std::string uri, bool autoindex)
+{
+	if (uri[uri.size() - 1] == '/')
 	{
-		_statusCode = Http::SC_NOT_FOUND;
-		uri = _error_pages[_statusCode];
+		if (autoindex)
+			listDirectory(uri);
+		else
+			handleDirectoryDefaultFile(uri);
 	}
+	else
+	{
+		handleDirectoryDefaultFile(uri);
+	}
+}
+
+void Response::handleDirectoryDefaultFile(std::string uri)
+{
+	if (resourceExists(uri + "/index.html"))
+		readResource(uri + "/index.html");
+	else
+		handleNotFound(uri);
+}
+
+void Response::handleNotFound(std::string uri)
+{
+	_statusCode = Http::SC_NOT_FOUND;
+	uri = _error_pages[_statusCode];
 	readResource(uri);
+}
+
+void Response::listDirectory(std::string &uri) //TODO: return html
+{
+	DIR *dir;
+	struct dirent *ent;
+	std::string dir_listing;
+
+	if ((dir = opendir(uri.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			dir_listing += ent->d_name;
+			dir_listing += "\n";
+		}
+		closedir(dir);
+	}
+	else
+	{
+		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+		uri = _error_pages[_statusCode];
+		readResource(uri);
+		return;
+	}
+
+	_body = dir_listing;
+	setHeader("Content-Type", "text/plain");
 }
 
 void Response::readResource(std::string uri)
 {
-	std::ifstream file(uri.c_str());
+	std::ifstream file(uri.c_str(), std::ios::binary);
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	setHeader("Content-Type", getResourceContentType(uri));
 	_body = content;
@@ -217,7 +313,7 @@ void Response::readResource(std::string uri)
 
 /**************************************************************************/
 
-/********************************  GETTERS  *******************************/
+/*******************************  GETTERS  *******************************/
 
 std::string const &Response::response() const
 {
@@ -226,7 +322,7 @@ std::string const &Response::response() const
 
 /**************************************************************************/
 
-/********************************  SETTERS  *******************************/
+/*******************************  SETTERS  *******************************/
 
 void Response::setCommonHeaders()
 {
@@ -252,3 +348,4 @@ void Response::setErrorPages()
 {
 	_error_pages = dummyGetErrorPages();
 }
+

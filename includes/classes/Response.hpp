@@ -3,6 +3,8 @@
 #include "../webserv.hpp"
 # include "Request.hpp"
 #include <fstream>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #define NO_SUCH_HEADER ""
 
@@ -43,4 +45,11 @@ class Response
 		void 					setResponse();
 
 		void					readResource(std::string uri);
+		void					listDirectory(std::string &uri);
+		std::string 			getResponseWithoutBody(); // Debug function, to be removed
+
+        void					handleDirectory(std::string uri, bool is_directory_listing_enabled);
+        void					handleDirectoryDefaultFile(std::string uri);
+        void					handleNotFound(std::string uri);
+
 };
