@@ -1,28 +1,46 @@
 #include "../../includes/classes/ConfigParser.hpp"
 
-void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfigs)
+std::vector<std::string>	ConfigParser::_strServerBlock;
+
+static void	printStrConfig(std::vector<std::string> &strServerConfig)
+{
+	for (std::vector<std::string>::iterator bgn = strServerConfig.begin(); bgn < strServerConfig.end(); bgn++)
+		std::cout << *bgn << std::endl;
+}
+
+void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverConfigs*/)	//	UNCOMMENT
 {
 	std::ifstream	configFile;
 
 	configFile.open(fileName.c_str());
 	if (!configFile.is_open())
+	{
 		//	THROW EXCEPTION
+		//	TEST CODE
+		return ;
+		//	=========
+	}
 
 	while (!configFile.eof())
 	{
 		//	CHECK IF SERVER CONTEXT IS OK & LOAD IT TO MEMORY
-		if (!this->serverBlockOK(configFile))
+		if (!serverBlockOK(configFile))
 		{
 			configFile.close();
 			//	THROW EXCEPTION
+			//	TEST CODE
+			std::cout << "SERVER BLOCK NOT OK" << std::endl;
+			return ;
+			//	=========
 		}
 		//	LOAD FROM STRINGS TO STRUCT & PASS AS ARGUMENT TO CONFIG CLASS CONSTRUCTOR
-		this->loadConfigs(this->_strServerBlock, serverConfigs);
-		this->_strServerBlock.clear();
+//		loadConfigs(_strServerBlock, serverConfigs);	UNCOMMENT
+		printStrConfig(_strServerBlock);
+		_strServerBlock.clear();
 	}
 	configFile.close();
 
-	if (!this->configsCheck(serverConfigs))
+//	if (!configsCheck(serverConfigs))	UNCOMMENT
 		//	THROW EXCEPTION
 
 
@@ -33,23 +51,24 @@ void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfig
 
 	/*	Utils for ParseConfigs	*/
 
-bool	ConfigParser::serverBlockOK(std::ifstream configFile)
+bool	ConfigParser::serverBlockOK(std::ifstream &configFile)
 {
+	std::string	configLine;
+
 	while (std::getline(configFile, configLine))
 	{
 		//	trim comments + blank spaces
-		this->trimConfigLine(configLine);
+		trimConfigLine(configLine);
 		if (configLine.empty())
 			continue ;	//	empty lines are to be ignored
-		else if (this->serverBlockHeaderOK(configLine))
+		else if (serverBlockHeaderOK(configLine))
 		{
 			//	load into RAM and check if block syntax OK
-			this->_strServerBlock.push_back(configLine);
-			; // MAKE THIS BOOL THAT RETURNS FALSE IF "}" NOT OK 
-			if (!this->copyToVector(configFile, this->_strServerBlock) || !this->syntaxCheck(this->_strServerBlock));
+			_strServerBlock.push_back(configLine);
+			if (!copyToVector(configFile/*, _strServerBlock*/) /* || !syntaxCheck(_strServerBlock) */)	//	UNCOMMENT
 				return (false);
 		}
-		else
+		else if (!configFile.eof() && !configLine.empty())
 			return (false);	//	nonempty line with anything other than "server {" is not valid config
 	}
 	return (true);
@@ -92,54 +111,53 @@ bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
 
 	wordStream >> word1;
 	wordStream >> word2;
-	if (this->wordCount(configLine) == 2 \
-		&& word1 == "server" && word2 == "}")
-		return (true);
+	if (wordCount(configLine) == 2 \
+		&& word1 == "server" && word2 == "{")
+		return (true);	
 	else
 		return (false);
 }
 
-bool	ConfigParser::copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock)
+bool	ConfigParser::copyToVector(std::ifstream &configFile/*, std::vector<std::string> strBlock*/)	//	UNCOMMENT
 {
 	std::string		configLine;
 	int				braceLvl;
 
 	braceLvl = 1;
-	while (std::readline(configFile, configLine))
+	while (std::getline(configFile, configLine))
 	{
-		this->trimConfigLine(configLine);
+		trimConfigLine(configLine);
 		if (!configLine.empty())
 		{
 			switch (configLine.at(configLine.size() - 1))
 			{
 				case ('{'):
 					braceLvl++;
-					this->strServerBlock.push_back(configLine);
+					_strServerBlock.push_back(configLine);
 					break ;
 				case ('}'):
 					braceLvl--;
-					this->strServerBlock.push_back(configLine);
+					_strServerBlock.push_back(configLine);
 					break ;
 				case (';'):
-					this->strServerBlock.push_back(configLine);
+					_strServerBlock.push_back(configLine);
 					break ;
 				default:
-					return (false);					
+						return (false);										
 			}
 			if (braceLvl == 0)	
 				return (true);
 		}
 	}
-
 	return (false);	//	reached EOF and braceLvl != 0
 }
-
+/*
 bool	ConfigParser::syntaxCheck(std::vector<std::string> strServerBlock)
 {
 
 	return (true);
 }
-
+*/	//	UNCOMMENT
 /*	==============================	*/
 
 	/*	UTILS FOR serverBlockHeaderOK()	*/
@@ -154,8 +172,8 @@ unsigned int		ConfigParser::wordCount(std::string configLine)
 		wordsCounted++;
 	return (wordsCounted);
 }
-
-void	ConfigParser::loadConfigs(std::string fileName, /* CONFIGS CONTAINER */)
+/*
+void	ConfigParser::loadConfigs(std::string fileName, / CONFIGS CONTAINER *)
 {
 	std::ifstream	configFile;
 	std::string		configLine;
@@ -169,11 +187,11 @@ void	ConfigParser::loadConfigs(std::string fileName, /* CONFIGS CONTAINER */)
 	}
 }
 
-bool	ConfigParser::configsCheck(/* CONFIGS CONTAINER */)
+bool	ConfigParser::configsCheck(/ CONFIGS CONTAINER /)
 {
 	//	ARE WE REALLY GONNA NEED THIS?
 }
-
+*/
 ConfigParser::ConfigParser(void)
 {
 	return ;
@@ -184,5 +202,3 @@ ConfigParser::~ConfigParser(void)
 	return ;
 }
 
-
-//	UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE

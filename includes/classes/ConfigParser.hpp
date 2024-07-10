@@ -31,53 +31,53 @@ class	ConfigParser
 {
 	public:
 
-		static void	parseConfigs(std::string *fileName, ServerBlocks &serverConfigs);
-
-	private:
-		ConfigParser(void);
-		~ConfigParser(void);	
+		static void	parseConfigs(std::string fileName/*, ServerBlocks &serverConfigs*/);	//	UNCOMMENT
 
 		/*	To be called by parseConfigs()	*/
 			//	check if current server context is OK and load it to memory
-		static bool	serverBlockOK(std::ifstream configFile);
+		static bool	serverBlockOK(std::ifstream &configFile);
 			//	create a new server block
-		static bool	addServerBlock(std::vector<std::string> strServerBlock);
-			//	check syntax in block
+//		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	load configs into object
-		static void	loadConfigs(std::string fileName, &serverBlocks); 
+//		static void	loadConfigs(std::string fileName, &serverBlocks); 
 			//	check if configs loaded are OK
-		static bool	configsCheck(ServerBlocks &serverBlocks);
+//		static bool	configsCheck(ServerBlocks &serverBlocks);
 		/*	==============================	*/
 
 		/*	To be called by serverBlockOK()	*/
 		static void	trimConfigLine(std::string &configLine);	//	will also be called by copyToVector()
 		static bool	serverBlockHeaderOK(std::string configLine);
-		static bool	copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock);
-		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
+		static bool	copyToVector(std::ifstream &configFile/*, std::vector<std::string> strBlock*/);	//	UNCOMMENT
+//		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
 		/*	==============================	*/
 
 		/*	To be called by serverBlockHeaderOK()	*/
-		static int		wordCount(std::string configLine);
+		static unsigned int		wordCount(std::string configLine);
 		/*	==============================	*/
 
 		/*	To be called by syntaxCheck()	*/
 			//	check if current location context is OK
-		static bool	locationContextOK(std::ifstream configFile);
+//		static bool	locationContextOK(std::ifstream configFile);
 			//	check if current directive is OK - WILL BE CALLED BY THE 2 METHODS ABOVE
-		static bool	directiveOK(std::string configLine);
+//		static bool	directiveOK(std::string configLine);
 		/*	==============================	*/
 
 
 		static std::vector<std::string>	_strServerBlock;
-		static std::vector<std::string>	_strLocationBlock;
+//		static std::vector<std::string>	_strLocationBlock;
+
+	private:
+		ConfigParser(void);
+		~ConfigParser(void);	
+
 
 
 		//	DON'T FORGET DO ADD EXCEPTIONS
 
 
 		/*	prob not gonna use these	*/
-		static ServerConfig		&loadServerConfig(/* struct goes here */, ServerBlocks &serverBlocks);
-		static ServerLocation	&loadServerLocation(/* struct goes here */, LocationBlocks &locationBlocks);
+//		static ServerConfig		&loadServerConfig(/* struct goes here */, ServerBlocks &serverBlocks);
+//		static ServerLocation	&loadServerLocation(/* struct goes here */, LocationBlocks &locationBlocks);
 		/*	==============================	*/
 
 

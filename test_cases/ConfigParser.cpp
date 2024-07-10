@@ -143,10 +143,7 @@ bool	ConfigParser::copyToVector(std::ifstream &configFile/*, std::vector<std::st
 					_strServerBlock.push_back(configLine);
 					break ;
 				default:
-					if (configLine.find("location ") != 0)
 						return (false);										
-					else
-						_strServerBlock.push_back(configLine);
 			}
 			if (braceLvl == 0)	
 				return (true);

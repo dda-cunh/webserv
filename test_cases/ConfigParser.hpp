@@ -79,7 +79,7 @@ class	ConfigParser
 
 
 		static std::vector<std::string>	_strServerBlock;
-//		static std::vector<std::string>	_strLocationBlock;	UNCOMMENT
+//		static std::vector<std::string>	_strLocationBlock;
 
 	private:
 		ConfigParser(void);
