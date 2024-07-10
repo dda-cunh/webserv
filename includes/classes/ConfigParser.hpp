@@ -43,7 +43,6 @@ class	ConfigParser
 			//	create a new server block
 		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	check syntax in block
-		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
 			//	load configs into object
 		static void	loadConfigs(std::string fileName, &serverBlocks); 
 			//	check if configs loaded are OK
@@ -51,9 +50,10 @@ class	ConfigParser
 		/*	==============================	*/
 
 		/*	To be called by serverBlockOK()	*/
-		static void		trimConfigLine(std::string &configLine);
-		static bool		serverBlockHeaderOK(std::string configLine);
-		static void		copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock);
+		static void	trimConfigLine(std::string &configLine);	//	will also be called by copyToVector()
+		static bool	serverBlockHeaderOK(std::string configLine);
+		static bool	copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock);
+		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
 		/*	==============================	*/
 
 		/*	To be called by serverBlockHeaderOK()	*/
@@ -67,17 +67,20 @@ class	ConfigParser
 		static bool	directiveOK(std::string configLine);
 		/*	==============================	*/
 
-		/*	To be called by loadConfigs()	*/
+
+		static std::vector<std::string>	_strServerBlock;
+		static std::vector<std::string>	_strLocationBlock;
+
+
+		//	DON'T FORGET DO ADD EXCEPTIONS
+
+
+		/*	prob not gonna use these	*/
 		static ServerConfig		&loadServerConfig(/* struct goes here */, ServerBlocks &serverBlocks);
 		static ServerLocation	&loadServerLocation(/* struct goes here */, LocationBlocks &locationBlocks);
 		/*	==============================	*/
 
-			// to display in case of error in config file
-			// initialize to 1 and increment after reading each line
-		static std::vector<std::string>	_strServerBlock;
-		static std::vector<std::string>	_strLocationBlock;
 
-		//	DON'T FORGET DO ADD EXCEPTIONS
 };
 
 //	THESE ARE UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE

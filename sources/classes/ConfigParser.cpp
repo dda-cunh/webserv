@@ -81,7 +81,7 @@ void	ConfigParser::trimConfigLine(std::string &configLine) // not util, put this
 	//	REMOVE ' ' AND '\t' FROM RIGHT
 	pos = configLine.find_last_not_of(" \t");
 	if (pos != configLine.npos)
-		configLine.erase(pos + 1, configLine.size());
+		configLine.erase(pos + 1, configLine.size());	//	WILL IT SEGFAULT?
 }
 
 bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
@@ -99,30 +99,60 @@ bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
 		return (false);
 }
 
-void	ConfigParser::copyToVector()
+bool	ConfigParser::copyToVector(std::ifstream &configFile, std::vector<std::string> strBlock)
 {
+	std::string		configLine;
+	int				braceLvl;
 
-}
+	braceLvl = 1;
+	while (std::readline(configFile, configLine))
+	{
+		this->trimConfigLine(configLine);
+		if (!configLine.empty())
+		{
+			switch (configLine.at(configLine.size() - 1))
+			{
+				case ('{'):
+					braceLvl++;
+					this->strServerBlock.push_back(configLine);
+					break ;
+				case ('}'):
+					braceLvl--;
+					this->strServerBlock.push_back(configLine);
+					break ;
+				case (';'):
+					this->strServerBlock.push_back(configLine);
+					break ;
+				default:
+					return (false);					
+			}
+			if (braceLvl == 0)	
+				return (true);
+		}
+	}
 
-/*	==============================	*/
-
-	/*	UTILS FOR serverBlockHeaderOK()	*/
-int		ConfigParser::wordCount(std::string configLine)
-{
-	std::istringstream	strStream(configLine);
-	std::string			word;
-	int					wordsCounted;
-
-	words = 0;
-	while (strStream >> word)
-		wordsCounted++;
-	return (wordsCounted);
+	return (false);	//	reached EOF and braceLvl != 0
 }
 
 bool	ConfigParser::syntaxCheck(std::vector<std::string> strServerBlock)
 {
 
 	return (true);
+}
+
+/*	==============================	*/
+
+	/*	UTILS FOR serverBlockHeaderOK()	*/
+unsigned int		ConfigParser::wordCount(std::string configLine)
+{
+	std::istringstream	strStream(configLine);
+	std::string			word;
+	unsigned int		wordsCounted;
+
+	wordsCounted = 0;
+	while (strStream >> word)
+		wordsCounted++;
+	return (wordsCounted);
 }
 
 void	ConfigParser::loadConfigs(std::string fileName, /* CONFIGS CONTAINER */)
