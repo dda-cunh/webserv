@@ -9,13 +9,19 @@ static void	displayHelp(void)
 int	main(int argc, char **argv)
 {
 	std::string	fileName;
-	if (argc == 2)
+	switch (argc)
 	{
-		fileName = argv[1];
-		ConfigParser::parseConfigs(fileName);
+		case (1):
+			fileName = "configs/inception";
+			ConfigParser::parseConfigs(fileName);
+			break ;
+		case (2):
+			fileName = argv[1];
+			ConfigParser::parseConfigs(fileName);
+			break ;
+		default:
+			displayHelp();
 	}
-	else
-		displayHelp();
 	return (0);
 }
 

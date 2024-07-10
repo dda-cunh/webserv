@@ -2,6 +2,12 @@
 
 std::vector<std::string>	ConfigParser::_strServerBlock;
 
+static void	printStrConfig(std::vector<std::string> &strServerConfig)
+{
+	for (std::vector<std::string>::iterator bgn = strServerConfig.begin(); bgn < strServerConfig.end(); bgn++)
+		std::cout << *bgn << std::endl;
+}
+
 void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverConfigs*/)	//	UNCOMMENT
 {
 	std::ifstream	configFile;
@@ -29,6 +35,7 @@ void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverCon
 		}
 		//	LOAD FROM STRINGS TO STRUCT & PASS AS ARGUMENT TO CONFIG CLASS CONSTRUCTOR
 //		loadConfigs(_strServerBlock, serverConfigs);	UNCOMMENT
+		printStrConfig(_strServerBlock);
 		_strServerBlock.clear();
 	}
 	configFile.close();
@@ -61,7 +68,7 @@ bool	ConfigParser::serverBlockOK(std::ifstream &configFile)
 			if (!copyToVector(configFile/*, _strServerBlock*/) /* || !syntaxCheck(_strServerBlock) */)	//	UNCOMMENT
 				return (false);
 		}
-		else
+		else if (!configFile.eof() && !configLine.empty())
 			return (false);	//	nonempty line with anything other than "server {" is not valid config
 	}
 	return (true);
@@ -105,8 +112,8 @@ bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
 	wordStream >> word1;
 	wordStream >> word2;
 	if (wordCount(configLine) == 2 \
-		&& word1 == "server" && word2 == "}")
-		return (true);
+		&& word1 == "server" && word2 == "{")
+		return (true);	
 	else
 		return (false);
 }
@@ -136,13 +143,15 @@ bool	ConfigParser::copyToVector(std::ifstream &configFile/*, std::vector<std::st
 					_strServerBlock.push_back(configLine);
 					break ;
 				default:
-					return (false);					
+					if (configLine.find("location ") != 0)
+						return (false);										
+					else
+						_strServerBlock.push_back(configLine);
 			}
 			if (braceLvl == 0)	
 				return (true);
 		}
 	}
-
 	return (false);	//	reached EOF and braceLvl != 0
 }
 /*
