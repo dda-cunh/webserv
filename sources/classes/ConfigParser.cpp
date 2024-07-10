@@ -1,6 +1,7 @@
 #include "../../includes/classes/ConfigParser.hpp"
 
 std::vector<std::string>	ConfigParser::_strServerBlock;
+std::vector<std::string>	ConfigParser::_strLocationBlock;
 
 static void	printStrConfig(std::vector<std::string> &strServerConfig)
 {
@@ -16,9 +17,11 @@ void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverCon
 	if (!configFile.is_open())
 	{
 		//	THROW EXCEPTION
+
 		//	TEST CODE
 		return ;
 		//	=========
+
 	}
 
 	while (!configFile.eof())
@@ -28,19 +31,25 @@ void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverCon
 		{
 			configFile.close();
 			//	THROW EXCEPTION
+
 			//	TEST CODE
 			std::cout << "SERVER BLOCK NOT OK" << std::endl;
 			return ;
 			//	=========
+
 		}
 		//	LOAD FROM STRINGS TO STRUCT & PASS AS ARGUMENT TO CONFIG CLASS CONSTRUCTOR
-//		loadConfigs(_strServerBlock, serverConfigs);	UNCOMMENT
+		loadConfigs(_strServerBlock, serverConfigs);
+
+		//	TEST CODE
 		printStrConfig(_strServerBlock);
+		//	=========
+
 		_strServerBlock.clear();
 	}
 	configFile.close();
 
-//	if (!configsCheck(serverConfigs))	UNCOMMENT
+	if (!configsCheck(serverConfigs))
 		//	THROW EXCEPTION
 
 
@@ -65,7 +74,7 @@ bool	ConfigParser::serverBlockOK(std::ifstream &configFile)
 		{
 			//	load into RAM and check if block syntax OK
 			_strServerBlock.push_back(configLine);
-			if (!copyToVector(configFile/*, _strServerBlock*/) /* || !syntaxCheck(_strServerBlock) */)	//	UNCOMMENT
+			if (!copyToVector(configFile) || !syntaxCheck(_strServerBlock) )
 				return (false);
 		}
 		else if (!configFile.eof() && !configLine.empty())
@@ -118,7 +127,7 @@ bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
 		return (false);
 }
 
-bool	ConfigParser::copyToVector(std::ifstream &configFile/*, std::vector<std::string> strBlock*/)	//	UNCOMMENT
+bool	ConfigParser::copyToVector(std::ifstream &configFile)
 {
 	std::string		configLine;
 	int				braceLvl;
@@ -151,13 +160,15 @@ bool	ConfigParser::copyToVector(std::ifstream &configFile/*, std::vector<std::st
 	}
 	return (false);	//	reached EOF and braceLvl != 0
 }
-/*
+
 bool	ConfigParser::syntaxCheck(std::vector<std::string> strServerBlock)
 {
-
+	//	READ EACH STRING IN VECTOR
+	//	CHECK IF IT STARTS WITH ANY ACCEPTED KEYWORDS (DEPENDS ON CONTEXT)
+	//		FUCK AROUND WITH NGINX TO GET AN IDEA OF THE RIGHT SYNTAX FOR EACH KEYWORD
 	return (true);
 }
-*/	//	UNCOMMENT
+
 /*	==============================	*/
 
 	/*	UTILS FOR serverBlockHeaderOK()	*/

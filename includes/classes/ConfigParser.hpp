@@ -36,10 +36,10 @@ class	ConfigParser
 		/*	To be called by parseConfigs()	*/
 			//	check if current server context is OK and load it to memory
 		static bool	serverBlockOK(std::ifstream &configFile);
-			//	create a new server block
-//		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	load configs into object
 //		static void	loadConfigs(std::string fileName, &serverBlocks); 
+			//	create a new server block
+//		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	check if configs loaded are OK
 //		static bool	configsCheck(ServerBlocks &serverBlocks);
 		/*	==============================	*/
@@ -47,8 +47,8 @@ class	ConfigParser
 		/*	To be called by serverBlockOK()	*/
 		static void	trimConfigLine(std::string &configLine);	//	will also be called by copyToVector()
 		static bool	serverBlockHeaderOK(std::string configLine);
-		static bool	copyToVector(std::ifstream &configFile/*, std::vector<std::string> strBlock*/);	//	UNCOMMENT
-//		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
+		static bool	copyToVector(std::ifstream &configFile);
+		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
 		/*	==============================	*/
 
 		/*	To be called by serverBlockHeaderOK()	*/
@@ -64,11 +64,11 @@ class	ConfigParser
 
 
 		static std::vector<std::string>	_strServerBlock;
-//		static std::vector<std::string>	_strLocationBlock;
+		static std::vector<std::string>	_strLocationBlock;
 
 	private:
 		ConfigParser(void);
-		~ConfigParser(void);	
+		~ConfigParser(void);
 
 
 
@@ -83,7 +83,6 @@ class	ConfigParser
 
 };
 
-//	THESE ARE UTIL FUNCTIONS; MOVE TO UTILS.HPP BEFORE MERGE
 
 /*
 	keywords to accept for directives in each context
