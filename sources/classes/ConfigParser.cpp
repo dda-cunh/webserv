@@ -18,7 +18,7 @@ void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfig
 		}
 		//	LOAD FROM STRINGS TO STRUCT & PASS AS ARGUMENT TO CONFIG CLASS CONSTRUCTOR
 		this->loadConfigs(this->_strServerBlock, serverConfigs);
-	//	RESET this->_strServerBlock
+		this->_strServerBlock.clear();
 	}
 	configFile.close();
 
