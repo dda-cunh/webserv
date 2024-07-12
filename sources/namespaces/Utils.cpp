@@ -62,4 +62,34 @@ namespace Utils
 			}
 		}
 	}
+
+	std::string 	intToString(int const& value)
+	{
+		std::stringstream ss;
+		ss << value;
+		return ss.str();
+	}
+
+	std::string getCurrentDate()
+	{
+		time_t now = time(0);
+		struct tm tstruct;
+		char buf[80];
+		tstruct = *gmtime(&now);
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tstruct);
+		return buf;
+	}
+
+	bool isDirectory(std::string const& uri)
+	{
+		struct stat path_stat;
+		stat(uri.c_str(), &path_stat);
+		return S_ISDIR(path_stat.st_mode);
+	}
+
+	bool resourceExists(std::string const &uri)
+	{
+		std::ifstream file(uri.c_str());
+		return file.good();
+	}
 }
