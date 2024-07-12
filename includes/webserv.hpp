@@ -18,6 +18,7 @@
 #include "namespaces/Network.hpp"
 #include "namespaces/Utils.hpp"
 #include "namespaces/Http.hpp"
+#include "namespaces/Directory.hpp"
 
 /********************************  CLASSES  *******************************/
 class	ExceptionMaker;

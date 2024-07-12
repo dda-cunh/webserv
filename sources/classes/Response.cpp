@@ -39,19 +39,6 @@ Response::~Response(void)
 
 /**************************  HELPERS  / DEBUG  ****************************/
 
-std::string to_string(int value)
-{
-	std::stringstream ss;
-	ss << value;
-	return ss.str();
-}
-
-bool resourceExists(std::string const &uri)
-{
-	std::ifstream file(uri.c_str());
-	return file.good();
-}
-
 std::string getResourceContentType(std::string uri)
 {
 	std::string extension = uri.substr(uri.find_last_of(".") + 1);
@@ -73,17 +60,7 @@ std::string getResourceContentType(std::string uri)
 		return "text/plain";
 }
 
-std::string getCurrentDate()
-{
-	time_t now = time(0);
-	struct tm tstruct;
-	char buf[80];
-	tstruct = *gmtime(&now);
-	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tstruct);
-	return buf;
-}
-
-// TODO: Remove this dummy function once config can be extracted from elsewhere
+// TODO: Get this from config and remove function
 IntStrMap dummyGetErrorPages()
 {
 	IntStrMap error_pages;
@@ -105,6 +82,24 @@ IntStrMap dummyGetErrorPages()
 	return error_pages;
 }
 
+std::string Response::getResponseWithoutBody() // Debug function, to be removed
+{
+	std::string responseWithoutBody;
+	responseWithoutBody += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
+	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
+		responseWithoutBody += it->first + ": " + it->second + CRLF;
+	responseWithoutBody += CRLF;
+	return responseWithoutBody;
+}
+
+std::string constructUri(std::string uri, std::string root)
+{
+	if (uri == "/")
+		return root;
+	else
+		return root + "/" + uri;
+}
+
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
@@ -118,31 +113,6 @@ Response::Response(Request const &request)
 {
 	setErrorPages();
 	dispatchRequestMethod();
-}
-
-std::string Response::getResponseWithoutBody() // Debug function, to be removed
-{
-	std::string responseWithoutBody;
-	responseWithoutBody += "HTTP/1.1 " + to_string(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
-	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
-		responseWithoutBody += it->first + ": " + it->second + CRLF;
-	responseWithoutBody += CRLF;
-	return responseWithoutBody;
-}
-
-bool is_directory(std::string uri)
-{
-	struct stat path_stat;
-	stat(uri.c_str(), &path_stat);
-	return S_ISDIR(path_stat.st_mode);
-}
-
-std::string constructUri(std::string uri, std::string root)
-{
-	if (uri == "/")
-		return root;
-	else
-		return root + "/" + uri;
 }
 
 /**************************************************************************/
@@ -165,7 +135,7 @@ void Response::dispatchRequestMethod()
 	}
 	else
 	{
-		//TODO: get allowed methods from config, return 405 if not allowed
+		// TODO: get allowed methods from config, return 405 if not allowed
 		if (_request.method() == Http::M_GET)
 			this->handleGETMethod(_request);
 		else if (_request.method() == Http::M_POST)
@@ -197,18 +167,18 @@ void Response::handlePOSTMethod(Request const &request)
 	std::string fileContent;
 	if (!request.parseFileContent(fileName, fileContent))
 	{
-		Utils::log("Error parsing file content", Utils::LOG_ERROR);	\
+		Utils::log("Error parsing file content", Utils::LOG_ERROR);
 		_statusCode = Http::SC_BAD_REQUEST;
 		readResource(_error_pages[_statusCode]);
 		return;
 	}
 
-	std::string filePath = "test_files/uploaded_files/" + fileName; //TODO: Get this from config
+	std::string filePath = "test_files/uploaded_files/" + fileName; // TODO: Get this from config
 
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
 	{
-		Utils::log("Error opening file for writing", Utils::LOG_ERROR);	\
+		Utils::log("Error opening file for writing", Utils::LOG_ERROR);
 		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
 		readResource(_error_pages[_statusCode]);
 		return;
@@ -219,7 +189,7 @@ void Response::handlePOSTMethod(Request const &request)
 
 	if (!outFile)
 	{
-		Utils::log("Error writing to file", Utils::LOG_ERROR);	\
+		Utils::log("Error writing to file", Utils::LOG_ERROR);
 		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
 		readResource(_error_pages[_statusCode]);
 		return;
@@ -227,80 +197,36 @@ void Response::handlePOSTMethod(Request const &request)
 
 	_statusCode = Http::SC_CREATED;
 	setHeader("Location", filePath);
-	_body = "File uploaded successfully"; //TODO: Return HTML in the body
+	_body = "File uploaded successfully"; // TODO: Return HTML in the body
 }
 
 void Response::handleGETMethod(Request const &request)
 {
 	std::string uri = request.uri();
-	std::string root = "test_files/www";	  // TODO: get this from config
-	bool autoindex = true; // TODO: get this from config
+	std::string root = "test_files/www"; // TODO: get this from config
+	bool autoindex = true;				 // TODO: get this from config
 
 	uri = constructUri(uri, root);
 
-	if (is_directory(uri))
-		handleDirectory(uri, autoindex);
-	else if (resourceExists(uri))
-		readResource(uri);
-	else
-		handleNotFound(uri);
-}
-
-void Response::handleDirectory(std::string uri, bool autoindex)
-{
-	if (uri[uri.size() - 1] == '/')
+	if (Utils::isDirectory(uri))
 	{
-		if (autoindex)
-			listDirectory(uri);
+		Directory::Result result = Directory::handleDirectory(uri, autoindex);
+		_statusCode = result.statusCode;
+		uri = result.path;
+		if (_statusCode == Http::SC_OK)
+			readResource(uri);
 		else
-			handleDirectoryDefaultFile(uri);
+			readResource(_error_pages[_statusCode]);
 	}
-	else
+	else if (Utils::resourceExists(uri))
 	{
-		handleDirectoryDefaultFile(uri);
-	}
-}
-
-void Response::handleDirectoryDefaultFile(std::string uri)
-{
-	if (resourceExists(uri + "/index.html"))
-		readResource(uri + "/index.html");
-	else
-		handleNotFound(uri);
-}
-
-void Response::handleNotFound(std::string uri)
-{
-	_statusCode = Http::SC_NOT_FOUND;
-	uri = _error_pages[_statusCode];
-	readResource(uri);
-}
-
-void Response::listDirectory(std::string &uri) //TODO: return html
-{
-	DIR *dir;
-	struct dirent *ent;
-	std::string dir_listing;
-
-	if ((dir = opendir(uri.c_str())) != NULL)
-	{
-		while ((ent = readdir(dir)) != NULL)
-		{
-			dir_listing += ent->d_name;
-			dir_listing += "\n";
-		}
-		closedir(dir);
-	}
-	else
-	{
-		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
-		uri = _error_pages[_statusCode];
 		readResource(uri);
-		return;
 	}
-
-	_body = dir_listing;
-	setHeader("Content-Type", "text/plain");
+	else
+	{
+		_statusCode = Http::SC_NOT_FOUND;
+		readResource(_error_pages[_statusCode]);
+	}
 }
 
 void Response::readResource(std::string uri)
@@ -327,8 +253,8 @@ std::string const &Response::response() const
 void Response::setCommonHeaders()
 {
 	setHeader("Server", "webserv/0.1");
-	setHeader("Content-Length", to_string(_body.length()));
-	setHeader("Date", getCurrentDate());
+	setHeader("Content-Length", Utils::intToString(_body.length()));
+	setHeader("Date", Utils::getCurrentDate());
 }
 
 void Response::setHeader(const std::string &key, const std::string &value)
@@ -338,7 +264,7 @@ void Response::setHeader(const std::string &key, const std::string &value)
 
 void Response::setResponse()
 {
-	_response += "HTTP/1.1 " + to_string(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
+	_response += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
 	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
 		_response += it->first + ": " + it->second + CRLF;
 	_response += CRLF + _body;
@@ -348,4 +274,3 @@ void Response::setErrorPages()
 {
 	_error_pages = dummyGetErrorPages();
 }
-
