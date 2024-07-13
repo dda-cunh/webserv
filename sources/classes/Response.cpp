@@ -4,7 +4,7 @@
 
 /****************************  CANNONICAL FORM  ****************************/
 
-Response::Response(void)
+Response::Response()
 	: _statusCode(Http::SC_OK),
 	  _headers(),
 	  _body(),
@@ -31,7 +31,7 @@ Response &Response::operator=(Response const &rhs)
 	return (*this);
 }
 
-Response::~Response(void)
+Response::~Response()
 {
 }
 
@@ -44,20 +44,19 @@ std::string getResourceContentType(std::string uri)
 	std::string extension = uri.substr(uri.find_last_of(".") + 1);
 	if (extension == "html")
 		return "text/html";
-	else if (extension == "css")
+	if (extension == "css")
 		return "text/css";
-	else if (extension == "js")
+	if (extension == "js")
 		return "text/javascript";
-	else if (extension == "jpg" || extension == "jpeg")
+	if (extension == "jpg" || extension == "jpeg")
 		return "image/jpeg";
-	else if (extension == "png")
+	if (extension == "png")
 		return "image/png";
-	else if (extension == "gif")
+	if (extension == "gif")
 		return "image/gif";
-	else if (extension == "svg")
+	if (extension == "svg")
 		return "image/svg+xml";
-	else
-		return "text/plain";
+	return "text/plain";
 }
 
 // TODO: Get this from config and remove function
@@ -82,7 +81,7 @@ IntStrMap dummyGetErrorPages()
 	return error_pages;
 }
 
-std::string Response::getResponseWithoutBody() // Debug function, to be removed
+std::string Response::getResponseWithoutBody() // TODO: Debug function, to be removed
 {
 	std::string responseWithoutBody;
 	responseWithoutBody += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
@@ -90,14 +89,6 @@ std::string Response::getResponseWithoutBody() // Debug function, to be removed
 		responseWithoutBody += it->first + ": " + it->second + CRLF;
 	responseWithoutBody += CRLF;
 	return responseWithoutBody;
-}
-
-std::string constructUri(std::string uri, std::string root)
-{
-	if (uri == "/")
-		return root;
-	else
-		return root + "/" + uri;
 }
 
 /**************************************************************************/
@@ -112,7 +103,7 @@ Response::Response(Request const &request)
 	  _request(request)
 {
 	setErrorPages();
-	dispatchRequestMethod();
+	dispatchMethod();
 }
 
 /**************************************************************************/
@@ -122,30 +113,25 @@ Response::Response(Request const &request)
 /**
  * @brief Dispatches the request method.
  *
- * Checks the request flag and method, sets the appropriate status code, headers, and body,
- * calls the relevant method handler and sets response string.
- * @param request The request to dispatch.
+ * Calls the relevant method handler and sets response string.
  */
-void Response::dispatchRequestMethod()
+void Response::dispatchMethod()
 {
 	if (_request.flag() == _400)
 	{
-		_statusCode = Http::SC_BAD_REQUEST;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
 	}
 	else
 	{
-		// TODO: get allowed methods from config, return 405 if not allowed
-		if (_request.method() == Http::M_GET)
-			this->handleGETMethod(_request);
+		std::vector<Http::METHOD> allowedMethods;	//
+		allowedMethods.push_back(Http::M_GET);		//
+		allowedMethods.push_back(Http::M_POST);		// TODO: Get this from config
+		if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
+			handleMethodNotAllowed();
+		else if (_request.method() == Http::M_GET)
+			handleGETMethod();
 		else if (_request.method() == Http::M_POST)
-			this->handlePOSTMethod(_request);
-		else
-		{
-			_statusCode = Http::SC_METHOD_NOT_ALLOWED;
-			setHeader("Allow", "GET");
-			readResource(_error_pages[_statusCode]);
-		}
+			handlePOSTMethod();
 	}
 	setCommonHeaders();
 	setResponse();
@@ -154,59 +140,48 @@ void Response::dispatchRequestMethod()
 }
 
 // TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
-void Response::handlePOSTMethod(Request const &request)
+void Response::handlePOSTMethod()
 {
-	if (request.header("content-type").find("multipart/form-data") == std::string::npos)
+	if (_request.header("content-type").find("multipart/form-data") == std::string::npos)
 	{
-		_statusCode = Http::SC_BAD_REQUEST;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
 		return;
 	}
-
 	std::string fileName;
 	std::string fileContent;
-	if (!request.parseFileContent(fileName, fileContent))
+	if (!_request.parseFileContent(fileName, fileContent))
 	{
 		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		_statusCode = Http::SC_BAD_REQUEST;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
 		return;
 	}
-
 	std::string filePath = "test_files/uploaded_files/" + fileName; // TODO: Get this from config
-
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
 	{
 		Utils::log("Error opening file for writing", Utils::LOG_ERROR);
-		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_INTERNAL_SERVER_ERROR);
 		return;
 	}
-
 	outFile.write(fileContent.data(), fileContent.size());
 	outFile.close();
-
 	if (!outFile)
 	{
 		Utils::log("Error writing to file", Utils::LOG_ERROR);
-		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_INTERNAL_SERVER_ERROR);
 		return;
 	}
-
 	_statusCode = Http::SC_CREATED;
 	setHeader("Location", filePath);
 	_body = "File uploaded successfully"; // TODO: Return HTML in the body
 }
 
-void Response::handleGETMethod(Request const &request)
+void Response::handleGETMethod()
 {
-	std::string uri = request.uri();
 	std::string root = "test_files/www"; // TODO: get this from config
 	bool autoindex = true;				 // TODO: get this from config
 
-	uri = constructUri(uri, root);
+	std::string uri = (_request.uri() == "/") ? root : root + "/" + _request.uri();
 
 	if (Utils::isDirectory(uri))
 	{
@@ -224,9 +199,21 @@ void Response::handleGETMethod(Request const &request)
 	}
 	else
 	{
-		_statusCode = Http::SC_NOT_FOUND;
-		readResource(_error_pages[_statusCode]);
+		setStatusAndReadErrorPage(Http::SC_NOT_FOUND);
 	}
+}
+
+void Response::handleMethodNotAllowed()
+{
+	_statusCode = Http::SC_METHOD_NOT_ALLOWED;
+	std::vector<Http::METHOD> allowedMethods;
+	allowedMethods.push_back(Http::M_GET);
+	allowedMethods.push_back(Http::M_POST); // TODO: Get this from config
+	std::string allowedMethodsStr;
+	for (size_t i = 0; i < allowedMethods.size(); ++i)
+		allowedMethodsStr += Http::methodToString(allowedMethods[i]) + (i < allowedMethods.size() - 1 ? ", " : "");
+	setHeader("Allow", allowedMethodsStr);
+	readResource(_error_pages[_statusCode]);
 }
 
 void Response::readResource(std::string uri)
@@ -235,6 +222,12 @@ void Response::readResource(std::string uri)
 	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	setHeader("Content-Type", getResourceContentType(uri));
 	_body = content;
+}
+
+void Response::setStatusAndReadErrorPage(Http::STATUS_CODE statusCode)
+{
+	_statusCode = statusCode;
+	readResource(_error_pages[_statusCode]);
 }
 
 /**************************************************************************/

@@ -3,6 +3,9 @@
 #include "../webserv.hpp"
 # include "Request.hpp"
 
+#include <vector>
+#include <algorithm> // std::find
+
 #define NO_SUCH_HEADER ""
 
 /**
@@ -29,18 +32,18 @@ class Response
 		Response(Response const &src);
 		Response &operator=(Response const &rhs);
 
-		void 					dispatchRequestMethod();
-
-		void 					handleGETMethod(Request const &);
-		void 					handlePOSTMethod(Request const &);
-		void 					handleDELETEMethod(Request const &);
+		void 					dispatchMethod();
+		void 					handleGETMethod();
+		void 					handlePOSTMethod();
+		void 					handleDELETEMethod();
+		void 					handleMethodNotAllowed();
 
 		void					setErrorPages();
-
 		void 					setHeader(const std::string &, const std::string &);
 		void 					setCommonHeaders();
 		void 					setResponse();
 
 		void					readResource(std::string uri);
+		void					setStatusAndReadErrorPage(Http::STATUS_CODE statusCode);
 		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
 };
