@@ -74,7 +74,7 @@ bool	ConfigParser::serverBlockOK(std::ifstream &configFile)
 		{
 			//	load into RAM and check if block syntax OK
 			_strServerBlock.push_back(configLine);
-			if (!copyToVector(configFile) || !syntaxCheck(_strServerBlock) )
+			if (!copyToVector(configFile) || !syntaxCheck(SERVER_KEYWORDS) )
 				return (false);
 		}
 		else if (!configFile.eof() && !configLine.empty())
@@ -141,6 +141,8 @@ bool	ConfigParser::copyToVector(std::ifstream &configFile)
 			switch (configLine.at(configLine.size() - 1))
 			{
 				case ('{'):
+					if (configLine.find("location") != 0)
+						return (false);
 					braceLvl++;
 					_strServerBlock.push_back(configLine);
 					break ;
@@ -161,11 +163,12 @@ bool	ConfigParser::copyToVector(std::ifstream &configFile)
 	return (false);	//	reached EOF and braceLvl != 0
 }
 
-bool	ConfigParser::syntaxCheck(std::vector<std::string> strServerBlock)
+bool	ConfigParser::syntaxCheck(char *keywords)
 {
 	//	READ EACH STRING IN VECTOR
-	//	CHECK IF IT STARTS WITH ANY ACCEPTED KEYWORDS (DEPENDS ON CONTEXT)
-	//		FUCK AROUND WITH NGINX TO GET AN IDEA OF THE RIGHT SYNTAX FOR EACH KEYWORD
+	//	CHECK IF IT STARTS WITH ANY ACCEPTED KEYWORDS
+	//	EACH LINE MUST HAVE THE APPROPRIATE NR OF WORDS (DEPENDS ON KEYWORD?)
+	//	WHEN KEYWORD "location" IS FOUND, CALL FUNCTION TO CHECK SYNTAX OF LOCATION BLOCK
 	return (true);
 }
 

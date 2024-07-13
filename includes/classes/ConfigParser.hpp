@@ -48,7 +48,7 @@ class	ConfigParser
 		static void	trimConfigLine(std::string &configLine);	//	will also be called by copyToVector()
 		static bool	serverBlockHeaderOK(std::string configLine);
 		static bool	copyToVector(std::ifstream &configFile);
-		static bool	syntaxCheck(std::vector<std::string> strServerBlock);
+		static bool	syntaxCheck(char *keywords);	//	HUH... MAYBE WE'LL NEED TO USE A FUNCTION FOR EACH BLOCK TYPE?
 		/*	==============================	*/
 
 		/*	To be called by serverBlockHeaderOK()	*/
