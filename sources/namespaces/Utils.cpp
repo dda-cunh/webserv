@@ -80,13 +80,6 @@ namespace Utils
 		return buf;
 	}
 
-	bool isDirectory(std::string const& uri)
-	{
-		struct stat path_stat;
-		stat(uri.c_str(), &path_stat);
-		return S_ISDIR(path_stat.st_mode);
-	}
-
 	bool resourceExists(std::string const &uri)
 	{
 		std::ifstream file(uri.c_str());
