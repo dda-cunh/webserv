@@ -81,6 +81,17 @@ IntStrMap dummyGetErrorPages()
 	return error_pages;
 }
 
+// TODO: Get this from config and remove function
+StrStrMap dummyGetRedirections()
+{
+	StrStrMap redirections;
+
+	redirections["/old-path.html"] = "/new-path.html";
+	redirections["/old-file"] = "/new-file";
+
+	return redirections;
+}
+
 std::string Response::getResponseWithoutBody() // TODO: Debug function, to be removed
 {
 	std::string responseWithoutBody;
@@ -100,9 +111,10 @@ Response::Response(Request const &request)
 	  _headers(),
 	  _body(),
 	  _response(),
-	  _request(request)
+	  _request(request),
+	  _error_pages(dummyGetErrorPages()),
+	  _redirections(dummyGetRedirections())
 {
-	setErrorPages();
 	dispatchMethod();
 }
 
@@ -121,11 +133,14 @@ void Response::dispatchMethod()
 	{
 		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
 	}
+	else if (isRedirection())
+	{
+	}
 	else
 	{
-		std::vector<Http::METHOD> allowedMethods;	//
-		allowedMethods.push_back(Http::M_GET);		//
-		allowedMethods.push_back(Http::M_POST);		// TODO: Get this from config
+		std::vector<Http::METHOD> allowedMethods; //
+		allowedMethods.push_back(Http::M_GET);	  //
+		allowedMethods.push_back(Http::M_POST);	  // TODO: Get this from config
 		if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
 			handleMethodNotAllowed();
 		else if (_request.method() == Http::M_GET)
@@ -228,6 +243,18 @@ void Response::setStatusAndReadErrorPage(Http::STATUS_CODE statusCode)
 {
 	_statusCode = statusCode;
 	readResource(_error_pages[_statusCode]);
+}
+
+bool Response::isRedirection()
+{
+	std::map<std::string, std::string>::iterator it = _redirections.find(_request.uri());
+	if (it != _redirections.end())
+	{
+		_statusCode = Http::SC_FOUND;
+		setHeader("Location", it->second);
+		return true;
+	}
+	return false;
 }
 
 /**************************************************************************/

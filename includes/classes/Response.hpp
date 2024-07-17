@@ -27,6 +27,7 @@ class Response
 		std::string 			_response;
 		Request					_request;
 		IntStrMap				_error_pages;
+		StrStrMap				_redirections;
 
 		Response();
 		Response(Response const &src);
@@ -46,4 +47,5 @@ class Response
 		void					readResource(std::string uri);
 		void					setStatusAndReadErrorPage(Http::STATUS_CODE statusCode);
 		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
+		bool 					isRedirection();
 };

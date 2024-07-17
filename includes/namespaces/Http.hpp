@@ -27,6 +27,7 @@ namespace Http
 		SC_OK = 200,
 		SC_CREATED = 201,
 		SC_NO_CONTENT = 204, //The most common success code for DELETE
+		SC_FOUND = 302,
 		SC_BAD_REQUEST = 400,
 		SC_FORBIDDEN = 403, //Getting a resource
 		SC_NOT_FOUND = 404,
