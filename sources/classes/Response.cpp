@@ -80,6 +80,15 @@ IntStrMap dummyGetErrorPages()
 
 	return error_pages;
 }
+// TODO: Get this from config and remove function
+std::vector<Http::METHOD> getAllowedMethods() {
+    std::vector<Http::METHOD> allowedMethods;
+    allowedMethods.push_back(Http::M_GET);
+    allowedMethods.push_back(Http::M_DELETE);
+    allowedMethods.push_back(Http::M_POST);
+    // Add more methods or retrieve from config as needed
+    return allowedMethods;
+}
 
 std::string Response::getResponseWithoutBody() // TODO: Debug function, to be removed
 {
@@ -89,6 +98,44 @@ std::string Response::getResponseWithoutBody() // TODO: Debug function, to be re
 		responseWithoutBody += it->first + ": " + it->second + CRLF;
 	responseWithoutBody += CRLF;
 	return responseWithoutBody;
+}
+
+void Response::handleFileList()
+{
+	std::string directory = "test_files/uploads"; // TODO: Get this from config
+	std::vector<std::string> files = Directory::listFiles(directory);
+
+	std::ostringstream json;
+	json << "[";
+	for (size_t i = 0; i < files.size(); ++i)
+	{
+		json << "\"" << files[i] << "\"";
+		if (i < files.size() - 1)
+		{
+			json << ",";
+		}
+	}
+	json << "]";
+
+	_statusCode = Http::SC_OK;
+	_body = json.str();
+	_headers["Content-Type"] = "application/json";
+}
+
+std::string extractFileNameFromQuery(const std::string &uri)
+{
+	std::string fileName;
+	size_t queryStartPos = uri.find('?');
+	if (queryStartPos != std::string::npos)
+	{
+		std::string queryString = uri.substr(queryStartPos + 1);
+		size_t fileParamPos = queryString.find("file=");
+		if (fileParamPos != std::string::npos)
+		{
+			fileName = queryString.substr(fileParamPos + 5);
+		}
+	}
+	return fileName;
 }
 
 /**************************************************************************/
@@ -115,23 +162,19 @@ Response::Response(Request const &request)
  *
  * Calls the relevant method handler and sets response string.
  */
-void Response::dispatchMethod()
-{
-	if (_request.flag() == _400)
-	{
-		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
-	}
-	else
-	{
-		std::vector<Http::METHOD> allowedMethods;	//
-		allowedMethods.push_back(Http::M_GET);		//
-		allowedMethods.push_back(Http::M_POST);		// TODO: Get this from config
+void Response::dispatchMethod() {
+	if (_request.flag() == _400) {
+		setStatusAndReadResource(Http::SC_BAD_REQUEST);
+	} else {
+		std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
 		if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
 			handleMethodNotAllowed();
 		else if (_request.method() == Http::M_GET)
 			handleGETMethod();
 		else if (_request.method() == Http::M_POST)
 			handlePOSTMethod();
+		else if (_request.method() == Http::M_DELETE)
+			handleDELETEMethod();
 	}
 	setCommonHeaders();
 	setResponse();
@@ -139,51 +182,93 @@ void Response::dispatchMethod()
 	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
 }
 
+/**
+ * @brief Deletes a specified file, handling errors and permissions.
+ */
+void Response::handleDELETEMethod()
+{
+	if (_request.uri().find("/delete") != 0)
+		return setStatusAndReadResource(Http::SC_NOT_FOUND);
+
+	std::string fileName = extractFileNameFromQuery(_request.uri());
+	if (fileName.empty())
+		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
+
+	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
+	std::string filePath = uploads_directory + "/" + fileName;
+	
+	if (Directory::isDirectory(filePath))
+		return setStatusAndReadResource(Http::SC_FORBIDDEN);
+	if (Utils::resourceExists(filePath))
+	{
+		if (remove(filePath.c_str()) != 0)
+		{
+			Utils::log("Error deleting file", Utils::LOG_ERROR);
+			setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+		}
+		else
+		{
+			_statusCode = Http::SC_NO_CONTENT;
+			_body = "File" + fileName + " deleted successfully";
+		}
+	}
+	else
+	{
+		setStatusAndReadResource(Http::SC_NOT_FOUND);
+	}
+}
+
 // TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
 void Response::handlePOSTMethod()
 {
 	if (_request.header("content-type").find("multipart/form-data") == std::string::npos)
-	{
-		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
-		return;
-	}
+		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 	std::string fileName;
 	std::string fileContent;
 	if (!_request.parseFileContent(fileName, fileContent))
 	{
 		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
-		return;
+		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 	}
-	std::string filePath = "test_files/uploaded_files/" + fileName; // TODO: Get this from config
+	std::string filePath = "test_files/uploads/" + fileName; // TODO: Get this from config
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
 	{
 		Utils::log("Error opening file for writing", Utils::LOG_ERROR);
-		setStatusAndReadErrorPage(Http::SC_INTERNAL_SERVER_ERROR);
-		return;
+		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
 	}
 	outFile.write(fileContent.data(), fileContent.size());
 	outFile.close();
 	if (!outFile)
 	{
 		Utils::log("Error writing to file", Utils::LOG_ERROR);
-		setStatusAndReadErrorPage(Http::SC_INTERNAL_SERVER_ERROR);
-		return;
+		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
 	}
 	_statusCode = Http::SC_CREATED;
 	setHeader("Location", filePath);
 	_body = "File uploaded successfully"; // TODO: Return HTML in the body
 }
 
+/**
+ * @brief Handles GET requests by serving files, directories, or JSON file lists.
+ *
+ * - For "/files" URI, it invokes `handleFileList` to return a JSON list of files.
+ * - For other URIs, it serves the requested file or directory listing, based on the existence and type of the resource.
+ */
 void Response::handleGETMethod()
 {
 	std::string root = "test_files/www"; // TODO: get this from config
 	bool autoindex = true;				 // TODO: get this from config
 
+	if (_request.uri() == "/files")
+	{
+		handleFileList();
+		return;
+	}
+
 	std::string uri = (_request.uri() == "/") ? root : root + "/" + _request.uri();
 
-	if (Utils::isDirectory(uri))
+	if (Directory::isDirectory(uri))
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
@@ -199,16 +284,14 @@ void Response::handleGETMethod()
 	}
 	else
 	{
-		setStatusAndReadErrorPage(Http::SC_NOT_FOUND);
+		setStatusAndReadResource(Http::SC_NOT_FOUND);
 	}
 }
 
 void Response::handleMethodNotAllowed()
 {
 	_statusCode = Http::SC_METHOD_NOT_ALLOWED;
-	std::vector<Http::METHOD> allowedMethods;
-	allowedMethods.push_back(Http::M_GET);
-	allowedMethods.push_back(Http::M_POST); // TODO: Get this from config
+	std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
 	std::string allowedMethodsStr;
 	for (size_t i = 0; i < allowedMethods.size(); ++i)
 		allowedMethodsStr += Http::methodToString(allowedMethods[i]) + (i < allowedMethods.size() - 1 ? ", " : "");
@@ -224,10 +307,13 @@ void Response::readResource(std::string uri)
 	_body = content;
 }
 
-void Response::setStatusAndReadErrorPage(Http::STATUS_CODE statusCode)
+void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
 {
 	_statusCode = statusCode;
-	readResource(_error_pages[_statusCode]);
+	if (!uri.empty())
+		readResource(uri);
+	else
+		readResource(_error_pages[_statusCode]);
 }
 
 /**************************************************************************/

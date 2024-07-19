@@ -44,6 +44,7 @@ class Response
 		void 					setResponse();
 
 		void					readResource(std::string uri);
-		void					setStatusAndReadErrorPage(Http::STATUS_CODE statusCode);
-		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
+		void					setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
+
+		void					handleFileList();
 };
