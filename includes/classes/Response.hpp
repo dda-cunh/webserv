@@ -48,4 +48,5 @@ class Response
 		void					setStatusAndReadErrorPage(Http::STATUS_CODE statusCode);
 		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
 		bool 					isRedirection();
+		void					handleFileList();
 };

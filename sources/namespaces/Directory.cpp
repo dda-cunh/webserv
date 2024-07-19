@@ -12,11 +12,9 @@ namespace Directory
 
 	Result listDirectory(const std::string &path)
 	{
-		DIR *dir;
-		dirent *ent;
 		std::string htmlFilePath = path + "/directory_listing.html";
 		std::ofstream htmlFile(htmlFilePath.c_str());
-		std::string root = "test_files/www/"; // TODO: get this from config
+		std::string root = "test_files/www/";
 		Result result;
 
 		result.path = "";
@@ -27,23 +25,21 @@ namespace Directory
 		}
 
 		htmlFile << "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory Listing</title>\n \
-					</head>\n<body>\n<h1>Directory Listing for "
+                </head>\n<body>\n<h1>Directory Listing for "
 				 << path.substr(root.length()) << "</h1>\n<ul>\n";
-		if ((dir = opendir(path.c_str())))
-		{
-			while ((ent = readdir(dir)))
-				if (ent->d_name[0] != '.' && strcmp(ent->d_name, "directory_listing.html") != 0)
-					htmlFile << "<li>" << ent->d_name << "</li>\n";
-			closedir(dir);
 
-			htmlFile << "</ul>\n</body>\n</html>";
-			result.statusCode = Http::SC_OK;
-			result.path = htmlFilePath;
-		}
-		else
+		std::vector<std::string> files = listFiles(path);
+		for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
 		{
-			result.statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+			if (*it != "directory_listing.html")
+			{
+				htmlFile << "<li>" << *it << "</li>\n";
+			}
 		}
+
+		htmlFile << "</ul>\n</body>\n</html>";
+		result.statusCode = Http::SC_OK;
+		result.path = htmlFilePath;
 		htmlFile.close();
 		return result;
 	}
@@ -65,5 +61,28 @@ namespace Directory
 		result.statusCode = Http::SC_NOT_FOUND;
 		result.path = path;
 		return result;
+	}
+
+	bool isDirectory(const std::string &path)
+	{
+		struct stat statbuf;
+
+		if (stat(path.c_str(), &statbuf) != 0)
+			return false;
+		return S_ISDIR(statbuf.st_mode);
+	}
+
+	std::vector<std::string> listFiles(const std::string &directory)
+	{
+		std::vector<std::string> files;
+		DIR *dir = opendir(directory.c_str());
+		if (!dir)
+			return files;
+		dirent *entry;
+		while ((entry = readdir(dir)) != NULL)
+			if (entry->d_type == DT_REG)
+				files.push_back(entry->d_name);
+		closedir(dir);
+		return files;
 	}
 }
