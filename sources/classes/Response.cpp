@@ -81,13 +81,14 @@ IntStrMap dummyGetErrorPages()
 	return error_pages;
 }
 // TODO: Get this from config and remove function
-std::vector<Http::METHOD> getAllowedMethods() {
-    std::vector<Http::METHOD> allowedMethods;
-    allowedMethods.push_back(Http::M_GET);
-    allowedMethods.push_back(Http::M_DELETE);
-    allowedMethods.push_back(Http::M_POST);
-    // Add more methods or retrieve from config as needed
-    return allowedMethods;
+std::vector<Http::METHOD> getAllowedMethods()
+{
+	std::vector<Http::METHOD> allowedMethods;
+	allowedMethods.push_back(Http::M_GET);
+	allowedMethods.push_back(Http::M_DELETE);
+	allowedMethods.push_back(Http::M_POST);
+	// Add more methods or retrieve from config as needed
+	return allowedMethods;
 }
 
 // TODO: Get this from config and remove function
@@ -162,7 +163,16 @@ Response::Response(Request const &request)
 	  _error_pages(dummyGetErrorPages()),
 	  _redirections(dummyGetRedirections())
 {
-	dispatchMethod();
+	if (_request.flag() == _400)
+		setStatusAndReadResource(Http::SC_BAD_REQUEST);
+	else if (isRedirection())
+		;
+	else
+		dispatchMethod();
+	setCommonHeaders();
+	setResponse();
+	Utils::log("Response:", Utils::LOG_INFO);
+	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
 }
 
 /**************************************************************************/
@@ -172,32 +182,19 @@ Response::Response(Request const &request)
 /**
  * @brief Dispatches the request method.
  *
- * Calls the relevant method handler and sets response string.
+ * Calls the relevant method handler.
  */
 void Response::dispatchMethod()
 {
-	if (_request.flag() == _400)
-	{
-		setStatusAndReadErrorPage(Http::SC_BAD_REQUEST);
-	}
-	else if (isRedirection())
-	{
-	}
-	else
-		std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
-		if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
-			handleMethodNotAllowed();
-		else if (_request.method() == Http::M_GET)
-			handleGETMethod();
-		else if (_request.method() == Http::M_POST)
-			handlePOSTMethod();
-		else if (_request.method() == Http::M_DELETE)
-			handleDELETEMethod();
-	}
-	setCommonHeaders();
-	setResponse();
-	Utils::log("Response:", Utils::LOG_INFO);
-	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
+	std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
+	if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
+		handleMethodNotAllowed();
+	else if (_request.method() == Http::M_GET)
+		handleGETMethod();
+	else if (_request.method() == Http::M_POST)
+		handlePOSTMethod();
+	else if (_request.method() == Http::M_DELETE)
+		handleDELETEMethod();
 }
 
 /**
@@ -214,7 +211,7 @@ void Response::handleDELETEMethod()
 
 	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
 	std::string filePath = uploads_directory + "/" + fileName;
-	
+
 	if (Directory::isDirectory(filePath))
 		return setStatusAndReadResource(Http::SC_FORBIDDEN);
 	if (Utils::resourceExists(filePath))
