@@ -28,6 +28,8 @@ namespace Http
 			return "Created";
 		else if (statusCode == Http::SC_NO_CONTENT)
 			return "No Content";
+		else if (statusCode == Http::SC_FOUND)
+			return "Found";
 		else if (statusCode == Http::SC_BAD_REQUEST)
 			return "Bad Request";
 		else if (statusCode == Http::SC_FORBIDDEN)
