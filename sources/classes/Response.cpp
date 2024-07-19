@@ -210,8 +210,8 @@ void Response::handleDELETEMethod()
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 
 	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
-	std::string filePath = uploads_directory + "/" + fileName;
-
+	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
+	
 	if (Directory::isDirectory(filePath))
 		return setStatusAndReadResource(Http::SC_FORBIDDEN);
 	if (Utils::resourceExists(filePath))
@@ -224,7 +224,6 @@ void Response::handleDELETEMethod()
 		else
 		{
 			_statusCode = Http::SC_NO_CONTENT;
-			_body = "File" + fileName + " deleted successfully";
 		}
 	}
 	else
@@ -245,7 +244,9 @@ void Response::handlePOSTMethod()
 		Utils::log("Error parsing file content", Utils::LOG_ERROR);
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 	}
-	std::string filePath = "test_files/uploads/" + fileName; // TODO: Get this from config
+	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
+	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
+
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
 	if (!outFile)
 	{
@@ -281,7 +282,7 @@ void Response::handleGETMethod()
 		return;
 	}
 
-	std::string uri = (_request.uri() == "/") ? root : root + "/" + _request.uri();
+	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
 	if (Directory::isDirectory(uri))
 	{
