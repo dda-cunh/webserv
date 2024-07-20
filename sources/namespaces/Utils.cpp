@@ -85,4 +85,18 @@ namespace Utils
 		std::ifstream file(uri.c_str());
 		return file.good();
 	}
+
+	std::string concatenatePaths(const std::string &basePath, const std::string &appendPath)
+	{
+		std::string adjustedBasePath = basePath;
+		std::string adjustedAppendPath = appendPath;
+
+		if (!adjustedBasePath.empty() && adjustedBasePath[adjustedBasePath.length() - 1] != PATH_SEPARATOR)
+			adjustedBasePath += PATH_SEPARATOR;
+
+		if (!adjustedAppendPath.empty() && adjustedAppendPath[0] == PATH_SEPARATOR)
+			adjustedAppendPath = adjustedAppendPath.substr(1);
+
+		return adjustedBasePath + adjustedAppendPath;
+	}
 }
