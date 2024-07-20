@@ -39,6 +39,7 @@ class Response
 		void 					handleDELETEMethod();
 		void 					handleMethodNotAllowed();
 
+		void 					setLocation();
 		void					setErrorPages();
 		void 					setHeader(const std::string &, const std::string &);
 		void 					setCommonHeaders();

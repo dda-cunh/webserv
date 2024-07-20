@@ -150,6 +150,30 @@ std::string extractFileNameFromQuery(const std::string &uri)
 	return fileName;
 }
 
+/**
+ * @brief 
+ *
+ * This function will match the response to the right location/route
+ */
+void Response::setLocation()
+{
+	/*
+		loop over Response._config locations
+		get the longest match between reques.uri and locations
+		Response._matchedLocation = longestmatch
+
+		Response will gain access to:
+		_matchedLocation
+			.allowedMethods
+			.redirections
+			.root
+			.autoindex
+			.uploadDirectory
+			.errorPages
+	*/
+	_redirections = dummyGetRedirections();
+}
+
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
@@ -159,16 +183,20 @@ Response::Response(Request const &request)
 	  _headers(),
 	  _body(),
 	  _response(),
-	  _request(request),
-	  _error_pages(dummyGetErrorPages()),
-	  _redirections(dummyGetRedirections())
+	  _request(request)
 {
+	setLocation();// location needs to be matched first due to custom error pages requirement
+	setErrorPages();
+
 	if (_request.flag() == _400)
 		setStatusAndReadResource(Http::SC_BAD_REQUEST);
+	else if(_request.method() == Http::M_UNHANDLED)
+		setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
 	else if (isRedirection())
 		;
 	else
 		dispatchMethod();
+
 	setCommonHeaders();
 	setResponse();
 	Utils::log("Response:", Utils::LOG_INFO);
@@ -288,11 +316,8 @@ void Response::handleGETMethod()
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
-		uri = result.path;
-		if (_statusCode == Http::SC_OK)
-			readResource(uri);
-		else
-			readResource(_error_pages[_statusCode]);
+		uri = _statusCode == Http::SC_OK ? result.path : _error_pages[_statusCode];
+		readResource(uri);
 	}
 	else if (Utils::resourceExists(uri))
 	{
