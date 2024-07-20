@@ -79,10 +79,13 @@ class	ConfigParser
 //		static ServerConfig		&loadServerConfig(/* struct goes here */, ServerBlocks &serverBlocks);
 //		static ServerLocation	&loadServerLocation(/* struct goes here */, LocationBlocks &locationBlocks);
 		/*	==============================	*/
-
-
 };
 
+//	CUSTOM EXCEPTIONS DELCARED LIKE THIS
+class	ServerBlockNotEnclosed : public ExceptionMaker
+{
+
+};
 
 /*
 	keywords to accept for directives in each context
@@ -100,4 +103,7 @@ class	ConfigParser
 			allow_methods
 			proxy_pass
 			- whatever we'll use to handle CGI; check with the team
+
+
+	DONT FORGET DIRECTORY LISTING
 */

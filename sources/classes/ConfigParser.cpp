@@ -21,7 +21,6 @@ void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverCon
 		//	TEST CODE
 		return ;
 		//	=========
-
 	}
 
 	while (!configFile.eof())

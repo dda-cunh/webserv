@@ -8,12 +8,28 @@
 //	USE SOMETHING LIFO
 typedef std::vector<ServerLocation *>	LocationBlocks;
 
+// ADD ENUM FOT LOCATION TYPES
+
 class	ServerConfig
 {
 	public:
-		ServerConfig();			//	DONT FORGET TO SET DEFAULTS
+		ServerConfig(void);			//	DONT FORGET TO SET DEFAULTS
+		ServerConfig(std::vector<std::string> strLocationBlock);
 		~ServerConfig(void);	//	DESTRUCTOR MUST DELETE POINTERS IN locationBlocks
-		
+
+		/*
+			ADD THESE METHODS:
+				getLocationFromPath(std::string path) - returns const ref to locationBlock corresponting to path; if not found: return NULL or exception?
+					CHECK WITH NGINX HOW PATH TREES ARE HANDLED & HOW TO LIMIT ACCESS TO PATHS
+				getLocationType(ServerLocation *location) - return corresponding type from enum
+		*/
+
+		/*
+			ADD DEFAULT/CUSTOM ERROR PAGES - BOTH ON SERER & LOCATION CONTEXT
+				> 404
+				> 502
+		*/
+
 		std::string		getServerName();
 		std::string		getRootDir();
 		unsigned int	getMaxBodySize();
@@ -22,7 +38,7 @@ class	ServerConfig
 
 	private:
 		uint32_t		host;
-		uint16_t		port;
+		uint16_t		port;	//	CHECK FOR OVERFLOWS
 
 		std::string		_serverName;
 		std::string 	_rootDir;	//	TEST ON NGINX TO SEE HOW TO HANDLE THIS ONE
@@ -34,7 +50,7 @@ class	ServerLocation
 	public:
 				ServerLocation(void);
 				ServerLocation(/* pass configs as struct */);
-		virtual ~ServerLocation(void);
+		virtual ~ServerLocation(void) = 0;
 
 		std::string	getLocation();
 		std::string	getRootDir();
@@ -57,7 +73,16 @@ class	LocationStatic: public ServerLocation
 	public:
 		LocationStatic();
 		~LocationStatic();
-	
+
+/*
+			std::vector<Http::METHOD>	_allowedMethods
+			StrStrMap					_redirections
+			std::string					_root		MANDATORY, else wrong configuration
+			bool 						_autoindex
+			std::string					_uploadDirectory
+			IntStrMap 					_error_pages;
+*/
+
 };
 
 class	LocationRevProxy: public ServerLocation
@@ -68,7 +93,7 @@ class	LocationRevProxy: public ServerLocation
 
 	private:
 		//	proxy_pass
-	
+
 };
 
 class LocationCGI: public ServerLocation
