@@ -4,7 +4,8 @@ namespace Directory
 {
 	Result handleDirectory(const std::string path, const bool autoindex)
 	{
-		if (autoindex && !path.empty() && path[path.length() - 1] == '/')
+		std::string root = "public/";
+		if (autoindex && !path.empty() && path[path.length() - 1] == '/' && path != root)
 			return listDirectory(path);
 		else
 			return handleDirectoryDefaultFile(path);
@@ -14,7 +15,7 @@ namespace Directory
 	{
 		std::string htmlFilePath = path + "/directory_listing.html";
 		std::ofstream htmlFile(htmlFilePath.c_str());
-		std::string root = "test_files/www/";
+		std::string root = "public/";
 		Result result;
 
 		result.path = "";

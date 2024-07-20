@@ -1,6 +1,6 @@
 .vscode/
 temp/
-test_files/uploads/
+public/uploads/
 *.o
 webserv
 TODO.md
