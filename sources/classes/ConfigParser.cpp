@@ -9,7 +9,7 @@ static void	printStrConfig(std::vector<std::string> &strServerConfig)
 		std::cout << *bgn << std::endl;
 }
 
-void	ConfigParser::parseConfigs(std::string fileName /*, ServerBlocks &serverConfigs*/)	//	UNCOMMENT
+void	ConfigParser::parseConfigs(std::string fileName, ServerBlocks &serverConfigs)
 {
 	std::ifstream	configFile;
 
@@ -120,7 +120,7 @@ bool	ConfigParser::serverBlockHeaderOK(std::string configLine)
 	wordStream >> word1;
 	wordStream >> word2;
 	if (wordCount(configLine) == 2 \
-		&& word1 == "server" && word2 == "{")
+		&& word1 == "server" && word2 == "{")	//	'{' CAN ALSO BE IN NEXT LINE; FIX THIS SHIT
 		return (true);	
 	else
 		return (false);

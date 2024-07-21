@@ -22,17 +22,14 @@ class	ServerConfig
 				getLocationFromPath(std::string path) - returns const ref to locationBlock corresponting to path; if not found: return NULL or exception?
 					CHECK WITH NGINX HOW PATH TREES ARE HANDLED & HOW TO LIMIT ACCESS TO PATHS
 				getLocationType(ServerLocation *location) - return corresponding type from enum
+					IMPLEMENT ENUM FOR DIFFERENT TYPES OF SERVER LOCATION
 		*/
 
-		/*
-			ADD DEFAULT/CUSTOM ERROR PAGES - BOTH ON SERER & LOCATION CONTEXT
-				> 404
-				> 502
-		*/
-
+		//			GETTERS
 		std::string		getServerName();
 		std::string		getRootDir();
 		unsigned int	getMaxBodySize();
+		//	=============================
 
 		LocationBlocks	locationBlocks;
 
@@ -59,12 +56,15 @@ class	ServerLocation
 		
 		bool		methodIsAllowed(std::string method);
 
-	protected:
-		std::string	location;
-		std::string	rootDir;
-		std::string	indexDir;
-		bool		autoIndex;
-		std::map<std::string, bool>	methodsAllowed;
+	protected:											//	KEYWORDS
+		std::string					location;			//		location [...] {
+		std::string					rootDir;			//		root
+		std::string					indexDir;			//		index
+		bool						autoIndex;			//		autoindex
+		std::vector<Http::METHOD>	methodsAllowed;		//		allowed_methods
+		StrStrMap					redirections;		//	
+		IntStrMap 					errorPages;			//	
+		std::string					uploadDirectory;	//	
 };
 
 //	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
@@ -73,15 +73,6 @@ class	LocationStatic: public ServerLocation
 	public:
 		LocationStatic();
 		~LocationStatic();
-
-/*
-			std::vector<Http::METHOD>	_allowedMethods
-			StrStrMap					_redirections
-			std::string					_root		MANDATORY, else wrong configuration
-			bool 						_autoindex
-			std::string					_uploadDirectory
-			IntStrMap 					_error_pages;
-*/
 
 };
 

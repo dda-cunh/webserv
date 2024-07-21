@@ -31,13 +31,13 @@ class	ConfigParser
 {
 	public:
 
-		static void	parseConfigs(std::string fileName/*, ServerBlocks &serverConfigs*/);	//	UNCOMMENT
+		static void	parseConfigs(std::string fileName, ServerBlocks &serverConfigs);	//	UNCOMMENT
 
 		/*	To be called by parseConfigs()	*/
 			//	check if current server context is OK and load it to memory
 		static bool	serverBlockOK(std::ifstream &configFile);
 			//	load configs into object
-//		static void	loadConfigs(std::string fileName, &serverBlocks); 
+//		static void	loadConfigs(std::string fileName, ServerBlocks &serverConfigs); 
 			//	create a new server block
 //		static bool	addServerBlock(std::vector<std::string> strServerBlock);
 			//	check if configs loaded are OK
