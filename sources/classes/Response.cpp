@@ -4,33 +4,6 @@
 
 /****************************  CANNONICAL FORM  ****************************/
 
-Response::Response()
-	: _statusCode(Http::SC_OK),
-	  _headers(),
-	  _body(),
-	  _response(),
-	  _request(Request(0)),
-	  _error_pages()
-{
-}
-
-Response::Response(Response const &src)
-	: _statusCode(Http::SC_OK),
-	  _headers(),
-	  _body(),
-	  _response(),
-	  _request(Request(0)),
-	  _error_pages()
-{
-	*this = src;
-}
-
-Response &Response::operator=(Response const &rhs)
-{
-	(void)rhs;
-	return (*this);
-}
-
 Response::~Response()
 {
 }
@@ -94,23 +67,34 @@ std::string Response::getResponseWithoutBody() // TODO: Debug function, to be re
 void Response::handleFileList()
 {
 	std::string directory = "public/uploads"; // TODO: Get this from config
-	std::vector<std::string> files = Directory::listFiles(directory);
 
-	std::ostringstream json;
-	json << "[";
-	for (size_t i = 0; i < files.size(); ++i)
+	try
 	{
-		json << "\"" << files[i] << "\"";
-		if (i < files.size() - 1)
-		{
-			json << ",";
-		}
-	}
-	json << "]";
+		std::vector<std::string> files = Directory::listFiles(directory);
 
-	_statusCode = Http::SC_OK;
-	_body = json.str();
-	_headers["Content-Type"] = "application/json";
+		std::ostringstream json;
+		json << "[";
+		for (size_t i = 0; i < files.size(); ++i)
+		{
+			json << "\"" << files[i] << "\"";
+			if (i < files.size() - 1)
+			{
+				json << ",";
+			}
+		}
+		json << "]";
+
+		_statusCode = Http::SC_OK;
+		_body = json.str();
+		_headers["Content-Type"] = "application/json";
+	}
+	catch (ExceptionMaker &e)
+	{
+		e.log();
+		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+		_body = "{\"error\":\"Failed to list files in directory.\"}";
+		_headers["Content-Type"] = "application/json";
+	}
 }
 
 std::string extractFileNameFromQuery(const std::string &uri)
@@ -164,12 +148,12 @@ Response::Response(Request const &request)
 	  _response(),
 	  _request(request)
 {
-	setLocation();// location needs to be matched first due to custom error pages requirement
+	setLocation(); // location needs to be matched first due to custom error pages requirement
 	setErrorPages();
 
 	if (_request.flag() == _400)
 		setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	else if(_request.method() == Http::M_UNHANDLED)
+	else if (_request.method() == Http::M_UNHANDLED)
 		setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
 	else if (isRedirection())
 		;
@@ -218,7 +202,7 @@ void Response::handleDELETEMethod()
 
 	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
 	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
-	
+
 	if (Directory::isDirectory(filePath))
 		return setStatusAndReadResource(Http::SC_FORBIDDEN);
 	if (Utils::resourceExists(filePath))
@@ -244,6 +228,7 @@ void Response::handlePOSTMethod()
 {
 	if (_request.header("content-type").find("multipart/form-data") == std::string::npos)
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
+
 	std::string fileName;
 	std::string fileContent;
 	if (!_request.parseFileContent(fileName, fileContent))
@@ -251,25 +236,35 @@ void Response::handlePOSTMethod()
 		Utils::log("Error parsing file content", Utils::LOG_ERROR);
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 	}
+
+	if (fileName.empty() || fileContent.empty())
+	{
+		Utils::log("Error parsing file content", Utils::LOG_ERROR);
+		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
+	}
+
 	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
 	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
 
-	std::ofstream outFile(filePath.c_str(), std::ios::binary);
-	if (!outFile)
+	try
 	{
-		Utils::log("Error opening file for writing", Utils::LOG_ERROR);
+		std::ofstream outFile(filePath.c_str(), std::ios::binary);
+		if (!outFile)
+			throw ExceptionMaker("Error opening file for writing: " + filePath);
+
+		outFile.write(fileContent.data(), fileContent.size());
+		if (!outFile)
+			throw ExceptionMaker("Error writing to file: " + filePath);
+
+		_statusCode = Http::SC_CREATED;
+		setHeader("Location", filePath);
+		_body = "File uploaded successfully"; // TODO: Return HTML in the body
+	}
+	catch (ExceptionMaker &e)
+	{
+		e.log();
 		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
 	}
-	outFile.write(fileContent.data(), fileContent.size());
-	outFile.close();
-	if (!outFile)
-	{
-		Utils::log("Error writing to file", Utils::LOG_ERROR);
-		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-	}
-	_statusCode = Http::SC_CREATED;
-	setHeader("Location", filePath);
-	_body = "File uploaded successfully"; // TODO: Return HTML in the body
 }
 
 /**
@@ -281,18 +276,15 @@ void Response::handlePOSTMethod()
 void Response::handleGETMethod()
 {
 	std::string root = "public/"; // TODO: get this from config
-	bool autoindex = true;				 // TODO: get this from config
+	bool autoindex = true;		  // TODO: get this from config
 
 	if (_request.uri() == "/files")
 	{
 		handleFileList();
 		return;
 	}
-	std::cout << "Request URI: " << _request.uri() << std::endl;
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
-
-	std::cout << "URI: " << uri << std::endl;
 
 	if (Directory::isDirectory(uri))
 	{
@@ -304,7 +296,6 @@ void Response::handleGETMethod()
 	else if (Utils::resourceExists(uri))
 	{
 		readResource(uri);
-		std::cout << "Resource exists: " << uri << std::endl;
 	}
 	else
 	{
@@ -323,12 +314,35 @@ void Response::handleMethodNotAllowed()
 	readResource(_error_pages[_statusCode]);
 }
 
-void Response::readResource(std::string uri)
+void Response::readResource(const std::string &uri, bool isErrorResponse)
 {
-	std::ifstream file(uri.c_str(), std::ios::binary);
-	std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-	setHeader("Content-Type", getResourceContentType(uri));
-	_body = content;
+	try
+	{
+		std::ifstream file(uri.c_str(), std::ios::binary);
+		if (!file.is_open())
+			throw ExceptionMaker("Failed to open file: " + uri);
+
+		std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		if (file.bad())
+			throw ExceptionMaker("Error reading file: " + uri);
+
+		setHeader("Content-Type", getResourceContentType(uri));
+		_body = content;
+	}
+	catch (ExceptionMaker &e)
+	{
+		e.log();
+		if (!isErrorResponse)
+		{
+			setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+		}
+		else
+		{
+			Utils::log("Failed to load the internal server error page.", Utils::LOG_ERROR);
+			_body = "<html><body><h1>500 Internal Server Error</h1></body></html>";
+			setHeader("Content-Type", "text/html");
+		}
+	}
 }
 
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
@@ -337,7 +351,7 @@ void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::strin
 	if (!uri.empty())
 		readResource(uri);
 	else
-		readResource(_error_pages[_statusCode]);
+		readResource(_error_pages[_statusCode], true);
 }
 
 bool Response::isRedirection()
@@ -390,6 +404,6 @@ void Response::setErrorPages()
 	IntStrMap default_error_pages = ErrorPages::getDefaultErrorPages();
 
 	// TODO: get custom error pages from config and replace the default ones when available
-	
+
 	_error_pages = default_error_pages;
 }

@@ -15,3 +15,8 @@ const char *ExceptionMaker::what()	const	throw()
 {
 	return (this->_message.c_str());
 }
+
+void ExceptionMaker::log()
+{
+	Utils::log(_message, Utils::LOG_ERROR);
+}

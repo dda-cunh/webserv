@@ -25,22 +25,30 @@ namespace Directory
 			return result;
 		}
 
-		htmlFile << "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory Listing</title>\n \
-                </head>\n<body>\n<h1>Directory Listing for "
-				 << path.substr(root.length()) << "</h1>\n<ul>\n";
-
-		std::vector<std::string> files = listFiles(path);
-		for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
+		try
 		{
-			if (*it != "directory_listing.html")
-			{
-				htmlFile << "<li>" << *it << "</li>\n";
-			}
-		}
+			htmlFile << "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory Listing</title>\n \
+                </head>\n<body>\n<h1>Directory Listing for "
+					 << path.substr(root.length()) << "</h1>\n<ul>\n";
 
-		htmlFile << "</ul>\n</body>\n</html>";
-		result.statusCode = Http::SC_OK;
-		result.path = htmlFilePath;
+			std::vector<std::string> files = listFiles(path);
+			for (std::vector<std::string>::const_iterator it = files.begin(); it != files.end(); ++it)
+			{
+				if (*it != "directory_listing.html")
+				{
+					htmlFile << "<li>" << *it << "</li>\n";
+				}
+			}
+
+			htmlFile << "</ul>\n</body>\n</html>";
+			result.statusCode = Http::SC_OK;
+			result.path = htmlFilePath;
+		}
+		catch (ExceptionMaker &e)
+		{
+			e.log();
+			result.statusCode = Http::SC_INTERNAL_SERVER_ERROR;
+		}
 		htmlFile.close();
 		return result;
 	}
@@ -78,11 +86,14 @@ namespace Directory
 		std::vector<std::string> files;
 		DIR *dir = opendir(directory.c_str());
 		if (!dir)
-			return files;
+			throw ExceptionMaker("Failed to open directory: " + directory);
+
 		dirent *entry;
 		while ((entry = readdir(dir)) != NULL)
+		{
 			if (entry->d_type == DT_REG)
 				files.push_back(entry->d_name);
+		}
 		closedir(dir);
 		return files;
 	}
