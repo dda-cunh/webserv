@@ -60,27 +60,6 @@ std::string getResourceContentType(std::string uri)
 }
 
 // TODO: Get this from config and remove function
-IntStrMap dummyGetErrorPages()
-{
-	IntStrMap error_pages;
-
-	error_pages[Http::SC_OK] = "test_files/error_pages/200.html";
-	error_pages[Http::SC_CREATED] = "test_files/error_pages/201.html";
-	error_pages[Http::SC_NO_CONTENT] = "test_files/error_pages/204.html";
-	error_pages[Http::SC_BAD_REQUEST] = "test_files/error_pages/400.html";
-	error_pages[Http::SC_FORBIDDEN] = "test_files/error_pages/403.html";
-	error_pages[Http::SC_NOT_FOUND] = "test_files/error_pages/404.html";
-	error_pages[Http::SC_METHOD_NOT_ALLOWED] = "test_files/error_pages/405.html";
-	error_pages[Http::SC_CONFLICT] = "test_files/error_pages/409.html";
-	error_pages[Http::SC_INTERNAL_SERVER_ERROR] = "test_files/error_pages/500.html";
-	error_pages[Http::SC_NOT_IMPLEMENTED] = "test_files/error_pages/501.html";
-	error_pages[Http::SC_BAD_GATEWAY] = "test_files/error_pages/502.html";
-	error_pages[Http::SC_SERVICE_UNAVAILABLE] = "test_files/error_pages/503.html";
-	error_pages[Http::SC_VERSION_NOT_SUPPORTED] = "test_files/error_pages/505.html";
-
-	return error_pages;
-}
-// TODO: Get this from config and remove function
 std::vector<Http::METHOD> getAllowedMethods()
 {
 	std::vector<Http::METHOD> allowedMethods;
@@ -114,7 +93,7 @@ std::string Response::getResponseWithoutBody() // TODO: Debug function, to be re
 
 void Response::handleFileList()
 {
-	std::string directory = "test_files/uploads"; // TODO: Get this from config
+	std::string directory = "public/uploads"; // TODO: Get this from config
 	std::vector<std::string> files = Directory::listFiles(directory);
 
 	std::ostringstream json;
@@ -164,12 +143,12 @@ void Response::setLocation()
 
 		Response will gain access to:
 		_matchedLocation
-			.allowedMethods
-			.redirections
-			.root
-			.autoindex
-			.uploadDirectory
-			.errorPages
+			std::vector<Http::METHOD>	_allowedMethods
+			StrStrMap					_redirections
+			std::string					_root		MANDATORY, else wrong configuration
+			bool 						_autoindex
+			std::string					_uploadDirectory
+			IntStrMap 					_error_pages;
 	*/
 	_redirections = dummyGetRedirections();
 }
@@ -237,7 +216,7 @@ void Response::handleDELETEMethod()
 	if (fileName.empty())
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 
-	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
+	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
 	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
 	
 	if (Directory::isDirectory(filePath))
@@ -272,7 +251,7 @@ void Response::handlePOSTMethod()
 		Utils::log("Error parsing file content", Utils::LOG_ERROR);
 		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
 	}
-	std::string uploads_directory = "test_files/uploads"; // TODO: Get this from config
+	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
 	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
 
 	std::ofstream outFile(filePath.c_str(), std::ios::binary);
@@ -301,7 +280,7 @@ void Response::handlePOSTMethod()
  */
 void Response::handleGETMethod()
 {
-	std::string root = "test_files/www"; // TODO: get this from config
+	std::string root = "public/"; // TODO: get this from config
 	bool autoindex = true;				 // TODO: get this from config
 
 	if (_request.uri() == "/files")
@@ -309,8 +288,11 @@ void Response::handleGETMethod()
 		handleFileList();
 		return;
 	}
+	std::cout << "Request URI: " << _request.uri() << std::endl;
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
+
+	std::cout << "URI: " << uri << std::endl;
 
 	if (Directory::isDirectory(uri))
 	{
@@ -322,6 +304,7 @@ void Response::handleGETMethod()
 	else if (Utils::resourceExists(uri))
 	{
 		readResource(uri);
+		std::cout << "Resource exists: " << uri << std::endl;
 	}
 	else
 	{
@@ -404,5 +387,9 @@ void Response::setResponse()
 
 void Response::setErrorPages()
 {
-	_error_pages = dummyGetErrorPages();
+	IntStrMap default_error_pages = ErrorPages::getDefaultErrorPages();
+
+	// TODO: get custom error pages from config and replace the default ones when available
+	
+	_error_pages = default_error_pages;
 }
