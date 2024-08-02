@@ -1,8 +1,8 @@
 #pragma once
 
-#include <fstream>
+#include <fstream>	//	what do I need this for again?
 #include <vector>
-#include <map>
+#include "ServerLocation.hpp"
 #include "../webserv.hpp"
 
 //	USE SOMETHING LIFO
@@ -14,8 +14,13 @@ class	ServerConfig
 {
 	public:
 		ServerConfig(void);			//	DONT FORGET TO SET DEFAULTS
-		ServerConfig(std::vector<std::string> strLocationBlock);
+		ServerConfig(std::vector<std::string> strServerBlock);
+		ServerConfig(const ServerConfig &serverConfig);
 		~ServerConfig(void);	//	DESTRUCTOR MUST DELETE POINTERS IN locationBlocks
+
+		ServerConfig &operator = (const ServerConfig &serverConfig);
+
+		//	SETTERS FOR CONSTRUCTOR
 
 		/*
 			ADD THESE METHODS:
@@ -26,70 +31,32 @@ class	ServerConfig
 		*/
 
 		//			GETTERS
-		std::string		getServerName();
-		std::string		getRootDir();
-		unsigned int	getMaxBodySize();
+		std::string		getServerName(void);
+		std::string		getRootDir(void);
+		unsigned int	getMaxBodySize(void);
+		ServerLocation	*getLocationFromPath(std::string path);
+		int 			getLocationType(ServerLocation *location);	//	MAYBE PUT THIS IN UTILS
 		//	=============================
 
-		LocationBlocks	locationBlocks;
-
 	private:
-		uint32_t		host;
-		uint16_t		port;	//	CHECK FOR OVERFLOWS
+		uint32_t		_host;
+		uint16_t		_port;	//	CHECK FOR OVERFLOWS ON INIT
 
 		std::string		_serverName;
-		std::string 	_rootDir;	//	TEST ON NGINX TO SEE HOW TO HANDLE THIS ONE
 		unsigned int	_maxBodySize;
+
+		LocationBlocks	_locationBlocks;
+	
+		//	THIS ONE, ALONGSIDE WITH OTHER KEYWORDS THAT CAN GO ON LOCATION
+		//	BLOCKS, WILL SERVE AS "OVERRIDE" FOR LOCATION DEFAULTS
+		//	THEREFORE, THIS MEMBER WILL BE REMOVED
+		//	(AND I'LL PROB NEED A STRUCT TO HANDLE DEFAULT OVERRIDES OR STH)
+		std::string 	_rootDir;
 };
 
-class	ServerLocation
+typedef enum	e_location_type
 {
-	public:
-				ServerLocation(void);
-				ServerLocation(/* pass configs as struct */);
-		virtual ~ServerLocation(void) = 0;
-
-		std::string	getLocation();
-		std::string	getRootDir();
-		std::string	getindexDir();
-		bool		getAutoIndex();
-		
-		bool		methodIsAllowed(std::string method);
-
-	protected:											//	KEYWORDS
-		std::string					location;			//		location [...] {
-		std::string					rootDir;			//		root
-		std::string					indexDir;			//		index
-		bool						autoIndex;			//		autoindex
-		std::vector<Http::METHOD>	methodsAllowed;		//		allowed_methods
-		StrStrMap					redirections;		//	
-		IntStrMap 					errorPages;			//	
-		std::string					uploadDirectory;	//	
-};
-
-//	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
-class	LocationStatic: public ServerLocation
-{
-	public:
-		LocationStatic();
-		~LocationStatic();
-
-};
-
-class	LocationRevProxy: public ServerLocation
-{
-	public:
-		LocationRevProxy();
-		~LocationRevProxy();
-
-	private:
-		//	proxy_pass
-
-};
-
-class LocationCGI: public ServerLocation
-{
-	public:
-		LocationCGI();
-		~LocationCGI();
-}
+	L_UNHANDLED,
+	L_STATIC,
+	L_CGI
+}	LOCATION_TYPE;
