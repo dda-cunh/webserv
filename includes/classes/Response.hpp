@@ -45,7 +45,7 @@ class Response
 		void 					setCommonHeaders();
 		void 					setResponse();
 
-		void					readResource(std::string uri);
+		void					readResource(const std::string &uri, bool isErrorResponse = false);
 		void					setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");
 		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
 		bool 					isRedirection();

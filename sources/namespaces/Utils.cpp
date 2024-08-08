@@ -82,8 +82,8 @@ namespace Utils
 
 	bool resourceExists(std::string const &uri)
 	{
-		std::ifstream file(uri.c_str());
-		return file.good();
+		struct stat buffer;
+		return (stat(uri.c_str(), &buffer) == 0);
 	}
 
 	std::string concatenatePaths(const std::string &basePath, const std::string &appendPath)
