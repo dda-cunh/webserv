@@ -22,20 +22,12 @@ class	ServerConfig
 
 		//	SETTERS FOR CONSTRUCTOR
 
-		/*
-			ADD THESE METHODS:
-				getLocationFromPath(std::string path) - returns const ref to locationBlock corresponting to path; if not found: return NULL or exception?
-					CHECK WITH NGINX HOW PATH TREES ARE HANDLED & HOW TO LIMIT ACCESS TO PATHS
-				getLocationType(ServerLocation *location) - return corresponding type from enum
-					IMPLEMENT ENUM FOR DIFFERENT TYPES OF SERVER LOCATION
-		*/
 
 		//			GETTERS
 
 		uint32_t			getHost(void);
 		uint16_t			getPort(void);
 		std::string			getServerName(void);
-		unsigned int		getMaxBodySize(void);
 		size_t				getLocationBlocksSize(void);
 		ServerLocation		*getLocationFromIndex(size_t i);
 		ServerLocation		*getLocationFromPath(std::string path);
@@ -45,9 +37,7 @@ class	ServerConfig
 	private:
 		uint32_t		_host;
 		uint16_t		_port;	//	CHECK FOR OVERFLOWS ON INIT
-
 		std::string		_serverName;
-		unsigned int	_maxBodySize;	//	SHOULDNT THIS BE IN LOCATION BLOCK?
 
 		LocationBlocks	_locationBlocks;
 };

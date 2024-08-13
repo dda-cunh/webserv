@@ -32,9 +32,14 @@ std::string	ServerLocation::getRootDir(void)
 	return (this->_rootDir);
 }
 
-std::string	ServerLocation::getIndexDir(void)
+std::string	ServerLocation::getIndexFilename(void)
 {
-	return (this->_indexDir);
+	return (this->_indexFile);
+}
+
+uint32_t	ServerLocation::getMaxBodySize(void)
+{
+	return (this->_maxBodySize);
 }
 
 std::string	ServerLocation::getErrPagePath(int status)
@@ -96,12 +101,12 @@ LocationRevProxy::LocationRevProxy(void)
 	this->_uploadDirectory = "/upload";
 }
 
-/*
+
 LocationRevProxy::LocationRevProxy(std::vector<std::string> strLocationBlock)
 {
 
 }
-*/
+
 
 LocationRevProxy::~LocationRevProxy(void)
 {
@@ -121,12 +126,12 @@ LocationCGI::LocationCGI(void)
 	//	INIT WITH DEFAULT VALUES
 }
 
-/*
+
 LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock)
 {
 
 }
-*/
+
 
 LocationCGI::~LocationCGI(void)
 {

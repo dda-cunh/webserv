@@ -45,6 +45,8 @@ ServerConfig ServerConfig::&operator=(const ServerConfig &serverConfig)
 	lbSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < lbSize; i++)
 		this->_locationBlocks.push_back(new ServerLocation(serverConfig.getLocationFromIndex(i) ) );	//	DOES INHERITANCE WORK WITH THIS?
+
+	return (*this);
 }
 
 	/*	GETTERS	*/
@@ -112,7 +114,7 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 	out << serverConfig.getPort() << std::endl;
 	out << serverConfig.getserverName() << std::endl;
 
-	out << serverConfig.getmaxBodySize();	//	MOVE THIS TO LOCATION?
+	out << serverConfig.getmaxBodySize();	//	MOVE THIS TO LOCATIONBLOCK?
 	
 	lbSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < lbSize; i++)
@@ -121,4 +123,5 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 		out << serverConfig.getLocationFromIndex(i) << std::endl;
 		out << std::endl;
 	}
+	return (out);
 }
