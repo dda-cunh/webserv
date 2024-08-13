@@ -103,3 +103,22 @@ LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location)
 	else
 		return (L_UNHANDLED);
 }
+
+std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
+{
+	size_t	lbSize;
+
+	out << serverConfig.getHost() << std::endl;
+	out << serverConfig.getPort() << std::endl;
+	out << serverConfig.getserverName() << std::endl;
+
+	out << serverConfig.getmaxBodySize();	//	MOVE THIS TO LOCATION?
+	
+	lbSize = serverConfig.getLocationBlocksSize();
+	for (size_t i = 0; i < lbSize; i++)
+	{
+		out << "LocationBlock nr. " << i << ":" << std::endl
+		out << serverConfig.getLocationFromIndex(i) << std::endl;
+		out << std::endl;
+	}
+}

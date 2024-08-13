@@ -70,3 +70,9 @@ class LocationCGI: public ServerLocation
 		//	fastcgi_index
 		//	fastcgi_split_path_info
 }
+
+//	<< overloads
+std::ostream & operator << (std::ostream &out, const ServerLocation &serverLocation);
+std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
+//	overload for file uploads location block
+std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);

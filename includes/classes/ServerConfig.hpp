@@ -47,10 +47,12 @@ class	ServerConfig
 		uint16_t		_port;	//	CHECK FOR OVERFLOWS ON INIT
 
 		std::string		_serverName;
-		unsigned int	_maxBodySize;
+		unsigned int	_maxBodySize;	//	SHOULDNT THIS BE IN LOCATION BLOCK?
 
 		LocationBlocks	_locationBlocks;
 };
+
+std::ostream & operator << (std::ostream &out, const ServerConfig &serverConfig);
 
 typedef enum	e_location_block_type
 {
