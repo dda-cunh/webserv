@@ -8,47 +8,65 @@ class	ServerLocation
 				ServerLocation(std::vector<std::string> strLocationBlock);
 		virtual ~ServerLocation(void) = 0;
 
-		std::string	getLocation();
-		std::string	getRootDir();
-		std::string	getindexDir();
-		bool		getAutoIndex();
-		
-		bool		methodIsAllowed(std::string method);
+		std::string	getLocation(void);
+		std::string	getRootDir(void);
+		std::string	getIndexDir(void);
+		std::string	getErrPagePath(int status);
+		std::string	getRedirection(int status); // give this parameter an appropriate name...
+		bool		methodIsAllowed(Http::METHOD method);
 
 	protected:											//	KEYWORDS
-		std::string					location;			//		location [...] {
-		std::string					rootDir;			//		root
-		std::string					indexDir;			//		index
-		bool						autoIndex;			//		autoindex
-		std::vector<Http::METHOD>	methodsAllowed;		//		allowed_methods
-		StrStrMap					redirections;		//	
-		IntStrMap 					errorPages;			//	
-		std::string					uploadDirectory;	//	
+		std::string					_location;			//		location [...] {
+		std::string					_rootDir;			//		root
+		std::string					_indexFile;			//		index
+		IntStrMap 					_errorPages;		//		error_page
+		IntStrMap					_redirections;		//		return
+		std::vector<Http::METHOD>	_methodsAllowed;	//		allowed_methods
 };
 
 //	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
 class	LocationStatic: public ServerLocation
 {
 	public:
-		LocationStatic();
-		~LocationStatic();
+		LocationStatic(void);
+		LocationStatic(std::vector<std::string> strLocationBlock);
+		~LocationStatic(void);
 
+		bool	getAutoIndex(void);
+
+	private:
+		bool	_autoIndex;			//		autoindex
+		//	try_files
 };
 
+//	THIS WILL BE FOR FILE UPLOADS
+//	huh... fuck, now I'm not sure if this still needs to be a reverse proxy...
 class	LocationRevProxy: public ServerLocation
 {
 	public:
-		LocationRevProxy();
-		~LocationRevProxy();
+		LocationRevProxy(void);
+		LocationRevProxy(std::vector<std::string> strLocationBlock);
+		~LocationRevProxy(void);
+
+		std::string	getUploadDir(void);
 
 	private:
 		//	proxy_pass
+		std::string	_uploadDirectory;	//	THIS WILL REQUIRE ITS OWN LOCATION BLOCK...
 
 };
 
 class LocationCGI: public ServerLocation
 {
 	public:
-		LocationCGI();
-		~LocationCGI();
+		LocationCGI(void);
+		LocationCGI(std::vector<std::string> strLocationBlock);
+		~LocationCGI(void);
+
+	private:
+		//	proxy_pass ?
+		//	fastcgi_pass
+		//	fastcgi_param
+		//	fastcgi_index
+		//	fastcgi_split_path_info
 }

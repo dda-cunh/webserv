@@ -31,11 +31,15 @@ class	ServerConfig
 		*/
 
 		//			GETTERS
-		std::string		getServerName(void);
-		std::string		getRootDir(void);
-		unsigned int	getMaxBodySize(void);
-		ServerLocation	*getLocationFromPath(std::string path);
-		int 			getLocationType(ServerLocation *location);	//	MAYBE PUT THIS IN UTILS
+
+		uint32_t			getHost(void);
+		uint16_t			getPort(void);
+		std::string			getServerName(void);
+		unsigned int		getMaxBodySize(void);
+		size_t				getLocationBlocksSize(void);
+		ServerLocation		*getLocationFromIndex(size_t i);
+		ServerLocation		*getLocationFromPath(std::string path);
+		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location);	//	MAYBE PUT THIS IN UTILS
 		//	=============================
 
 	private:
@@ -46,17 +50,12 @@ class	ServerConfig
 		unsigned int	_maxBodySize;
 
 		LocationBlocks	_locationBlocks;
-	
-		//	THIS ONE, ALONGSIDE WITH OTHER KEYWORDS THAT CAN GO ON LOCATION
-		//	BLOCKS, WILL SERVE AS "OVERRIDE" FOR LOCATION DEFAULTS
-		//	THEREFORE, THIS MEMBER WILL BE REMOVED
-		//	(AND I'LL PROB NEED A STRUCT TO HANDLE DEFAULT OVERRIDES OR STH)
-		std::string 	_rootDir;
 };
 
-typedef enum	e_location_type
+typedef enum	e_location_block_type
 {
 	L_UNHANDLED,
 	L_STATIC,
+	L_REV_PROXY,
 	L_CGI
-}	LOCATION_TYPE;
+}	LOCATION_BLOCK_TYPE;
