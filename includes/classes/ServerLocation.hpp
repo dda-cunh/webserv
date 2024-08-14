@@ -75,7 +75,6 @@ class LocationCGI: public ServerLocation
 		LocationCGI	&operator = (const LocationCGI & locationCGI);
 
 	private:
-		//	proxy_pass ?
 		//	fastcgi_pass
 		//	fastcgi_param
 		//	fastcgi_index

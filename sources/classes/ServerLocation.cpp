@@ -6,7 +6,8 @@ ServerLocation::ServerLocation(void)
 {
 	this->_location = "/";
 	this->_rootDir = "./test_files/error_pages/"
-	this->_indexFile = "index.html";	//	THIS FILE NEEDS TO BE CREATED!!!
+	this->_indexFile = "index.html";	//	DONT FORGET TO CREATE THIS FILE
+	this->_maxBodySize = 1000000;
 	this->_errorPages[404] = "./test_files/error_pages/404.html";
 	this->_errorPages[405] = "./test_files/error_pages/405.html";
 	this->_errorPages[500] = "./test_files/error_pages/500.html";
@@ -21,6 +22,23 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 
 }
 */
+
+ServerLocation::ServerLocation(const ServerLocation &serverLocation)
+{
+	if (this != &serverLocation)
+		*this = serverLocation;
+}
+
+ServerLocation	ServerLocation::&operator=(const ServerLocation &serverLocation)
+{
+	this->_location = serverLocation.getLocation();
+	this->_rootDir = serverLocation.getRootDir();
+	this->_indexFile = serverLocation.getIndexFilename();
+	this->_maxBodySize = serverLocation.getMaxBodySize();
+	//	HOW AM i GONNA COPY THE MAPS...?
+
+	return (*this);
+}
 
 std::string	ServerLocation::getLocation(void)
 {
@@ -83,9 +101,23 @@ LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock)	//	ini
 }
 */
 
+LocationStatic::LocationStatic(const LocationStatic &locationStatic)
+{
+	if (this != &locationStatic)
+		*this = locationStatic;
+
+}
+
 LocationStatic::~LocationStatic(void)
 {
 	return ;
+}
+
+LocationStatic	LocationStatic::&operator=(const LocationStatic &locationStatic)
+{
+	this->_autoIndex = locationStatic.getAutoIndex();
+
+	return (*this);
 }
 
 bool	LocationStatic::getAutoIndex(void)
@@ -126,12 +158,23 @@ LocationCGI::LocationCGI(void)
 	//	INIT WITH DEFAULT VALUES
 }
 
-
 LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock)
 {
 
 }
 
+LocationCGI::LocationCGI(const LocationCGI &locationCGI)
+{
+	if (this != &locationCGI)
+		*this = locationCGI;
+}
+
+LocationCGI	LocationCGI::&operator=(const LocationCGI &locationCGI)
+{
+	//	COPY VALUES
+
+	return (*this);
+}
 
 LocationCGI::~LocationCGI(void)
 {

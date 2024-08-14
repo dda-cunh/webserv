@@ -12,12 +12,14 @@ ServerConfig::ServerConfig(void)
 
 	this->_locationBlocks.push_back(new LocationStatic);
 }
+
 /*
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
 	//	PARSE STRINGS TO SET MEMBERS (MAYBE USE CONFIGPARSER FOR THIS...)
 }
 */
+
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
 {
 	if (this != &serverConfig)
