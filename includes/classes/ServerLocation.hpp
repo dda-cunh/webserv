@@ -11,13 +11,20 @@ class	ServerLocation
 
 		ServerLocation	&operator = (const ServerLocation &serverLocation);
 
-		std::string	getLocation(void);
-		std::string	getRootDir(void);
-		std::string	getIndexFilename(void);
-		uint32_t	getMaxBodySize(void);
-		std::string	getErrPagePath(int status);
-		std::string	getRedirection(int status); // give this parameter an appropriate name...
-		bool		methodIsAllowed(Http::METHOD method);
+		std::string			getLocation(void);
+		std::string			getRootDir(void);
+		std::string			getIndexFilename(void);
+		uint32_t			getMaxBodySize(void);
+		IntStrMap::iterator	getErrPageIttBegin(void);
+		IntStrMap::iterator	getErrPageIttEnd(void);
+		IntStrMap::iterator	getRedirectionIttBegin(void);
+		IntStrMap::iterator	getRedirectionIttEnd(void);
+		http::METHOD		getMethodByIndex(size_t i);
+		size_t				getMethodsAllowedSize(void);
+
+		std::string			getErrPagePath(int status);
+		std::string			getRedirection(int status); // give this parameter an appropriate name...
+		bool				methodIsAllowed(Http::METHOD method);
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
@@ -47,8 +54,8 @@ class	LocationStatic: public ServerLocation
 		//	try_files
 };
 
-//	THIS WILL BE FOR FILE UPLOADS
-//	huh... fuck, now I'm not sure if this still needs to be a reverse proxy...
+//	NO NEED FOR A REVERSE PROXY; EITHER IMPLEMENT A CLASS JUST FOR UPLOADS
+//		OR INCORPORATE IT IN LOCATIONSTATIC
 class	LocationRevProxy: public ServerLocation
 {
 	public:
@@ -59,8 +66,8 @@ class	LocationRevProxy: public ServerLocation
 		std::string	getUploadDir(void);
 
 	private:
-		//	proxy_pass
-		std::string	_uploadDirectory;	//	THIS WILL REQUIRE ITS OWN LOCATION BLOCK...
+
+		std::string	_uploadDirectory;
 
 };
 
@@ -81,8 +88,7 @@ class LocationCGI: public ServerLocation
 		//	fastcgi_split_path_info
 }
 
-//	<< overloads
-std::ostream & operator << (std::ostream &out, const ServerLocation &serverLocation);
+
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
-//	overload for file uploads location block
+
 std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);

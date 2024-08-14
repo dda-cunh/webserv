@@ -35,7 +35,15 @@ ServerLocation	ServerLocation::&operator=(const ServerLocation &serverLocation)
 	this->_rootDir = serverLocation.getRootDir();
 	this->_indexFile = serverLocation.getIndexFilename();
 	this->_maxBodySize = serverLocation.getMaxBodySize();
-	//	HOW AM i GONNA COPY THE MAPS...?
+	
+	for (IntStrMap::iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
+		this->_errorPages[itt->first] = itt->second;
+
+	for (IntStrMap::iterator itt = serverLocation.getRedirectionIttBegin(); itt != serverLocation.getRedirectionIttEnd(); itt++)
+		this->_redirections[itt->first] = itt->second;
+
+	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
+		this->_methodsAllowed[i] = serverLocation.getMethodByIndex(i);
 
 	return (*this);
 }
@@ -181,3 +189,24 @@ LocationCGI::~LocationCGI(void)
 	return ;
 }
 
+std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
+{
+	out << locationStatic.getLocation() << std::endl;
+	out << locationStatic.getRootDir() << std::endl;
+	out << locationStatic.getIndexFilename() << std::endl;
+	out << locationStatic.getMaxBodySize() << std::endl;
+	//	AND THEN, MAPS
+
+	return (out);
+}
+
+std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
+{
+	out << locationCGI.getLocation() << std::endl;
+	out << locationCGI.getRootDir() << std::endl;
+	out << locationCGI.getIndexFilename() << std::endl;
+	out << locationCGI.getMaxBodySize() << std::endl;
+	//	AND THEN, MAPS
+
+	return (out);
+}
