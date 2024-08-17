@@ -15,6 +15,7 @@ class	ServerLocation
 		std::string			getRootDir(void);
 		std::string			getIndexFilename(void);
 		uint32_t			getMaxBodySize(void);
+
 		IntStrMap::iterator	getErrPageIttBegin(void);
 		IntStrMap::iterator	getErrPageIttEnd(void);
 		IntStrMap::iterator	getRedirectionIttBegin(void);
@@ -23,7 +24,7 @@ class	ServerLocation
 		size_t				getMethodsAllowedSize(void);
 
 		std::string			getErrPagePath(int status);
-		std::string			getRedirection(int status); // give this parameter an appropriate name...
+		std::string			getRedirection(int status);
 		bool				methodIsAllowed(Http::METHOD method);
 
 	protected:											//	KEYWORDS

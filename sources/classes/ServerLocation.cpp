@@ -68,6 +68,36 @@ uint32_t	ServerLocation::getMaxBodySize(void)
 	return (this->_maxBodySize);
 }
 
+IntStrMap::iterator	ServerLocation::getErrPageIttBegin(void)
+{
+	return (this->_errorPages.begin());
+}
+
+IntStrMap::iterator	ServerLocation::getErrPageIttEnd(void)
+{
+	return (this->_errorPages.end());
+}
+
+IntStrMap::iterator	ServerLocation::getRedirectionIttBegin(void)
+{
+	return (this->_redirections.begin());
+}
+
+IntStrMap::iterator	ServerLocation::getRedirectionIttEnd(void)
+{
+	return (this->_redirections.end());
+}
+
+http::METHOD	ServerLocation::getMethodByIndex(size_t i)
+{
+	return (this->_methodsAllowed.at(i));
+}
+
+size_t	ServerLocation::getMethodsAllowedSize(void)
+{
+	return (this->_methodsAllowed.size());
+}
+
 std::string	ServerLocation::getErrPagePath(int status)
 {
 	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
@@ -195,7 +225,17 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 	out << locationStatic.getRootDir() << std::endl;
 	out << locationStatic.getIndexFilename() << std::endl;
 	out << locationStatic.getMaxBodySize() << std::endl;
-	//	AND THEN, MAPS
+
+	for (IntStrMap::iterator itt = locationStatic.getErrPageIttBegin(); itt != locationStatic.getErrPageIttEnd(); itt++)
+		out << itt->first << " " << itt->second << std::endl;
+
+	for (IntStrMap::iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
+		out << itt->first << " " << itt->second << std::endl;
+
+	for (size_t i = 0; i < locationStatic.getMethodsAllowedSize(); i++)
+		out << locationStatic.getMethodByIndex(i) << std::endl;
+
+	out << locationStatic,getAutoIndex() << std::endl;
 
 	return (out);
 }
@@ -206,7 +246,17 @@ std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
 	out << locationCGI.getRootDir() << std::endl;
 	out << locationCGI.getIndexFilename() << std::endl;
 	out << locationCGI.getMaxBodySize() << std::endl;
-	//	AND THEN, MAPS
+
+	for (IntStrMap::iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
+		out << itt->first << " " << itt->second << std::endl;
+
+	for (IntStrMap::iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
+		out << itt->first << " " << itt->second << std::endl;
+
+	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
+		out << locationCGI.getMethodByIndex(i) << std::endl;
+
+
 
 	return (out);
 }
