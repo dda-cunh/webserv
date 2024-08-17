@@ -112,17 +112,17 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 {
 	size_t	lbSize;
 
-	out << serverConfig.getHost() << std::endl;
-	out << serverConfig.getPort() << std::endl;
-	out << serverConfig.getserverName() << std::endl;
+	out << "Host: " << serverConfig.getHost() << std::endl;
+	out << "Port: " << serverConfig.getPort() << std::endl;
+	out << "Server name: " << serverConfig.getserverName() << std::endl;
 
-	out << serverConfig.getmaxBodySize();	//	MOVE THIS TO LOCATIONBLOCK?
+	out << "Max body size: " serverConfig.getmaxBodySize();	//	MOVE THIS TO LOCATIONBLOCK?
 	
 	lbSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < lbSize; i++)
 	{
 		out << "LocationBlock nr. " << i << ":" << std::endl
-		out << serverConfig.getLocationFromIndex(i) << std::endl;
+		out << *(serverConfig.getLocationFromIndex(i)) << std::endl;
 		out << std::endl;
 	}
 	return (out);

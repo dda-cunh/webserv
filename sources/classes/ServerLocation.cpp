@@ -6,7 +6,7 @@ ServerLocation::ServerLocation(void)
 {
 	this->_location = "/";
 	this->_rootDir = "./test_files/error_pages/"
-	this->_indexFile = "index.html";	//	DONT FORGET TO CREATE THIS FILE
+	this->_indexFile = "index.html";
 	this->_maxBodySize = 1000000;
 	this->_errorPages[404] = "./test_files/error_pages/404.html";
 	this->_errorPages[405] = "./test_files/error_pages/405.html";
@@ -221,40 +221,46 @@ LocationCGI::~LocationCGI(void)
 
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {
-	out << locationStatic.getLocation() << std::endl;
-	out << locationStatic.getRootDir() << std::endl;
-	out << locationStatic.getIndexFilename() << std::endl;
-	out << locationStatic.getMaxBodySize() << std::endl;
+	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
+	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
+	out << "\tIndex: " << locationStatic.getIndexFilename() << std::endl;
+	out << "\tMax body size: " << locationStatic.getMaxBodySize() << std::endl;
 
+	out << "\tError pages:" << std::endl;
 	for (IntStrMap::iterator itt = locationStatic.getErrPageIttBegin(); itt != locationStatic.getErrPageIttEnd(); itt++)
-		out << itt->first << " " << itt->second << std::endl;
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
+	out << "\tRedirections:" << std::endl;
 	for (IntStrMap::iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
-		out << itt->first << " " << itt->second << std::endl;
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
+	out << "Allowed methods:" << std::endl;
 	for (size_t i = 0; i < locationStatic.getMethodsAllowedSize(); i++)
-		out << locationStatic.getMethodByIndex(i) << std::endl;
+		out << "\t\t" << locationStatic.getMethodByIndex(i) << std::endl;
 
-	out << locationStatic,getAutoIndex() << std::endl;
+	out << "\tAutoindex: " << locationStatic,getAutoIndex() << std::endl;
 
 	return (out);
 }
 
 std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
 {
-	out << locationCGI.getLocation() << std::endl;
-	out << locationCGI.getRootDir() << std::endl;
-	out << locationCGI.getIndexFilename() << std::endl;
-	out << locationCGI.getMaxBodySize() << std::endl;
+	out << "\tLocation: " << locationCGI.getLocation() << std::endl;
+	out << "\tRoot: " << locationCGI.getRootDir() << std::endl;
+	out << "\tIndex: " << locationCGI.getIndexFilename() << std::endl;
+	out << "\tMax body size: " << locationCGI.getMaxBodySize() << std::endl;
 
+	out << "\tError pages:" << std::endl;
 	for (IntStrMap::iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
-		out << itt->first << " " << itt->second << std::endl;
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
+	out << "\tRedirections:" << std::endl;
 	for (IntStrMap::iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
-		out << itt->first << " " << itt->second << std::endl;
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
+	out << "Allowed methods:" << std::endl;
 	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
-		out << locationCGI.getMethodByIndex(i) << std::endl;
+		out << "\t\t" << locationCGI.getMethodByIndex(i) << std::endl;
 
 
 
