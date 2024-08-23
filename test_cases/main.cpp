@@ -1,27 +1,11 @@
-#include "ConfigParser.hpp"
+#include "ServerConfig.hpp"
+#include "ServerLocation.hpp"
 
-static void	displayHelp(void)
+int	main(void)
 {
-	std::cout << "Usage:" << std::endl;
-	std::cout << "./test [config file]" << std::endl;
-}
+	ServerConfig	configs;
 
-int	main(int argc, char **argv)
-{
-	std::string	fileName;
-	switch (argc)
-	{
-		case (1):
-			fileName = "configs/inception";
-			ConfigParser::parseConfigs(fileName);
-			break ;
-		case (2):
-			fileName = argv[1];
-			ConfigParser::parseConfigs(fileName);
-			break ;
-		default:
-			displayHelp();
-	}
+	std::cout << configs << std::endl;
+
 	return (0);
 }
-
