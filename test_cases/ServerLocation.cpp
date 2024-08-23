@@ -29,7 +29,7 @@ ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 		*this = serverLocation;
 }
 
-ServerLocation	ServerLocation::&operator=(const ServerLocation &serverLocation)
+ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 {
 	this->_location = serverLocation.getLocation();
 	this->_rootDir = serverLocation.getRootDir();
@@ -88,7 +88,7 @@ IntStrMap::iterator	ServerLocation::getRedirectionIttEnd(void) const
 	return (this->_redirections.end());
 }
 
-http::METHOD	ServerLocation::getMethodByIndex(size_t i) const
+Http::METHOD	ServerLocation::getMethodByIndex(size_t i) const
 {
 	return (this->_methodsAllowed.at(i));
 }
@@ -151,7 +151,7 @@ LocationStatic::~LocationStatic(void)
 	return ;
 }
 
-LocationStatic	LocationStatic::&operator=(const LocationStatic &locationStatic)
+LocationStatic	&LocationStatic::operator=(const LocationStatic &locationStatic)
 {
 	this->_autoIndex = locationStatic.getAutoIndex();
 

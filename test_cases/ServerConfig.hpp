@@ -2,12 +2,12 @@
 
 #include <vector>
 #include <iostream>
+#include <stdint.h>
 #include "ServerLocation.hpp"
+#include "utils.hpp"
 
 //	USE SOMETHING LIFO
-typedef std::vector<ServerLocation *>	LocationBlocks;
 
-// ADD ENUM FOT LOCATION TYPES
 
 class	ServerConfig
 {
@@ -24,13 +24,13 @@ class	ServerConfig
 
 		//			GETTERS
 
-		uint32_t			getHost(void);
-		uint16_t			getPort(void);
-		std::string			getServerName(void);
-		size_t				getLocationBlocksSize(void);
-		ServerLocation		*getLocationFromIndex(size_t i);
-		ServerLocation		*getLocationFromPath(std::string path);
-		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location);	//	MAYBE PUT THIS IN UTILS
+		uint32_t			getHost(void) const;
+		uint16_t			getPort(void) const;
+		std::string			getServerName(void) const;
+		size_t				getLocationBlocksSize(void) const;
+		ServerLocation		*getLocationFromIndex(size_t i) const;
+		ServerLocation		*getLocationFromPath(std::string path) const;
+		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
 		//	=============================
 
 	private:
@@ -42,24 +42,3 @@ class	ServerConfig
 };
 
 std::ostream & operator << (std::ostream &out, const ServerConfig &serverConfig);
-
-namespace Http
-{
-	typedef enum	e_method
-	{
-		M_UNHANDLED,
-		M_DELETE,
-		M_POST,
-		M_GET,
-		__LEN_METHOD
-	}	METHOD;
-}
-
-typedef enum	e_location_block_type
-{
-	L_UNHANDLED,
-	L_STATIC,
-	L_REV_PROXY,
-	L_CGI
-}	LOCATION_BLOCK_TYPE;
-

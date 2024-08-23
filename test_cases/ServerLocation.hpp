@@ -1,10 +1,11 @@
+#pragma once
+
 #include <vector>
 #include <map>
 #include <iostream>
+#include <stdint.h>
 #include "ServerConfig.hpp"
-
-typedef std::map<std::string, std::string>		StrStrMap;
-typedef std::map<int, std::string>				IntStrMap;
+#include "utils.hpp"
 
 
 class	ServerLocation
@@ -26,7 +27,7 @@ class	ServerLocation
 		IntStrMap::iterator	getErrPageIttEnd(void) const;
 		IntStrMap::iterator	getRedirectionIttBegin(void) const;
 		IntStrMap::iterator	getRedirectionIttEnd(void) const;
-		http::METHOD		getMethodByIndex(size_t i) const;
+		Http::METHOD		getMethodByIndex(size_t i) const;
 		size_t				getMethodsAllowedSize(void) const; const
 
 		std::string			getErrPagePath(int status) const;
