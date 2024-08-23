@@ -104,7 +104,7 @@ ServerLocation	*ServerConfig::getLocationFromPath(std::string path) const
 	nLocations = this->_locationBlocks.size();
 	for (size_t i = 0; i < nLocations; i++)
 	{
-		if (this->_locationBlocks.at(i)->_location == path)
+		if (this->_locationBlocks.at(i)->getLocation() == path)
 			return (this->_locationBlocks.at(i));
 	}
 	return (NULL);
@@ -131,11 +131,29 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 	out << "Server name: " << serverConfig.getServerName() << std::endl;
 	
 	lbSize = serverConfig.getLocationBlocksSize();
+
+	ServerLocation	*location;
 	for (size_t i = 0; i < lbSize; i++)
 	{
+		location = serverConfig.getLocationFromIndex(i);
 		out << "LocationBlock nr. " << i << ":" << std::endl;
-		out << *(serverConfig.getLocationFromIndex(i)) << std::endl;
+		//	MUST USE FUCKING DYNAMIC CAST
+		switch (serverConfig.getLocationType(location))
+		{
+			case (L_STATIC):
+				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
+				break ;
+			case (L_REV_PROXY):
+				break ;
+			case (L_CGI):
+				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
+				break ;
+			case (L_UNHANDLED):
+				//	THROW EXCEPTION
+				break ;
+		}		
 		out << std::endl;
 	}
 	return (out);
 }
+

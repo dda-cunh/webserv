@@ -101,13 +101,13 @@ size_t	ServerLocation::getMethodsAllowedSize(void) const
 std::string	ServerLocation::getErrPagePath(int status) const
 {
 	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
-	return (this->_errorPages[status]);
+	return (this->_errorPages.at(status));
 }
 
 std::string	ServerLocation::getRedirection(int status) const
 {
 	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
-	return (this->_redirections[status]);
+	return (this->_redirections.at(status));
 }
 
 bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
