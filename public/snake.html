@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Snake</title>
+</head>
+
+<body>
+  <canvas id="game_field"
+    width="400px"
+    height="400px"
+    style="border: 1px solid black">
+    </canvas>
+</body>
+
+<script>
+  (function() {
+    const canvas = document.getElementById("game_field");
+    const context = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const CELLS_COUNT = 20;
+    const CELL_SIZE = Math.round(width / CELLS_COUNT);
+
+    let snake = [];
+    let food = null;
+    let dir = null;
+    let score = 0;
+    let speedCoeff = 1;
+
+    const FIELD_COLOR = "#f0f0f0";
+    const FOOD_COLOR = "#00f";
+    const GRID_COLOR = "#d9d9d9";
+    const SNAKE_COLOR = "#206020";
+
+    addEventListener("keydown", function(e) {
+      if (e.keyCode === 37 && dir !== "right") {
+        dir = "left";
+      } else if (e.keyCode === 38 && dir !== "down") {
+        dir = "up";
+      } else if (e.keyCode === 39 && dir !== "left") {
+        dir = "right";
+      } else if (e.keyCode === 40 && dir !== "up") {
+        dir = "down";
+      }
+    });
+
+    const draw = function() {
+      draw_field();
+      draw_snake();
+      draw_food();
+    };
+
+    const draw_field = function() {
+      context.fillStyle = FIELD_COLOR;
+      context.fillRect(0, 0, width, height);
+      context.strokeStyle = GRID_COLOR;
+      for (let i = CELL_SIZE; i < height; i += CELL_SIZE) {
+        context.moveTo(0, i);
+        context.lineTo(width, i);
+        context.stroke();
+      }
+      for (let i = CELL_SIZE; i < width; i += CELL_SIZE) {
+        context.moveTo(i, 0);
+        context.lineTo(i, height);
+        context.stroke();
+      }
+    };
+
+    const draw_food = function() {
+      context.beginPath();
+      context.fillStyle = FOOD_COLOR;
+      context.arc(food.x + CELL_SIZE / 2, food.y + CELL_SIZE / 2, CELL_SIZE /
+        2,
+        0, 2 * Math.PI);
+      context.fill();
+      context.closePath();
+    };
+
+    const draw_snake = function() {
+      context.fillStyle = SNAKE_COLOR;
+      context.strokeStyle = "#000000";
+      for (let i = 0; i < snake.length; i++) {
+        context.fillRect(snake[i].x, snake[i].y, CELL_SIZE, CELL_SIZE);
+        context.strokeRect(snake[i].x, snake[i].y, CELL_SIZE,
+          CELL_SIZE);
+      }
+    };
+
+    const init = function() {
+      snake = [];
+      for (let i = 0; i < 2; ++i) {
+        snake.push({
+          x: i * CELL_SIZE,
+          y: 0
+        });
+        snake.reverse();
+      }
+      dir = "right";
+      score = 0;
+      speedCoeff = 1;
+      spawn_food();
+    };
+
+    const isContact = function(fieldObj) {
+      let contact = false;
+      for (let i = 0; i < snake.length && !contact; i++) {
+        contact = snake[i].x === fieldObj.x && snake[i].y === fieldObj.y;
+      }
+      return contact;
+    };
+
+    const isValid = function(pos) {
+      return 0 <= pos.x && pos.x < width && 0 <= pos.y && pos.y < height;
+    }
+
+    const spawn_food = function() {
+      do {
+        food = {
+          x: Math.floor(
+            Math.round(Math.random() * width) / CELL_SIZE) * CELL_SIZE,
+          y: Math.floor(
+            Math.round(Math.random() * height) / CELL_SIZE) * CELL_SIZE
+        }
+      } while (isContact(food) || !isValid(food))
+    };
+
+    const step = function() {
+      let newPos = {};
+      if (dir === "up") {
+        newPos = {
+          x: snake[0].x,
+          y: snake[0].y - CELL_SIZE
+        };
+      } else if (dir === "right") {
+        newPos = {
+          x: snake[0].x + CELL_SIZE,
+          y: snake[0].y
+        };
+      } else if (dir === "down") {
+        newPos = {
+          x: snake[0].x,
+          y: snake[0].y + CELL_SIZE
+        };
+      } else if (dir === "left") {
+        newPos = {
+          x: snake[0].x - CELL_SIZE,
+          y: snake[0].y
+        };
+      }
+      if (!isValid(newPos) || isContact(newPos)) {
+        alert("Game over!\nYour score: " + score);
+        init();
+      } else if (newPos.x === food.x && newPos.y === food.y) {
+        score++;
+        if (score % 5 === 0) {
+          speedCoeff += 0.25;
+        }
+        spawn_food();
+        snake.unshift({
+          x: newPos.x,
+          y: newPos.y
+        });
+      } else {
+        snake.pop();
+        snake.unshift({
+          x: newPos.x,
+          y: newPos.y
+        });
+      }
+      draw();
+      setTimeout(step, 200 / speedCoeff);
+    };
+
+    init();
+    step();
+  }).call();
+</script>
+
+</html>

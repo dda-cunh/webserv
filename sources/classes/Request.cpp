@@ -145,13 +145,7 @@ ByteArr	Request::getNextChunkClient()
 	long			r;
 
 	r = recv(this->clientFD(), buff, CLIENT_CHUNK_SIZE, MSG_DONTWAIT);
-	if (r < 0)
-	{
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-			return (ByteArr());
-		throw (ExceptionMaker(strerror(errno)));
-	}
-	if (r == 0)
+	if (r <= 0)
 		return (ByteArr());
 	chunk.assign(buff, buff + r);
 	return (chunk);
