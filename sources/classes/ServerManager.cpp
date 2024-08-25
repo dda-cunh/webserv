@@ -81,19 +81,12 @@ void ServerManager::down()	throw()
 	if (this->_ep_fd != -1)
 	{
 		for (unsigned int i = 0; i < SM_EP_EV_LEN; i++)
-			doEpollCtl(EPOLL_CTL_DEL, ep_events()[i]);
+			doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
 		close(this->_ep_fd);
 	}
 	this->_ep_fd = -1;
 	this->_is_up = false;
 	Utils::log("ServerManager is down", Utils::LOG_INFO);
-}
-
-epoll_event	*ServerManager::ep_events()	throw()
-{
-	static epoll_event events[SM_EP_EV_LEN];
-
-	return (events);
 }
 
 bool	ServerManager::initEpoll()	throw()
@@ -112,14 +105,6 @@ bool	ServerManager::initEpoll()	throw()
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
 				return (false);
 		}
-		// event.events = EPOLLIN;
-		// event.data.fd = STDOUT_FILENO;
-		// if (!doEpollCtl(EPOLL_CTL_ADD, event))
-		// 	return (false);
-		// event.events = EPOLLIN;
-		// event.data.fd = STDERR_FILENO;
-		// if (!doEpollCtl(EPOLL_CTL_ADD, event))
-		// 	return (false);
 	}
 	return (true);
 }
@@ -135,20 +120,20 @@ void ServerManager::up()	throw()
 	Utils::log("ServerManager is up", Utils::LOG_INFO);
 	while (this->_is_up)
 	{
-		n_fds = epoll_wait(this->_ep_fd, ep_events(), SM_EP_EV_LEN, -1);
+		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
 		if (n_fds == -1)
 			syscall_kill();
 		for (int i = 0; i < n_fds; i++)
 		{
 			try
 			{
-				if (ep_events()[i].events & EPOLLIN)
+				if (_ep_events[i].events & EPOLLIN)
 				{
-					if (this->isServerSocket(ep_events()[i].data.fd))
+					if (this->isServerSocket(_ep_events[i].data.fd))
 					{
 						int	client_fd;
 
-						client_fd = accept(ep_events()[i].data.fd, NULL, NULL);
+						client_fd = accept(_ep_events[i].data.fd, NULL, NULL);
 						if (client_fd == -1)
 							syscall_kill();
 						Utils::log("New client connected", Utils::LOG_INFO);
@@ -159,9 +144,9 @@ void ServerManager::up()	throw()
 					}
 					else
 					{
-						Request req(ep_events()[i].data.fd);
+						Request req(_ep_events[i].data.fd);
 						event.events = EPOLLOUT | EPOLLET;
-						event.data.fd = ep_events()[i].data.fd;
+						event.data.fd = _ep_events[i].data.fd;
 						Utils::log("Request received", Utils::LOG_INFO);
 						Utils::log(req.str(), Utils::LOG_INFO);
 						if (!doEpollCtl(EPOLL_CTL_MOD, event))
@@ -171,28 +156,28 @@ void ServerManager::up()	throw()
 							close(event.data.fd);
 							continue;
 						}
-						this->_req_feed.insert(RequestFeed::value_type(ep_events()[i].data.fd, req));
+						this->_req_feed.insert(RequestFeed::value_type(_ep_events[i].data.fd, req));
 					}
 				}
-				else if (ep_events()[i].events & EPOLLOUT)
+				else if (_ep_events[i].events & EPOLLOUT)
 				{
 					RequestFeed::iterator	it;
-					it = this->_req_feed.find(ep_events()[i].data.fd);
+					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
 						Response response(it->second);
 						std::string responseStr = response.response();
-						send(ep_events()[i].data.fd, responseStr.c_str(),
+						send(_ep_events[i].data.fd, responseStr.c_str(),
 								responseStr.length(), MSG_DONTWAIT);
 						if (it->second.header("connection") != "keep-alive")
 						{
-							doEpollCtl(EPOLL_CTL_DEL, ep_events()[i]);
-							close(ep_events()[i].data.fd);
+							doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
+							close(_ep_events[i].data.fd);
 						}
 						else
 						{
 							event.events = EPOLLIN | EPOLLET;
-							event.data.fd = ep_events()[i].data.fd;
+							event.data.fd = _ep_events[i].data.fd;
 							if (!doEpollCtl(EPOLL_CTL_MOD, event))
 								syscall_kill();
 						}
@@ -201,8 +186,8 @@ void ServerManager::up()	throw()
 					}
 					else
 					{
-						if (ep_events()[i].data.fd != -1)
-							close(ep_events()[i].data.fd);
+						if (_ep_events[i].data.fd != -1)
+							close(_ep_events[i].data.fd);
 						Utils::log("Couldn't find request for client",
 									Utils::LOG_WARNING);
 					}

@@ -23,6 +23,7 @@ class ServerManager
 	private:
 		ServerBlocks const			_server_blocks;
 
+		epoll_event					_ep_events[SM_EP_EV_LEN];
 		RequestFeed					_req_feed;
 		SocketArr					_sockets;
 		bool						_is_up;
@@ -31,8 +32,6 @@ class ServerManager
 		ServerManager & operator=(ServerManager const & rhs)	throw();
 		ServerManager(ServerManager const & src)				throw();
 		ServerManager()											throw();
-
-		epoll_event	*ep_events()								throw();
 
 		bool	doEpollCtl(int const& op, epoll_event & ev)		throw();
 		bool	isServerSocket(int const& fd)					throw();
