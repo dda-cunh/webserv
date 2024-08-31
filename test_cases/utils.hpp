@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <sstream>
 #include "ServerLocation.hpp"
 
 class ServerLocation;
@@ -35,4 +36,3 @@ typedef enum	e_location_block_type
 	L_REV_PROXY,
 	L_CGI
 }	LOCATION_BLOCK_TYPE;
-

@@ -23,10 +23,10 @@ class	ServerLocation
 		std::string			getIndexFilename(void) const;
 		uint32_t			getMaxBodySize(void) const;
 
-		IntStrMap::iterator	getErrPageIttBegin(void) const;
-		IntStrMap::iterator	getErrPageIttEnd(void) const;
-		IntStrMap::iterator	getRedirectionIttBegin(void) const;
-		IntStrMap::iterator	getRedirectionIttEnd(void) const;
+		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
+		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
+		IntStrMap::const_iterator	getRedirectionIttBegin(void) const;
+		IntStrMap::const_iterator	getRedirectionIttEnd(void) const;
 		Http::METHOD		getMethodByIndex(size_t i) const;
 		size_t				getMethodsAllowedSize(void) const;
 

@@ -36,10 +36,10 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 	this->_indexFile = serverLocation.getIndexFilename();
 	this->_maxBodySize = serverLocation.getMaxBodySize();
 	
-	for (IntStrMap::iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
+	for (IntStrMap::const_iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
 		this->_errorPages[itt->first] = itt->second;
 
-	for (IntStrMap::iterator itt = serverLocation.getRedirectionIttBegin(); itt != serverLocation.getRedirectionIttEnd(); itt++)
+	for (IntStrMap::const_iterator itt = serverLocation.getRedirectionIttBegin(); itt != serverLocation.getRedirectionIttEnd(); itt++)
 		this->_redirections[itt->first] = itt->second;
 
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
@@ -68,22 +68,22 @@ uint32_t	ServerLocation::getMaxBodySize(void) const
 	return (this->_maxBodySize);
 }
 
-IntStrMap::iterator	ServerLocation::getErrPageIttBegin(void) const
+IntStrMap::const_iterator	ServerLocation::getErrPageIttBegin(void) const
 {
 	return (this->_errorPages.begin());
 }
 
-IntStrMap::iterator	ServerLocation::getErrPageIttEnd(void) const
+IntStrMap::const_iterator	ServerLocation::getErrPageIttEnd(void) const
 {
 	return (this->_errorPages.end());
 }
 
-IntStrMap::iterator	ServerLocation::getRedirectionIttBegin(void) const
+IntStrMap::const_iterator	ServerLocation::getRedirectionIttBegin(void) const
 {
 	return (this->_redirections.begin());
 }
 
-IntStrMap::iterator	ServerLocation::getRedirectionIttEnd(void) const
+IntStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
 {
 	return (this->_redirections.end());
 }
@@ -139,7 +139,7 @@ LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock)	//	ini
 }
 */
 
-LocationStatic::LocationStatic(const LocationStatic &locationStatic)
+LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation()
 {
 	if (this != &locationStatic)
 		*this = locationStatic;
@@ -229,11 +229,11 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 	out << "\tMax body size: " << locationStatic.getMaxBodySize() << std::endl;
 
 	out << "\tError pages:" << std::endl;
-	for (IntStrMap::iterator itt = locationStatic.getErrPageIttBegin(); itt != locationStatic.getErrPageIttEnd(); itt++)
+	for (IntStrMap::const_iterator itt = locationStatic.getErrPageIttBegin(); itt != locationStatic.getErrPageIttEnd(); itt++)
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "\tRedirections:" << std::endl;
-	for (IntStrMap::iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
+	for (IntStrMap::const_iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "\tAllowed methods:" << std::endl;
