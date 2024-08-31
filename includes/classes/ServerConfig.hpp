@@ -1,8 +1,11 @@
 #pragma once
 
 #include "../webserv.hpp"
+#include "ServerLocation.hpp"
 
 class ServerLocation;
+class LocationStatic;
+
 typedef std::vector<ServerLocation *>			LocationBlocks;
 
 typedef enum	e_location_block_type

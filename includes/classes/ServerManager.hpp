@@ -2,6 +2,9 @@
 
 #include "../webserv.hpp"
 #include "TCPSocket.hpp"
+#include "ServerConfig.hpp"
+#include "ServerLocation.hpp"
+
 
 class ServerManager
 {
