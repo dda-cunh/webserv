@@ -6,16 +6,9 @@
 #include "ServerLocation.hpp"
 #include "utils.hpp"
 
-//	USE SOMETHING LIFO
 
 class ServerLocation;
-
-typedef std::map<std::string, std::string>		StrStrMap;
-typedef std::map<int, std::string>				IntStrMap;
 typedef std::vector<ServerLocation *>			LocationBlocks;
-
-
-
 
 class	ServerConfig
 {

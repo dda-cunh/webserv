@@ -6,7 +6,7 @@ ServerConfig::ServerConfig(void)
 {
 	this->_host = Network::sToIPV4Packed("127.0.0.1");
 	this->_port = 80;
-	this->_serverName = "";
+	this->_serverName = "webserv.ft";
 
 	this->_locationBlocks.push_back(new LocationStatic);
 }

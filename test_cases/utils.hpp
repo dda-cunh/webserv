@@ -3,13 +3,13 @@
 #include <map>
 #include <vector>
 #include <sstream>
-#include "ServerLocation.hpp"
-
-class ServerLocation;
+#include <iostream>
+#include <stdint.h>
+#include <cstdlib>
 
 typedef std::map<std::string, std::string>		StrStrMap;
 typedef std::map<int, std::string>				IntStrMap;
-typedef std::vector<ServerLocation *>			LocationBlocks;
+
 
 namespace Network
 {

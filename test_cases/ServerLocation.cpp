@@ -29,6 +29,11 @@ ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 		*this = serverLocation;
 }
 
+ServerLocation::~ServerLocation(void)
+{
+	return ;
+}
+
 ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 {
 	this->_location = serverLocation.getLocation();

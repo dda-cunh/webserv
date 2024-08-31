@@ -14,7 +14,7 @@ class	ServerLocation
 		ServerLocation(void);
 //		ServerLocation(std::vector<std::string> strLocationBlock);
 		ServerLocation(const ServerLocation &serverLocation);
-		virtual ~ServerLocation(void) = 0;
+		virtual ~ServerLocation(void);
 
 		ServerLocation	&operator = (const ServerLocation &serverLocation);
 
