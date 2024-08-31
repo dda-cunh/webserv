@@ -5,27 +5,27 @@ class	ServerLocation
 {
 	public:
 		ServerLocation(void);
-		ServerLocation(std::vector<std::string> strLocationBlock);
+//		ServerLocation(std::vector<std::string> strLocationBlock);
 		ServerLocation(const ServerLocation &serverLocation);
-		virtual ~ServerLocation(void) = 0;
+		virtual ~ServerLocation(void);
 
 		ServerLocation	&operator = (const ServerLocation &serverLocation);
 
-		std::string			getLocation(void);
-		std::string			getRootDir(void);
-		std::string			getIndexFilename(void);
-		uint32_t			getMaxBodySize(void);
+		std::string			getLocation(void) const;
+		std::string			getRootDir(void) const;
+		std::string			getIndexFilename(void) const;
+		uint32_t			getMaxBodySize(void) const;
 
-		IntStrMap::iterator	getErrPageIttBegin(void);
-		IntStrMap::iterator	getErrPageIttEnd(void);
-		IntStrMap::iterator	getRedirectionIttBegin(void);
-		IntStrMap::iterator	getRedirectionIttEnd(void);
-		http::METHOD		getMethodByIndex(size_t i);
-		size_t				getMethodsAllowedSize(void);
+		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
+		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
+		IntStrMap::const_iterator	getRedirectionIttBegin(void) const;
+		IntStrMap::const_iterator	getRedirectionIttEnd(void) const;
+		Http::METHOD		getMethodByIndex(size_t i) const;
+		size_t				getMethodsAllowedSize(void) const;
 
-		std::string			getErrPagePath(int status);
-		std::string			getRedirection(int status);
-		bool				methodIsAllowed(Http::METHOD method);
+		std::string			getErrPagePath(int status) const;
+		std::string			getRedirection(int status) const;
+		bool				methodIsAllowed(Http::METHOD method) const;
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
@@ -42,13 +42,13 @@ class	LocationStatic: public ServerLocation
 {
 	public:
 		LocationStatic(void);
-		LocationStatic(std::vector<std::string> strLocationBlock);
+//		LocationStatic(std::vector<std::string> strLocationBlock);
 		LocationStatic(const LocationStatic &locationStatic);
-		~LocationStatic(void);
+		virtual ~LocationStatic(void);
 
 		LocationStatic	&operator = (const LocationStatic &locationStatic);
 
-		bool	getAutoIndex(void);
+		bool	getAutoIndex(void) const;
 
 	private:
 		bool	_autoIndex;			//		autoindex
@@ -57,6 +57,7 @@ class	LocationStatic: public ServerLocation
 
 //	NO NEED FOR A REVERSE PROXY; EITHER IMPLEMENT A CLASS JUST FOR UPLOADS
 //		OR INCORPORATE IT IN LOCATIONSTATIC
+/*
 class	LocationRevProxy: public ServerLocation
 {
 	public:
@@ -88,8 +89,16 @@ class LocationCGI: public ServerLocation
 		//	fastcgi_index
 		//	fastcgi_split_path_info
 }
-
+*/
 
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
 
-std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);
+//std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);
+
+typedef enum	e_location_block_type
+{
+	L_UNHANDLED,
+	L_STATIC,
+	L_REV_PROXY,
+	L_CGI
+}	LOCATION_BLOCK_TYPE;

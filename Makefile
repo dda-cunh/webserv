@@ -22,7 +22,9 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 												Request.cpp \
 												Response.cpp \
 												TCPSocket.cpp \
-												ServerManager.cpp) \
+												ServerManager.cpp \
+												ServerConfig.cpp \
+												ServerLocation.cpp) \
 					$(addprefix $(NAMES_DIR),	Utils.cpp \
 												Http.cpp \
 												Network.cpp))
