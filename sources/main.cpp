@@ -10,7 +10,9 @@ int	main(int ac, char **av)
 	(void) av;
 
 	ServerManager::ServerBlocks	blocks;
-	blocks.push_back((ServerConfig){Network::sToIPV4Packed("127.0.0.1"), 5050});
+	ServerConfig				config;
+
+	blocks.push_back(config);
 	ServerManager server(blocks);
 	return (0);
 }

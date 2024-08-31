@@ -1,12 +1,17 @@
 #pragma once
 
-#include <fstream>	//	what do I need this for again?
-#include <vector>
-#include "ServerLocation.hpp"
 #include "../webserv.hpp"
 
 class ServerLocation;
 typedef std::vector<ServerLocation *>			LocationBlocks;
+
+typedef enum	e_location_block_type
+{
+	L_UNHANDLED,
+	L_STATIC,
+	L_REV_PROXY,
+	L_CGI
+}	LOCATION_BLOCK_TYPE;
 
 class	ServerConfig
 {
@@ -41,3 +46,4 @@ class	ServerConfig
 };
 
 std::ostream & operator << (std::ostream &out, const ServerConfig &serverConfig);
+

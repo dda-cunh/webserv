@@ -1,4 +1,5 @@
-#include <vector>
+#pragma once
+
 #include "../webserv.hpp"
 
 class	ServerLocation
@@ -94,11 +95,3 @@ class LocationCGI: public ServerLocation
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
 
 //std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);
-
-typedef enum	e_location_block_type
-{
-	L_UNHANDLED,
-	L_STATIC,
-	L_REV_PROXY,
-	L_CGI
-}	LOCATION_BLOCK_TYPE;
