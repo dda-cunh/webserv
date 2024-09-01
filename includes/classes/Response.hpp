@@ -2,7 +2,9 @@
 
 #include "../webserv.hpp"
 # include "Request.hpp"
-#include <fstream>
+
+#include <vector>
+#include <algorithm> // std::find
 
 #define NO_SUCH_HEADER ""
 
@@ -25,22 +27,27 @@ class Response
 		std::string 			_response;
 		Request					_request;
 		IntStrMap				_error_pages;
+		StrStrMap				_redirections;
 
 		Response();
 		Response(Response const &src);
 		Response &operator=(Response const &rhs);
 
-		void 					dispatchRequestMethod();
+		void 					dispatchMethod();
+		void 					handleGETMethod();
+		void 					handlePOSTMethod();
+		void 					handleDELETEMethod();
+		void 					handleMethodNotAllowed();
 
-		void 					handleGETMethod(Request const &);
-		void 					handlePOSTMethod(Request const &);
-		void 					handleDELETEMethod(Request const &);
-
+		void 					setLocation();
 		void					setErrorPages();
-
 		void 					setHeader(const std::string &, const std::string &);
 		void 					setCommonHeaders();
 		void 					setResponse();
 
-		void					readResource(std::string uri);
+		void					readResource(const std::string &uri, bool isErrorResponse = false);
+		void					setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");
+		std::string 			getResponseWithoutBody(); // TODO: Debug function, to be removed
+		bool 					isRedirection();
+		void					handleFileList();
 };

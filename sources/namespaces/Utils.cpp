@@ -62,4 +62,41 @@ namespace Utils
 			}
 		}
 	}
+
+	std::string 	intToString(int const& value)
+	{
+		std::stringstream ss;
+		ss << value;
+		return ss.str();
+	}
+
+	std::string getCurrentDate()
+	{
+		time_t now = time(0);
+		struct tm tstruct;
+		char buf[80];
+		tstruct = *gmtime(&now);
+		strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", &tstruct);
+		return buf;
+	}
+
+	bool resourceExists(std::string const &uri)
+	{
+		struct stat buffer;
+		return (stat(uri.c_str(), &buffer) == 0);
+	}
+
+	std::string concatenatePaths(const std::string &basePath, const std::string &appendPath)
+	{
+		std::string adjustedBasePath = basePath;
+		std::string adjustedAppendPath = appendPath;
+
+		if (!adjustedBasePath.empty() && adjustedBasePath[adjustedBasePath.length() - 1] != PATH_SEPARATOR)
+			adjustedBasePath += PATH_SEPARATOR;
+
+		if (!adjustedAppendPath.empty() && adjustedAppendPath[0] == PATH_SEPARATOR)
+			adjustedAppendPath = adjustedAppendPath.substr(1);
+
+		return adjustedBasePath + adjustedAppendPath;
+	}
 }

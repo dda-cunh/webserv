@@ -27,7 +27,9 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 												ServerLocation.cpp) \
 					$(addprefix $(NAMES_DIR),	Utils.cpp \
 												Http.cpp \
-												Network.cpp))
+												Network.cpp \
+												Directory.cpp \
+												ErrorPages.cpp))
 
 OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(CLASS_DIR)) \
 								$(addprefix $(OBJ_DIR), $(NAMES_DIR))
