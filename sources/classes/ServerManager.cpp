@@ -49,7 +49,7 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 	{
 		try
 		{
-			TCPSocket	socket(server_blocks[i].ipv4, server_blocks[i].port, 5);
+			TCPSocket	socket(server_blocks[i].getHost(), server_blocks[i].getPort(), 5);
 
 			for (unique_i = 0; unique_i < this->_sockets.size(); unique_i++)
 				if (this->_sockets[unique_i] == socket)

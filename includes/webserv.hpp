@@ -15,6 +15,7 @@
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
+#include "classes/ConfigParser.hpp"
 #include "namespaces/Network.hpp"
 #include "namespaces/Utils.hpp"
 #include "namespaces/Http.hpp"
@@ -34,6 +35,7 @@ class	ExceptionMaker;
 */
 class	ServerManager;
 class	ServerConfig;
+class	ServerLocation;
 class	Response;
 class	Request;
 class	Socket;
@@ -46,12 +48,7 @@ typedef std::vector<unsigned char>				ByteArr;
 
 #define CLIENT_CHUNK_SIZE						4096
 
-//TODO: REMOVE PLACEHOLDER WHEN CLASS GETS IMPLEMENTED
-struct ServerConfig
-{
-	uint32_t	ipv4;
-	uint16_t	port;
-};
+
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
 #define CLI_COLORS_YELLOW	"\033[33m"
