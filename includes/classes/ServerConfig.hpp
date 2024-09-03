@@ -41,9 +41,9 @@ class	ServerConfig
 		//	=============================
 
 	private:
-		uint32_t		_host;
-		uint16_t		_port;	//	CHECK FOR OVERFLOWS ON INIT
-		std::string		_serverName;
+		uint32_t		_host;			//	listen
+		uint16_t		_port;			//	port
+		std::string		_serverName;	//	server_name
 
 		LocationBlocks	_locationBlocks;
 };

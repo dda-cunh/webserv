@@ -16,12 +16,19 @@ ServerLocation::ServerLocation(void)
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
 
-/*
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
+	//	PARSE DIRECTIVES FROM VECTOR
+	this->_location =
+	this->_rootDir =
+	this->_indexFile =
+	this->_maxBodySize =
 
+	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS
+	//		INTO this->_errorPages
+	//	SAME WITH REDIRECTIONS
+	//	AND ALLOWED METHODS
 }
-*/
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 {

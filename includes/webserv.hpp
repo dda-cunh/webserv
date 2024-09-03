@@ -15,6 +15,7 @@
 #include <map>
 
 #include "classes/ExceptionMaker.hpp"
+#include "classes/ConfigParser.hpp"
 #include "namespaces/Network.hpp"
 #include "namespaces/Utils.hpp"
 #include "namespaces/Http.hpp"

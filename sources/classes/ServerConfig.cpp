@@ -11,12 +11,24 @@ ServerConfig::ServerConfig(void)
 	this->_locationBlocks.push_back(new LocationStatic);
 }
 
-/*
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
-	//	PARSE STRINGS TO SET MEMBERS (MAYBE USE CONFIGPARSER FOR THIS...)
+	//	PARSE DIRECTIVES FROM VECTOR
+	//	PARSING FUNCTIONS SHOULD RETURN DEFAULT VALUES
+	//		FOR UNSPECIFIED DIRECTIVES
+	this->_host = ConfigParser::parseHost(strServerBlock);
+	this->_port = ConfigParser::parsePort(strServerBlock);
+	this->_serverName = ConfigParser::parseServerName(strServerBlock);
+
+	//	LOOP THROUGH VECTOR FOR LOCATION BLOCKS
+	//		EVERYTIME THE KEYWORD "location" IS FOUND
+	//		KEEP READING UNTIL A LINE ENDING IN '}' IS FOUND
+	//		THEN LOAD THAT STUFF TO ANOTHER VECTOR
+	//		READ THE CONTENTS OF THAT VECTOR TO DETERMINE LOCATION TYPE
+	//		AND PASS IT AS ARGUMENT FOR this->_locationBlocks.insert()
+	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT 
+	//		(HARDCODED) VALUES (but first check if nginx works like that too)
 }
-*/
 
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
 {
