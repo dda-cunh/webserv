@@ -138,7 +138,7 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 {
 	size_t	lbSize;
 
-	out << "Host: " << serverConfig.getHost() << std::endl;
+	out << "Host: " << Network::iPV4PackedTos(serverConfig.getHost() ) << std::endl;
 	out << "Port: " << serverConfig.getPort() << std::endl;
 	out << "Server name: " << serverConfig.getServerName() << std::endl;
 	
