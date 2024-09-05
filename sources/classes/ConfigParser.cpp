@@ -132,14 +132,35 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 
 void	ConfigParser::_overrideDefaults(void)
 {
-	size_t	vectorSize;
+	size_t		vectorSize;
+	std::string	line;
 
 	vectorSize = _strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
+		line = _strServerBlock.at(i);
 		//	IF location CONTEXT IS FOUND, SKIP TO END OF location CONTEXT
+		if (line.find("location") == 0)
+		{
+			while (line.at(line.size() - 1) != '}')
+				i++;
+		}
 		//	SEARCH FOR root AND index DIRECTIVES
 		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR SAME DIRECTIVE
+		if (line.find("root") == 0)
+		{
+			if (_defaultRoot.empty() )
+				//	COPY VALUE TO _defaultRoot
+			else
+				throw (ExceptionMaker("Multiple overrides for default root directive inside same server context") );
+		}
+		else if (line.find("index") == 0)
+		{
+			if (_defaultIndex.empty() )
+				//	COPY VALUE TO _defaultIndex
+			else
+				throw (ExceptionMaker("Multiple overrides for default index directive inside same server context") );
+		}
 	}
 }
 
