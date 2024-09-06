@@ -15,7 +15,7 @@ ServerLocation::ServerLocation(void)
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
-
+/*
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
 	//	PARSE DIRECTIVES FROM VECTOR
@@ -29,7 +29,7 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 	//	SAME WITH REDIRECTIONS
 	//	AND ALLOWED METHODS
 }
-
+*/
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 {
 	if (this != &serverLocation)
