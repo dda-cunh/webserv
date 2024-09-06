@@ -34,28 +34,26 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 			break ;
 
 
-//		print_vector(_strServerBlock);
-//		_strServerBlock.clear();
-
 
 		//	ADD SYNTAX CHECK LATER
 
 
+
 		_overrideDefaults();
 		
-
 		//	FOR DEBUGGING
 		print_vector(_strServerBlock);
 		std::cout << "Default override for root: " << _defaultRoot << std::endl;
 		std::cout << "Default override for index: " << _defaultIndex << std::endl;
 
-//		configs.push_back(ServerConfig(_strServerBlock) );
+		configs.push_back(ServerConfig(_strServerBlock) );
 
 		_strServerBlock.clear();
 		_defaultRoot.clear();
 		_defaultIndex.clear();
 	}
 
+	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
 }
@@ -183,11 +181,27 @@ void	ConfigParser::_overrideDefaults(void)
 }
 
 
+static std::string	strParseLine(std::string line)
+{
+	std::string	val;
+
+	val = line;
+
+	val.erase(0, val.find_first_of(" \t") );
+	if (val.at(val.size() - 1) == ';' || val.at(val.size() - 1) == '{')
+		val.erase(val.size() - 1, 1);
+	val = Utils::sTrim(val);
+
+	return (val);
+}
+
+
 /*		PARSING FOR SERVERCONFIG CLASS		*/
-/*
+
 uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 {
-	size_t	vectorSize;
+	size_t		vectorSize;
+	std::string	strHost;
 
 	vectorSize = strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
@@ -195,16 +209,26 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
 			//	GET 2ND WORD
+			strHost = strParseLine(strServerBlock.at(i) );
 			//	DETERMINE IF ':' IS PRESENT
-			//	IF YES, GET VALUE AT LEFT SIDE
-			//	ELSE, DETERMINE IF ITS AN IP ADDR
-			//	RETURN IP IF YES, RETURN DEFAULT OTHERWISE
+			//		IF YES, GET VALUE AT LEFT SIDE
+			if (strHost.find(':') != strHost.npos)
+				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
+			else
+			{
+			//		ELSE, DETERMINE IF ITS AN IP ADDR
+			//			RETURN IP IF YES, RETURN DEFAULT OTHERWISE
+				if (strHost.find('.') != strHost.npos)
+					return (Network::sToIPV4Packed(strHost) );
+				else
+					return (Network::sToIPV4Packed(DEFAULT_HOST) );
+			}
 		}
 	}
 
-	return (Network::sToIPV4Packed(DEFAULT_HOST));
+	return (Network::sToIPV4Packed(DEFAULT_HOST) );
 }
-
+/*
 uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 {
 	size_t	vectorSize;
@@ -217,6 +241,8 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 			//	SAME AS PARSEHOST, BUT CHECK FOR PORT INSTEAD
 		}
 	}
+
+	//	DO NOT FORGET TO CHECK FOR OVERFLOWS!!!!!!
 
 	return (DEFAULT_PORT);
 }

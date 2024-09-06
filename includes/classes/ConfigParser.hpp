@@ -24,9 +24,10 @@ class	ConfigParser
 	public:
 		static void			parseConfigs(const char *path, ServerBlocks &configs);
 
+
 			/*		PARSE FROM STR VECTOR TO SERVERCONFIG OBJECT		*/
-/*		static uint32_t		parseHost(std::vector<std::string> strServerBlock);
-		static uint16_t		parsePort(std::vector<std::string> strServerBlock);
+		static uint32_t		parseHost(std::vector<std::string> strServerBlock);
+/*		static uint16_t		parsePort(std::vector<std::string> strServerBlock);
 		static std::string	parseServerName(std::vector<std::string> strServerBlock);
 */
 		//	ALSO GONNA NEED A FUNCTION TO DETERMINE LOCATION TYPE FROM VECTOR
