@@ -1,6 +1,5 @@
 #pragma once
 
-//#include "ServerManager.hpp"
 #include "../webserv.hpp"
 
 /*	DEFAULTS FOR SERVERCONFIG	*/
@@ -56,7 +55,7 @@ class	ConfigParser
 
 		static void	_loadServerContext(std::ifstream &configFile);
 //		static void	_syntaxCheck WILL BE ADDED LATER
-//		static void	_overrideDefaults(void);
+		static void	_overrideDefaults(void);
 
 
 		static std::vector<std::string>	_strServerBlock;

@@ -12,21 +12,21 @@ class	ServerLocation
 
 		ServerLocation	&operator = (const ServerLocation &serverLocation);
 
-		std::string			getLocation(void) const;
-		std::string			getRootDir(void) const;
-		std::string			getIndexFilename(void) const;
-		uint32_t			getMaxBodySize(void) const;
+		std::string					getLocation(void) const;
+		std::string					getRootDir(void) const;
+		std::string					getIndexFilename(void) const;
+		uint32_t					getMaxBodySize(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
 		IntStrMap::const_iterator	getRedirectionIttBegin(void) const;
 		IntStrMap::const_iterator	getRedirectionIttEnd(void) const;
-		Http::METHOD		getMethodByIndex(size_t i) const;
-		size_t				getMethodsAllowedSize(void) const;
+		Http::METHOD				getMethodByIndex(size_t i) const;
+		size_t						getMethodsAllowedSize(void) const;
 
-		std::string			getErrPagePath(int status) const;
-		std::string			getRedirection(int status) const;
-		bool				methodIsAllowed(Http::METHOD method) const;
+		std::string					getErrPagePath(int status) const;
+		std::string					getRedirection(int status) const;
+		bool						methodIsAllowed(Http::METHOD method) const;
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {

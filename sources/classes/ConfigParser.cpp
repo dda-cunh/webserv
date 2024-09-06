@@ -5,7 +5,7 @@ std::string					ConfigParser::_defaultRoot;
 std::string					ConfigParser::_defaultIndex;
 
 
-/*
+
 static void	print_vector(std::vector<std::string> block)
 {
 	size_t	vectorSize;
@@ -15,7 +15,7 @@ static void	print_vector(std::vector<std::string> block)
 		std::cout << block.at(i) << std::endl;
 	std::cout << "==================================" << std::endl;
 }
-*/
+
 
 void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 {
@@ -34,7 +34,6 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 			break ;
 
 
-		//	FOR DEBUGGING
 //		print_vector(_strServerBlock);
 //		_strServerBlock.clear();
 
@@ -43,8 +42,14 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 
 
 		_overrideDefaults();
+		
 
-		configs.push_back(serverConfig(_strServerBlock) );
+		//	FOR DEBUGGING
+		print_vector(_strServerBlock);
+		std::cout << "Default override for root: " << _defaultRoot << std::endl;
+		std::cout << "Default override for index: " << _defaultIndex << std::endl;
+
+//		configs.push_back(ServerConfig(_strServerBlock) );
 
 		_strServerBlock.clear();
 		_defaultRoot.clear();
@@ -85,7 +90,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			if (line.at(line.size() - 1) != '{')
 			{
 				std::getline(configFile, line);
-				Utils::sTrim(line);
+				line = Utils::sTrim(line);
 
 				if (line != "{")
 					throw (ExceptionMaker("Syntax error in Server context encapsulation") );
@@ -102,7 +107,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
-		Utils::sTrim(line);
+		line = Utils::sTrim(line);
 
 		//	UPDATE BRACKET LEVEL
 		if (line.empty() )
@@ -116,7 +121,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			_strServerBlock.push_back(line);
 		
 
-		if (line.find("server") == 0)
+		if (line.find("server ") == 0)
 			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 		else if (brackets == 0)
 			break ;
@@ -143,21 +148,34 @@ void	ConfigParser::_overrideDefaults(void)
 		if (line.find("location") == 0)
 		{
 			while (line.at(line.size() - 1) != '}')
+			{
 				i++;
+				line = _strServerBlock.at(i);
+			}
 		}
 		//	SEARCH FOR root AND index DIRECTIVES
 		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR SAME DIRECTIVE
 		if (line.find("root") == 0)
 		{
 			if (_defaultRoot.empty() )
-				//	COPY VALUE TO _defaultRoot
+			{
+				line.erase(0, 4);
+				line.erase(line.size() - 1, line.size());
+				line = Utils::sTrim(line);
+				_defaultRoot = line;
+			}
 			else
 				throw (ExceptionMaker("Multiple overrides for default root directive inside same server context") );
 		}
 		else if (line.find("index") == 0)
 		{
 			if (_defaultIndex.empty() )
-				//	COPY VALUE TO _defaultIndex
+			{
+				line.erase(0, 5);
+				line.erase(line.size() - 1, line.size());
+				line = Utils::sTrim(line);
+				_defaultIndex = line;
+			}
 			else
 				throw (ExceptionMaker("Multiple overrides for default index directive inside same server context") );
 		}
