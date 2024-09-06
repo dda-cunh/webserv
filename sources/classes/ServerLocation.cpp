@@ -1,6 +1,5 @@
 #include "../../includes/classes/ServerLocation.hpp"
 
-//	BASE CLASS
 
 ServerLocation::ServerLocation(void)
 {
@@ -15,21 +14,7 @@ ServerLocation::ServerLocation(void)
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
-/*
-ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
-{
-	//	PARSE DIRECTIVES FROM VECTOR
-	this->_location =
-	this->_rootDir =
-	this->_indexFile =
-	this->_maxBodySize =
 
-	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS
-	//		INTO this->_errorPages
-	//	SAME WITH REDIRECTIONS
-	//	AND ALLOWED METHODS
-}
-*/
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 {
 	if (this != &serverLocation)
@@ -112,13 +97,11 @@ size_t	ServerLocation::getMethodsAllowedSize(void) const
 
 std::string	ServerLocation::getErrPagePath(int status) const
 {
-	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
 	return (this->_errorPages.at(status));
 }
 
 std::string	ServerLocation::getRedirection(int status) const
 {
-	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
 	return (this->_redirections.at(status));
 }
 
@@ -135,21 +118,10 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 	return (false);
 }
 
-
-//	DERIVED CLASSES
-
-//		STATIC SITE
-LocationStatic::LocationStatic(void)	//	INIT BASE CLASS TOO
+LocationStatic::LocationStatic(void)
 {
 	this->_autoIndex = false;
 }
-
-/*
-LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock)	//	init base class too
-{
-
-}
-*/
 
 LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation()
 {
@@ -176,63 +148,6 @@ bool	LocationStatic::getAutoIndex(void) const
 }
 
 
-/*
-//		REVERSE PROXY (FOR FILE UPLOADS)
-LocationRevProxy::LocationRevProxy(void)
-{
-	//	what will default proxy pass be?
-	this->_uploadDirectory = "/upload";
-}
-
-
-LocationRevProxy::LocationRevProxy(std::vector<std::string> strLocationBlock)
-{
-
-}
-
-
-LocationRevProxy::~LocationRevProxy(void)
-{
-	return ;
-}
-
-std::string	LocationRevProxy::getUploadDir(void)
-{
-	return (this->_uploadDirectory);
-}
-
-
-//		CGI
-
-LocationCGI::LocationCGI(void)
-{
-	//	INIT WITH DEFAULT VALUES
-}
-
-LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock)
-{
-
-}
-
-LocationCGI::LocationCGI(const LocationCGI &locationCGI)
-{
-	if (this != &locationCGI)
-		*this = locationCGI;
-}
-
-LocationCGI	LocationCGI::&operator=(const LocationCGI &locationCGI)
-{
-	//	COPY VALUES
-
-	return (*this);
-}
-
-LocationCGI::~LocationCGI(void)
-{
-	return ;
-}
-*/
-
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {
 	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
@@ -256,29 +171,3 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 
 	return (out);
 }
-
-/*
-std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
-{
-	out << "\tLocation: " << locationCGI.getLocation() << std::endl;
-	out << "\tRoot: " << locationCGI.getRootDir() << std::endl;
-	out << "\tIndex: " << locationCGI.getIndexFilename() << std::endl;
-	out << "\tMax body size: " << locationCGI.getMaxBodySize() << std::endl;
-
-	out << "\tError pages:" << std::endl;
-	for (IntStrMap::iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "\tRedirections:" << std::endl;
-	for (IntStrMap::iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "Allowed methods:" << std::endl;
-	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
-		out << "\t\t" << locationCGI.getMethodByIndex(i) << std::endl;
-
-
-
-	return (out);
-}
-*/

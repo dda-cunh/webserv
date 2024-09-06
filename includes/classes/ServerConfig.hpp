@@ -20,16 +20,10 @@ class	ServerConfig
 {
 	public:
 		ServerConfig(void);
-//		ServerConfig(std::vector<std::string> strServerBlock);
 		ServerConfig(const ServerConfig &serverConfig);
 		~ServerConfig(void);
 
 		ServerConfig &operator = (const ServerConfig &serverConfig);
-
-		//	SETTERS FOR CONSTRUCTOR
-
-
-		//			GETTERS
 
 		uint32_t			getHost(void) const;
 		uint16_t			getPort(void) const;
@@ -37,13 +31,12 @@ class	ServerConfig
 		size_t				getLocationBlocksSize(void) const;
 		ServerLocation		*getLocationFromIndex(size_t i) const;
 		ServerLocation		*getLocationFromPath(std::string path) const;
-		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
-		//	=============================
+		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;
 
 	private:
-		uint32_t		_host;			//	listen
-		uint16_t		_port;			//	port
-		std::string		_serverName;	//	server_name
+		uint32_t		_host;
+		uint16_t		_port;
+		std::string		_serverName;
 
 		LocationBlocks	_locationBlocks;
 };
