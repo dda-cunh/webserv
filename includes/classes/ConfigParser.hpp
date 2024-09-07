@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../webserv.hpp"
+#include "ServerManager.hpp"
 
 /*	DEFAULTS FOR SERVERCONFIG	*/
 #define DEFAULT_HOST "127.0.0.1"
@@ -15,9 +15,7 @@
 
 #define DEFAULT_AUTO_INDEX false
 
-class	ServerConfig;
 typedef std::vector<ServerConfig>	ServerBlocks;
-
 
 class	ConfigParser
 {
@@ -28,8 +26,8 @@ class	ConfigParser
 			/*		PARSE FROM STR VECTOR TO SERVERCONFIG OBJECT		*/
 		static uint32_t		parseHost(std::vector<std::string> strServerBlock);
 		static uint16_t		parsePort(std::vector<std::string> strServerBlock);
-/*		static std::string	parseServerName(std::vector<std::string> strServerBlock);
-*/
+		static std::string	parseServerName(std::vector<std::string> strServerBlock);
+
 		//	ALSO GONNA NEED A FUNCTION TO DETERMINE LOCATION TYPE FROM VECTOR
 
 			/*		PARSE FROM STR VECTOR TO SERVERLOCATION OBJECT		*/

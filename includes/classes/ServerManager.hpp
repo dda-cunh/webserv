@@ -9,7 +9,7 @@
 
 #define SM_EP_EV_LEN 1024
 
-class ServerConfig
+class ServerConfig;
 
 class ServerManager
 {

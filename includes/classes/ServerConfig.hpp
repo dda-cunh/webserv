@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../webserv.hpp"
+#include "ConfigParser.hpp"
 #include "ServerLocation.hpp"
 
 class ServerLocation;
@@ -20,7 +21,7 @@ class	ServerConfig
 {
 	public:
 		ServerConfig(void);
-//		ServerConfig(std::vector<std::string> strServerBlock);
+		ServerConfig(std::vector<std::string> strServerBlock);
 		ServerConfig(const ServerConfig &serverConfig);
 		~ServerConfig(void);
 

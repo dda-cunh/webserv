@@ -5,7 +5,7 @@ std::string					ConfigParser::_defaultRoot;
 std::string					ConfigParser::_defaultIndex;
 
 
-
+/*
 static void	print_vector(std::vector<std::string> block)
 {
 	size_t	vectorSize;
@@ -15,7 +15,7 @@ static void	print_vector(std::vector<std::string> block)
 		std::cout << block.at(i) << std::endl;
 	std::cout << "==================================" << std::endl;
 }
-
+*/
 
 void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 {
@@ -42,10 +42,10 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		_overrideDefaults();
 		
 		//	FOR DEBUGGING
-		print_vector(_strServerBlock);
+/*		print_vector(_strServerBlock);
 		std::cout << "Default override for root: " << _defaultRoot << std::endl;
 		std::cout << "Default override for index: " << _defaultIndex << std::endl;
-
+*/
 		configs.push_back(ServerConfig(_strServerBlock) );
 
 		_strServerBlock.clear();
@@ -56,6 +56,10 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
+/*
+	for (size_t i = 0; i < configs.size(); i++)
+		std::cout << configs.at(i) << std::endl;
+*/
 }
 
 static void	erase_comments(std::string &line)
@@ -243,7 +247,7 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 		{
 			//	SAME AS PARSEHOST, BUT CHECK FOR PORT INSTEAD
 			strPort = strParseLine(strServerBlock.at(i) );
-			
+
 			if (strPort.find(':') != strPort.npos)
 			{
 				substrSize = strPort.size() - strPort.find(':');
@@ -260,7 +264,7 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 
 	return (DEFAULT_PORT);
 }
--()
+
 std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBlock)
 {
 	size_t	vectorSize;
@@ -270,13 +274,13 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 	{
 		if (strServerBlock.at(i).find("server_name") == 0)
 		{
-			//	RETURN SECOND WORD
+			return (strParseLine(strServerBlock.at(i)) );
 		}
 	}
 
 	return (DEFAULT_SERVER_NAME);
 }
-*/
+
 
 /*		PARSING FOR SERVERLOCATION CLASSES		*/
 /*

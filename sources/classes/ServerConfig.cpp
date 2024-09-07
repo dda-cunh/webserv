@@ -10,7 +10,7 @@ ServerConfig::ServerConfig(void)
 
 	this->_locationBlocks.push_back(new LocationStatic);
 }
-/*
+
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
 	//	PARSE DIRECTIVES FROM VECTOR
@@ -29,7 +29,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT 
 	//		(HARDCODED) VALUES (but first check if nginx works like that too)
 }
-*/
+
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
 {
 	if (this != &serverConfig)
