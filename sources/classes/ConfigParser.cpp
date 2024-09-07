@@ -228,10 +228,13 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 
 	return (Network::sToIPV4Packed(DEFAULT_HOST) );
 }
-/*
+
 uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 {
-	size_t	vectorSize;
+	std::string	strPort;
+	size_t		vectorSize;
+	size_t		substrSize;
+	int			nPort;
 
 	vectorSize = strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
@@ -239,14 +242,25 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
 			//	SAME AS PARSEHOST, BUT CHECK FOR PORT INSTEAD
+			strPort = strParseLine(strServerBlock.at(i) );
+			
+			if (strPort.find(':') != strPort.npos)
+			{
+				substrSize = strPort.size() - strPort.find(':');
+				nPort = std::atoi(strPort.c_str() );
+				if (substrSize > 5 || nPort > 0xffff)
+					throw (ExceptionMaker("Port number is out of range") );
+				else
+					return (static_cast<uint16_t>(nPort) );
+			}
+			else
+				return (DEFAULT_PORT);
 		}
 	}
 
-	//	DO NOT FORGET TO CHECK FOR OVERFLOWS!!!!!!
-
 	return (DEFAULT_PORT);
 }
-
+-()
 std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBlock)
 {
 	size_t	vectorSize;
