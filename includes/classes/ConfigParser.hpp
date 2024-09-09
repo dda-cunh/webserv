@@ -24,11 +24,12 @@ class	ConfigParser
 
 
 			/*		PARSE FROM STR VECTOR TO SERVERCONFIG OBJECT		*/
-		static uint32_t		parseHost(std::vector<std::string> strServerBlock);
-		static uint16_t		parsePort(std::vector<std::string> strServerBlock);
-		static std::string	parseServerName(std::vector<std::string> strServerBlock);
+		static uint32_t				parseHost(std::vector<std::string> strServerBlock);
+		static uint16_t				parsePort(std::vector<std::string> strServerBlock);
+		static std::string			parseServerName(std::vector<std::string> strServerBlock);
 
-		//	ALSO GONNA NEED A FUNCTION TO DETERMINE LOCATION TYPE FROM VECTOR
+		static LOCATION_BLOCK_TYPE	parseStrLocationType(std::vector<std::string> strLocationBlock);
+
 
 			/*		PARSE FROM STR VECTOR TO SERVERLOCATION OBJECT		*/
 /*		static std::string	parseLocation(std::vector<std::string> strLocationBlock);

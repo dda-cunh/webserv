@@ -282,6 +282,14 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 }
 
 
+LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
+{
+	//	THIS WILL BE PROPERLY IMPLEMENTED LATER
+	(void)strLocationBlock;
+	return (L_STATIC);
+}
+
+
 /*		PARSING FOR SERVERLOCATION CLASSES		*/
 /*
 std::string	ConfigParser::parseLocation(std::vector<std::string> strLocationBlock)

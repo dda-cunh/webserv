@@ -13,21 +13,45 @@ ServerConfig::ServerConfig(void)
 
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
-	//	PARSE DIRECTIVES FROM VECTOR
-	//	PARSING FUNCTIONS SHOULD RETURN DEFAULT VALUES
-	//		FOR UNSPECIFIED DIRECTIVES
+	std::vector<std::string>	strLocationBlock;
+	std::string					line;
+	size_t						sServBlkSize;
+
 	this->_host = ConfigParser::parseHost(strServerBlock);
 	this->_port = ConfigParser::parsePort(strServerBlock);
 	this->_serverName = ConfigParser::parseServerName(strServerBlock);
 
-	//	LOOP THROUGH VECTOR FOR LOCATION BLOCKS
-	//		EVERYTIME THE KEYWORD "location" IS FOUND
-	//		KEEP READING UNTIL A LINE ENDING IN '}' IS FOUND
-	//		THEN LOAD THAT STUFF TO ANOTHER VECTOR
-	//		READ THE CONTENTS OF THAT VECTOR TO DETERMINE LOCATION TYPE
-	//		AND PASS IT AS ARGUMENT FOR this->_locationBlocks.insert()
-	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT 
-	//		(HARDCODED) VALUES (but first check if nginx works like that too)
+	sServBlkSize = strServerBlock.size();
+	for (size_t i = 0; i < sServBlkSize; i++)
+	{
+		line = strServerBlock.at(i);
+		if (line.find("location") == 0)
+		{
+			while (line.at(line.size() - 1) != '}')
+			{
+				strLocationBlock.push_back(line);
+				line = strServerBlock.at(++i);
+			}
+			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
+			{
+				case (L_STATIC):
+					this->_locationBlocks.insert(this->_locationBlocks.begin(), new LocationStatic(strLocationBlock) );
+					break ;
+				case (L_REV_PROXY):
+					throw (ExceptionMaker("This feature has not been implemented yet") );
+					break ;
+				case (L_CGI):
+					throw (ExceptionMaker("This feature has not been implemented yet") );
+					break ;
+				case (L_UNHANDLED):
+					throw (ExceptionMaker("Invalid Location type") );
+					break ;
+			}
+			strServerBlock.clear();
+		}
+	}
+	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT VALUES
+	//		(OR THROW EXCEPTION, WHICHEVER nginx DOES)
 }
 
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
