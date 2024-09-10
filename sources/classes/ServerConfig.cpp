@@ -50,8 +50,8 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 			strServerBlock.clear();
 		}
 	}
-	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT VALUES
-	//		(OR THROW EXCEPTION, WHICHEVER nginx DOES)
+	if (this->_locationBlocks.empty() )
+		this->_locationBlocks.push_back(new LocationStatic);
 }
 
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)

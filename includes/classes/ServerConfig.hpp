@@ -4,6 +4,13 @@
 #include "ConfigParser.hpp"
 #include "ServerLocation.hpp"
 
+
+//	DEFAULTS
+#define DEFAULT_HOST "127.0.0.1"
+#define DEFAULT_PORT 1024
+#define DEFAULT_SERVER_NAME "webserv.ft"
+
+
 class ServerLocation;
 class LocationStatic;
 

@@ -2,6 +2,20 @@
 
 #include "../webserv.hpp"
 
+
+//	DEFAULTS
+#define DEFAULT_LOCATION "/"
+#define DEFAULT_ROOT "./test_files"
+#define DEFAULT_INDEX "index.html"
+#define DEFAULT_MAX_BODY_SIZE 1000000
+
+#define DEFAULT_404 "./test_files/error_pages/404.html"
+#define DEFAULT_405 "./test_files/error_pages/405.html"
+#define DEFAULT_500 "./test_files/error_pages/500.html"
+
+#define DEFAULT_AUTO_INDEX false
+
+
 class	ServerLocation
 {
 	public:
@@ -31,7 +45,7 @@ class	ServerLocation
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
 		std::string					_rootDir;			//		root
-		std::string					_indexFile;			//		index
+		std::vector<std::string>	_indexFiles;			//		index
 		uint32_t					_maxBodySize;		//		client_max_body_size; default is 1m
 		IntStrMap 					_errorPages;		//		error_page
 		IntStrMap					_redirections;		//		return

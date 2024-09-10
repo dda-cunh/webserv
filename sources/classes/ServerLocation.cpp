@@ -1,17 +1,18 @@
 #include "../../includes/classes/ServerLocation.hpp"
 
+
 //	BASE CLASS
 
 ServerLocation::ServerLocation(void)
 {
-	this->_location = "/";
-	this->_rootDir = "./test_files";
-	this->_indexFile = "index.html";
-	this->_maxBodySize = 1000000;
-	this->_errorPages[404] = "./test_files/error_pages/404.html";
-	this->_errorPages[405] = "./test_files/error_pages/405.html";
-	this->_errorPages[500] = "./test_files/error_pages/500.html";
-	//	leave redirections empty for now
+	this->_location = DEFAULT_LOCATION;
+	this->_rootDir = DEFAULT_ROOT;
+	this->_indexFiles.push_back(DEFAULT_INDEX);
+	this->_maxBodySize = DEFAULT_MAX_BODY_SIZE;
+	this->_errorPages[404] = DEFAULT_404;
+	this->_errorPages[405] = DEFAULT_405;
+	this->_errorPages[500] = DEFAULT_500;
+	
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
@@ -21,7 +22,7 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 	//	PARSE DIRECTIVES FROM VECTOR
 	this->_location = ConfigParser::parseLocation(strLocationBlock);
 	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
-	this->_indexFile = ConfigParser::parseIndexFile(strLocationBlock);
+	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
 	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
 
 	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS

@@ -186,7 +186,7 @@ void	ConfigParser::_overrideDefaults(void)
 			}
 		}
 		//	SEARCH FOR root AND index DIRECTIVES
-		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR SAME DIRECTIVE
+		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR root DIRECTIVE
 		if (line.find("root") == 0)
 		{
 			if (_defaultRoot.empty() )
@@ -201,15 +201,10 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("index") == 0)
 		{
-			if (_defaultIndex.empty() )
-			{
-				str_parse_line(line);
-				if (word_count(line) > 1)	//	DOESNT nginx ACCEPT MULTIPLE VALUES FOR index...?
-					throw (ExceptionMaker("Invalid number of arguments in \"index\" directive") );
-				_defaultIndex = line;
-			}
-			else
-				throw (ExceptionMaker("Multiple overrides for default index directive inside same server context") );
+			line.erase(0, line.find_first_of(" \t") );
+			line.erase(line.size() - 1, 1);
+			line = Utils::sTrim(line);
+			//	SPLIT AND PUSH BACK EACH FILE TO _defaultIndex
 		}
 	}
 }
@@ -340,7 +335,7 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 		return (this->_defaultRoot);
 }
 
-std::string	ConfigParser::parseIndexFile(std::vector<std::string> strLocationBlock)
+void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles)
 {
 	size_t	vectorSize;
 
@@ -349,14 +344,17 @@ std::string	ConfigParser::parseIndexFile(std::vector<std::string> strLocationBlo
 	{
 		if (strLocationBlock.at(i).find("index") == 0)
 		{
-			//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+			//	PUSH BACK ARGS TO indexFiles
 		}
 	}
 
 	if (this->_defaultIndex.empty() )
-		return (DEFAULT_INDEX);
+		indexFiles.push_back(DEFAULT_INDEX);
 	else
-		return (this->_defaultIndex);
+	{
+		for (size_t i = 0; i < _defaultIndex.size(); i++)
+			indexFiles.push_back(_defaultIndex.at(i) );
+	}
 }
 
 uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBlock)
