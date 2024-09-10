@@ -28,7 +28,7 @@ class	ServerLocation
 
 		std::string					getLocation(void) const;
 		std::string					getRootDir(void) const;
-		std::string					getIndexFilename(void) const;
+		std::string					getIndexFilename(size_t i) const;
 		uint32_t					getMaxBodySize(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;

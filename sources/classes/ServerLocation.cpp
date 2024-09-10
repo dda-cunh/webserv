@@ -71,9 +71,12 @@ std::string	ServerLocation::getRootDir(void) const
 	return (this->_rootDir);
 }
 
-std::string	ServerLocation::getIndexFilename(void) const
+std::string	ServerLocation::getIndexFilename(size_t i) const
 {
-	return (this->_indexFile);
+	if (i < this->_indexFiles.size() )
+		return (this->_indexFiles.at(i) );
+	else
+		throw (ExceptionMaker("Index for index files out of range") );
 }
 
 uint32_t	ServerLocation::getMaxBodySize(void) const
