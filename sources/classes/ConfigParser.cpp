@@ -17,6 +17,41 @@ static void	print_vector(std::vector<std::string> block)
 }
 */
 
+static void	erase_comments(std::string &line)
+{
+	size_t	pos;
+
+	pos = line.find("#");
+	if (pos != line.npos)
+		line.erase(pos, line.size());
+}
+
+static std::string	str_parse_line(std::string line)
+{
+	std::string	val;
+
+	val = line;
+
+	val.erase(0, val.find_first_of(" \t") );
+	if (val.at(val.size() - 1) == ';' || val.at(val.size() - 1) == '{')
+		val.erase(val.size() - 1, 1);
+	val = Utils::sTrim(val);
+
+	return (val);
+}
+
+static size_t	word_count(std::string line)
+{
+	std::ostringstream	strStream;
+	size_t				count;
+
+	count = 0;
+	while (strStream << line)
+		count++;
+
+	return (count);
+}
+
 void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 {
 	std::ifstream	configFile;
@@ -56,20 +91,15 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
+
+	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
+	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
 /*
 	for (size_t i = 0; i < configs.size(); i++)
 		std::cout << configs.at(i) << std::endl;
 */
 }
 
-static void	erase_comments(std::string &line)
-{
-	size_t	pos;
-
-	pos = line.find("#");
-	if (pos != line.npos)
-		line.erase(pos, line.size());
-}
 
 void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 {
@@ -161,9 +191,9 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			if (_defaultRoot.empty() )
 			{
-				line.erase(0, 4);
-				line.erase(line.size() - 1, line.size());
-				line = Utils::sTrim(line);
+				str_parse_line(line);
+				if (word_count(line) > 1)
+					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				_defaultRoot = line;
 			}
 			else
@@ -173,9 +203,9 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			if (_defaultIndex.empty() )
 			{
-				line.erase(0, 5);
-				line.erase(line.size() - 1, line.size());
-				line = Utils::sTrim(line);
+				str_parse_line(line);
+				if (word_count(line) > 1)	//	DOESNT nginx ACCEPT MULTIPLE VALUES FOR index...?
+					throw (ExceptionMaker("Invalid number of arguments in \"index\" directive") );
 				_defaultIndex = line;
 			}
 			else
@@ -185,19 +215,6 @@ void	ConfigParser::_overrideDefaults(void)
 }
 
 
-static std::string	strParseLine(std::string line)
-{
-	std::string	val;
-
-	val = line;
-
-	val.erase(0, val.find_first_of(" \t") );
-	if (val.at(val.size() - 1) == ';' || val.at(val.size() - 1) == '{')
-		val.erase(val.size() - 1, 1);
-	val = Utils::sTrim(val);
-
-	return (val);
-}
 
 
 /*		PARSING FOR SERVERCONFIG CLASS		*/
@@ -213,7 +230,7 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
 			//	GET 2ND WORD
-			strHost = strParseLine(strServerBlock.at(i) );
+			strHost = str_parse_line(strServerBlock.at(i) );
 			//	DETERMINE IF ':' IS PRESENT
 			//		IF YES, GET VALUE AT LEFT SIDE
 			if (strHost.find(':') != strHost.npos)
@@ -245,8 +262,7 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 	{
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
-			//	SAME AS PARSEHOST, BUT CHECK FOR PORT INSTEAD
-			strPort = strParseLine(strServerBlock.at(i) );
+			strPort = str_parse_line(strServerBlock.at(i) );
 
 			if (strPort.find(':') != strPort.npos)
 			{
@@ -274,7 +290,7 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 	{
 		if (strServerBlock.at(i).find("server_name") == 0)
 		{
-			return (strParseLine(strServerBlock.at(i)) );
+			return (str_parse_line(strServerBlock.at(i)) );
 		}
 	}
 
@@ -284,21 +300,25 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 
 LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
 {
-	//	THIS WILL BE PROPERLY IMPLEMENTED LATER
+	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
 	(void)strLocationBlock;
 	return (L_STATIC);
 }
 
 
-/*		PARSING FOR SERVERLOCATION CLASSES		*/
-/*
-std::string	ConfigParser::parseLocation(std::vector<std::string> strLocationBlock)
-{
-	//	THIS CONFIG SHOULD BE ON THE 1ST LINE OF THE LOCATIONBLOCK
-	//	CHECK IF THERE IS ANY WORD AFTER "LOCATION" (EXCLUDING '{' IF PRESENT)
-	//	RETURN THAT VALUE IF FOUND
+/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
 
-	return (DEFAULT_LOCATION);
+std::string	ConfigParser::parseLocation(std::string locationLine)
+{
+	locationLine.erase(0, 8);
+	locationLine = Utils::sTrim(locationLine);
+	str_parse_line(locationLine);
+
+//	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
+	if (!locationLine.empty() && locationLine.find_first_of(" \t") == locationLine.npos)
+		return (locationLine);
+	else
+		throw (ExceptionMaker("Invalid number of arguments in \"location\" directive") );
 }
 
 std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock)
@@ -327,7 +347,10 @@ std::string	ConfigParser::parseIndexFile(std::vector<std::string> strLocationBlo
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+		if (strLocationBlock.at(i).find("index") == 0)
+		{
+			//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+		}
 	}
 
 	if (this->_defaultIndex.empty() )
@@ -336,4 +359,35 @@ std::string	ConfigParser::parseIndexFile(std::vector<std::string> strLocationBlo
 		return (this->_defaultIndex);
 }
 
-*/
+uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBlock)
+{
+	size_t	vectorSize;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+	}
+
+	return (DEFAULT_MAX_BODY_SIZE);	
+}
+
+
+
+
+
+
+/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
+
+bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
+{
+	size_t	vectorSize;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+	}
+
+	return (DEFAULT_AUTO_INDEX);	
+}

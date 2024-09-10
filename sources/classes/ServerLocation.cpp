@@ -15,21 +15,21 @@ ServerLocation::ServerLocation(void)
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
-/*
+
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
 	//	PARSE DIRECTIVES FROM VECTOR
-	this->_location =
-	this->_rootDir =
-	this->_indexFile =
-	this->_maxBodySize =
+	this->_location = ConfigParser::parseLocation(strLocationBlock);
+	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
+	this->_indexFile = ConfigParser::parseIndexFile(strLocationBlock);
+	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
 
 	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS
 	//		INTO this->_errorPages
 	//	SAME WITH REDIRECTIONS
 	//	AND ALLOWED METHODS
 }
-*/
+
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
 {
 	if (this != &serverLocation)
@@ -139,19 +139,19 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 //	DERIVED CLASSES
 
 //		STATIC SITE
-LocationStatic::LocationStatic(void)	//	INIT BASE CLASS TOO
+LocationStatic::LocationStatic(void)
 {
 	this->_autoIndex = false;
 }
 
-/*
-LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock)	//	init base class too
+
+LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): serverLocation(strLocationBlock)
 {
-
+	this->_autoIndex = 	ConfigParser::parseAutoIndex(strLocationBlock);
 }
-*/
 
-LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation()
+
+LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation(locationStatic)
 {
 	if (this != &locationStatic)
 		*this = locationStatic;
