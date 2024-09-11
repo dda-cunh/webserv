@@ -44,9 +44,15 @@ ServerLocation::~ServerLocation(void)
 
 ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 {
+	size_t	indexVectorSize;
+
 	this->_location = serverLocation.getLocation();
 	this->_rootDir = serverLocation.getRootDir();
-	this->_indexFile = serverLocation.getIndexFilename();
+
+	indexVectorSize = serverLocation.getIndexVectorSize();
+	for (size_t i = 0; i < indexVectorSize; i++)
+		this->_indexFiles.push_back(serverLocation.getIndexFileName(i) );
+	
 	this->_maxBodySize = serverLocation.getMaxBodySize();
 	
 	for (IntStrMap::const_iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
@@ -71,7 +77,7 @@ std::string	ServerLocation::getRootDir(void) const
 	return (this->_rootDir);
 }
 
-std::string	ServerLocation::getIndexFilename(size_t i) const
+std::string	ServerLocation::getIndexFileName(size_t i) const
 {
 	if (i < this->_indexFiles.size() )
 		return (this->_indexFiles.at(i) );
@@ -139,6 +145,10 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 	return (false);
 }
 
+size_t	ServerLocation::getIndexVectorSize(void)
+{
+	return (this->_indexFiles.size() );
+}
 
 //	DERIVED CLASSES
 
@@ -239,9 +249,16 @@ LocationCGI::~LocationCGI(void)
 
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {
+	size_t	indexVectorSize;
+
 	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
 	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
-	out << "\tIndex: " << locationStatic.getIndexFilename() << std::endl;
+
+	out << "\tIndex files: " << std::endl;
+	indexVectorSize = locationStatic.getIndexVectorSize();
+	for (size_t i = 0; i < indexVectorSize; i++)
+		out << "\t\t" << locationStatic.getIndexFileName(i) << std::endl;
+
 	out << "\tMax body size: " << locationStatic.getMaxBodySize() << std::endl;
 
 	out << "\tError pages:" << std::endl;

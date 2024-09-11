@@ -42,14 +42,24 @@ static std::string	str_parse_line(std::string line)
 
 static size_t	word_count(std::string line)
 {
-	std::ostringstream	strStream;
+	std::istringstream	strStream(line);
+	std::string			outStr;
 	size_t				count;
 
 	count = 0;
-	while (strStream << line)
+	while (strStream >> outStr)
 		count++;
 
 	return (count);
+}
+
+static void	split_string_to_vector(std::string line, std::vector<std::string> &strVector)
+{
+	std::istringstream	strStream(line);
+	std::string			outStr;
+
+	while(strStream >> outStr)
+		strVector.push_back(outStr);
 }
 
 void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
@@ -164,7 +174,9 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 }
 
 
+
 //		SYNTAX CHECK METHODS GO HERE
+
 
 
 void	ConfigParser::_overrideDefaults(void)
@@ -191,7 +203,7 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			if (_defaultRoot.empty() )
 			{
-				str_parse_line(line);
+				line = str_parse_line(line);
 				if (word_count(line) > 1)
 					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				_defaultRoot = line;
@@ -201,15 +213,11 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("index") == 0)
 		{
-			line.erase(0, line.find_first_of(" \t") );
-			line.erase(line.size() - 1, 1);
-			line = Utils::sTrim(line);
-			//	SPLIT AND PUSH BACK EACH FILE TO _defaultIndex
+			line = str_parse_line(line);
+			split_string_to_vector(line, _defaultIndex);
 		}
 	}
 }
-
-
 
 
 /*		PARSING FOR SERVERCONFIG CLASS		*/
@@ -310,7 +318,7 @@ std::string	ConfigParser::parseLocation(std::string locationLine)
 	str_parse_line(locationLine);
 
 //	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
-	if (!locationLine.empty() && locationLine.find_first_of(" \t") == locationLine.npos)
+	if (!locationLine.empty() || word_count(locationLine) != 1)
 		return (locationLine);
 	else
 		throw (ExceptionMaker("Invalid number of arguments in \"location\" directive") );
@@ -325,7 +333,10 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 	{
 		if (strLocationBlock.at(i).find("root") == 0)
 		{
-			//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+				line = str_parse_line(line);
+				if (word_count(line) > 1)
+					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
+				return (line);
 		}
 	}
 
@@ -337,42 +348,70 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 
 void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles)
 {
-	size_t	vectorSize;
+	size_t		vectorSize;
+	std::string	line;
 
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		if (strLocationBlock.at(i).find("index") == 0)
+		line = strLocationBlock.at(i);
+		if (line.find("index") == 0)
 		{
-			//	PUSH BACK ARGS TO indexFiles
+			line = str_parse_line(line);
+			split_string_to_vector(line, indexFiles);
 		}
 	}
-
-	if (this->_defaultIndex.empty() )
-		indexFiles.push_back(DEFAULT_INDEX);
-	else
+	
+	if (indexFiles.empty() )
 	{
-		for (size_t i = 0; i < _defaultIndex.size(); i++)
-			indexFiles.push_back(_defaultIndex.at(i) );
+		if (this->_defaultIndex.empty() )
+			indexFiles.push_back(DEFAULT_INDEX);
+		else
+		{
+			for (size_t i = 0; i < _defaultIndex.size(); i++)
+				indexFiles.push_back(_defaultIndex.at(i) );
+		}
 	}
 }
 
 uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBlock)
 {
-	size_t	vectorSize;
+	size_t				vectorSize;
+	std::string			line;
+	long unsigned int	ulConvert;
 
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+		line = strLocationBlock.at(i);
+		if (line.find("client_max_body_size") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (strLocationBlock.at(i).find("client_max_body_size") == 0)
+					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			if (word_count(line) > 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
+			ulConvert = std::strtoul(line);
+			if (line.size() > 10 || unConvert > 0xffffffff)
+				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
+			else
+				return (static_cast<uint32_t>(ulConvert) );
+		}
 	}
 
 	return (DEFAULT_MAX_BODY_SIZE);	
 }
 
 
+//	ERROR PAGES
 
+//	REDIRECTIONS
 
+//	ALLOWED METHODS
 
 
 /*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/

@@ -28,7 +28,7 @@ class	ServerLocation
 
 		std::string					getLocation(void) const;
 		std::string					getRootDir(void) const;
-		std::string					getIndexFilename(size_t i) const;
+		std::string					getIndexFileName(size_t i) const;
 		uint32_t					getMaxBodySize(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
@@ -41,6 +41,8 @@ class	ServerLocation
 		std::string					getErrPagePath(int status) const;
 		std::string					getRedirection(int status) const;
 		bool						methodIsAllowed(Http::METHOD method) const;
+
+		size_t						getIndexVectorSize(void);
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
