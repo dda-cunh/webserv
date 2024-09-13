@@ -412,18 +412,78 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 //	REDIRECTIONS
 
 //	ALLOWED METHODS
+void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	std::string			method;
 
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("allow_methods") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (line.find("allow_methods") == 0)
+					throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			strStream << line;
+
+			while (strStream >> method)
+			{
+				if (method == "GET")
+					methodsAllowed.push_back(M_GET);
+				else if (method == "POST")
+					methodsAllowed.push_back(M_POST);
+				else if (method == "DELETE")
+					methodsAllowed.push_back(M_DELETE);
+				else
+					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive") );
+			}
+		}
+	}
+
+	if (methodsAllowed.empty() )
+	{
+		methodsAllowed.push_back("GET");
+	}
+}
 
 /*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
 
 bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 {
-	size_t	vectorSize;
+	size_t		vectorSize;
+	std::string	line;
 
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		//	RETURN 2ND WORD FROM THIS LINE (EXCLUDING ';')
+		line = strLocationBlock.at(i);	
+		if (line.find("autoindex") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (line.find("autoindex") == 0)
+					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			if (word_count(line) > 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
+
+			if (line == "on")
+				return (true);
+			else if (line == "off")
+				return (false);
+			else
+				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive") );
+		}
 	}
 
 	return (DEFAULT_AUTO_INDEX);	

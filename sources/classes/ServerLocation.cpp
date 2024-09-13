@@ -25,10 +25,12 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
 	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
 
-	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS
-	//		INTO this->_errorPages
+	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS INTO this->_errorPages
+
 	//	SAME WITH REDIRECTIONS
+
 	//	AND ALLOWED METHODS
+	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)

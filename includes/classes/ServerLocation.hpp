@@ -20,7 +20,7 @@ class	ServerLocation
 {
 	public:
 		ServerLocation(void);
-//		ServerLocation(std::vector<std::string> strLocationBlock);
+		ServerLocation(std::vector<std::string> strLocationBlock);
 		ServerLocation(const ServerLocation &serverLocation);
 		virtual ~ServerLocation(void);
 
@@ -47,11 +47,11 @@ class	ServerLocation
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
 		std::string					_rootDir;			//		root
-		std::vector<std::string>	_indexFiles;			//		index
-		uint32_t					_maxBodySize;		//		client_max_body_size; default is 1m
+		std::vector<std::string>	_indexFiles;		//		index
+		uint32_t					_maxBodySize;		//		client_max_body_size
 		IntStrMap 					_errorPages;		//		error_page
 		IntStrMap					_redirections;		//		return
-		std::vector<Http::METHOD>	_methodsAllowed;	//		allowed_methods
+		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
 };
 
 //	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
