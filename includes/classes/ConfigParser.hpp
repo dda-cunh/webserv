@@ -7,15 +7,6 @@
 typedef std::vector<ServerConfig>	ServerBlocks;
 
 
-typedef enum	e_location_block_type
-{
-	L_UNHANDLED,
-	L_STATIC,
-	L_REV_PROXY,
-	L_CGI
-}	LOCATION_BLOCK_TYPE;
-
-
 class	ConfigParser
 {
 	public:
@@ -27,7 +18,7 @@ class	ConfigParser
 		static uint16_t				parsePort(std::vector<std::string> strServerBlock);
 		static std::string			parseServerName(std::vector<std::string> strServerBlock);
 
-		static LOCATION_BLOCK_TYPE	parseStrLocationType(std::vector<std::string> strLocationBlock);
+		static Utils::LOCATION_BLOCK_TYPE	parseStrLocationType(std::vector<std::string> strLocationBlock);
 
 
 			/*		PARSE FROM STR VECTOR TO SERVERLOCATION OBJECT		*/

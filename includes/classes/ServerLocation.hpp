@@ -17,9 +17,6 @@
 #define DEFAULT_AUTO_INDEX false
 
 
-
-
-
 class	ServerLocation
 {
 	public:

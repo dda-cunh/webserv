@@ -302,11 +302,11 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 }
 
 
-LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
+Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
 {
 	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
 	(void)strLocationBlock;
-	return (L_STATIC);
+	return (Utils::L_STATIC);
 }
 
 

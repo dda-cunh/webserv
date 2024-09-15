@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../webserv.hpp"
-#include "ConfigParser.hpp"
+//#include "ConfigParser.hpp"
 #include "ServerLocation.hpp"
 
 
@@ -38,7 +38,7 @@ class	ServerConfig
 		size_t				getLocationBlocksSize(void) const;
 		ServerLocation		*getLocationFromIndex(size_t i) const;
 		ServerLocation		*getLocationFromPath(std::string path) const;
-		LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
+		Utils::LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
 		//	=============================
 
 	private:
