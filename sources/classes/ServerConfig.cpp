@@ -17,8 +17,6 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 	std::string					line;
 	size_t						sServBlkSize;
 
-	std::cout << "initializing ServerConfig object" << std::endl;
-
 	this->_host = ConfigParser::parseHost(strServerBlock);
 	this->_port = ConfigParser::parsePort(strServerBlock);
 	this->_serverName = ConfigParser::parseServerName(strServerBlock);
@@ -54,7 +52,6 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 	}
 	if (this->_locationBlocks.empty() )
 		this->_locationBlocks.push_back(new LocationStatic);
-	std::cout << "ServerConfig object initialized" << std::endl;
 }
 
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)

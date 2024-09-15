@@ -65,7 +65,7 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 		this->_redirections[itt->first] = itt->second;
 
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
-		this->_methodsAllowed[i] = serverLocation.getMethodByIndex(i);
+		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
 
 	return (*this);
 }

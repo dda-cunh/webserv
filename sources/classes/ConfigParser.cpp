@@ -92,12 +92,12 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		std::cout << "Default override for index: " << _defaultIndex << std::endl;
 */
 		configs.push_back(ServerConfig(_strServerBlock) );
+	
 
 		_strServerBlock.clear();
 		_defaultRoot.clear();
 		_defaultIndex.clear();
 	}
-	std::cout << "Server configs have been loaded" << std::endl;
 
 	configFile.close();
 	if (configs.empty() )
