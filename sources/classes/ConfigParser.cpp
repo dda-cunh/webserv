@@ -2,34 +2,20 @@
 
 std::vector<std::string>	ConfigParser::_strServerBlock;
 std::string					ConfigParser::_defaultRoot;
-std::string					ConfigParser::_defaultIndex;
+std::vector<std::string>	ConfigParser::_defaultIndex;
 
 
-void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
+/*
+static void	print_vector(std::vector<std::string> block)
 {
-	std::ifstream	configFile;
-	std::string		line;
+	size_t	vectorSize;
 
-	configFile.open(path);
-	if (!configFile.is_open())
-		throw (ExceptionMaker("Unable to open configuration file") );
-
-	while (!configFile.eof() )
-	{
-		_loadServerContext(configFile);
-		if (_strServerBlock.empty() )
-			break ;
-
-		_overrideDefaults();
-
-		_strServerBlock.clear();
-		_defaultRoot.clear();
-		_defaultIndex.clear();
-	}
-
-	if (configs.empty() )
-		throw (ExceptionMaker("Configuration file is empty") );
+	vectorSize = block.size();
+	for (size_t i = 0; i < vectorSize; i++)
+		std::cout << block.at(i) << std::endl;
+	std::cout << "==================================" << std::endl;
 }
+*/
 
 static void	erase_comments(std::string &line)
 {
@@ -40,6 +26,92 @@ static void	erase_comments(std::string &line)
 		line.erase(pos, line.size());
 }
 
+static std::string	str_parse_line(std::string line)
+{
+	std::string	val;
+
+	val = line;
+
+	val.erase(0, val.find_first_of(" \t") );
+	if (val.at(val.size() - 1) == ';' || val.at(val.size() - 1) == '{')
+		val.erase(val.size() - 1, 1);
+	val = Utils::sTrim(val);
+
+	return (val);
+}
+
+static size_t	word_count(std::string line)
+{
+	std::istringstream	strStream(line);
+	std::string			outStr;
+	size_t				count;
+
+	count = 0;
+	while (strStream >> outStr)
+		count++;
+
+	return (count);
+}
+
+static void	split_string_to_vector(std::string line, std::vector<std::string> &strVector)
+{
+	std::istringstream	strStream(line);
+	std::string			outStr;
+
+	while(strStream >> outStr)
+		strVector.push_back(outStr);
+}
+
+void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
+{
+	std::ifstream	configFile;
+	std::string		line;
+
+	configFile.open(path);
+	if (!configFile.is_open())
+		throw (ExceptionMaker("Unable to open configuration file") );
+
+	//	READ configFile UNTIL EOF
+	while (!configFile.eof() )
+	{
+		_loadServerContext(configFile);
+		if (_strServerBlock.empty() )
+			break ;
+
+
+
+		//	ADD SYNTAX CHECK LATER
+
+
+
+		_overrideDefaults();
+		
+		//	FOR DEBUGGING
+/*		print_vector(_strServerBlock);
+		std::cout << "Default override for root: " << _defaultRoot << std::endl;
+		std::cout << "Default override for index: " << _defaultIndex << std::endl;
+*/
+		configs.push_back(ServerConfig(_strServerBlock) );
+
+		_strServerBlock.clear();
+		_defaultRoot.clear();
+		_defaultIndex.clear();
+	}
+	std::cout << "Server configs have been loaded" << std::endl;
+
+	configFile.close();
+	if (configs.empty() )
+		throw (ExceptionMaker("Configuration file is empty") );
+
+	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
+	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
+/*
+	for (size_t i = 0; i < configs.size(); i++)
+		std::cout << configs.at(i) << std::endl;
+*/
+}
+
+
 void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 {
 	std::string	line;
@@ -47,6 +119,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	
 	brackets = 0;
 
+	//	SKIP FILE UNTIL START OF CONTEXT
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
@@ -73,11 +146,13 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 	}
 
+	//	LOAD CONTEXT INTO STATIC VECTOR
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
 		line = Utils::sTrim(line);
 
+		//	UPDATE BRACKET LEVEL
 		if (line.empty() )
 			continue ;
 		else if (line.at(line.size() - 1) == '{')
@@ -99,6 +174,12 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 		throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 }
 
+
+
+//		SYNTAX CHECK METHODS GO HERE
+
+
+
 void	ConfigParser::_overrideDefaults(void)
 {
 	size_t		vectorSize;
@@ -108,6 +189,7 @@ void	ConfigParser::_overrideDefaults(void)
 	for (size_t i = 0; i < vectorSize; i++)
 	{
 		line = _strServerBlock.at(i);
+		//	IF location CONTEXT IS FOUND, SKIP TO END OF location CONTEXT
 		if (line.find("location") == 0)
 		{
 			while (line.at(line.size() - 1) != '}')
@@ -116,14 +198,15 @@ void	ConfigParser::_overrideDefaults(void)
 				line = _strServerBlock.at(i);
 			}
 		}
-
+		//	SEARCH FOR root AND index DIRECTIVES
+		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR root DIRECTIVE
 		if (line.find("root") == 0)
 		{
 			if (_defaultRoot.empty() )
 			{
-				line.erase(0, 4);
-				line.erase(line.size() - 1, line.size());
-				line = Utils::sTrim(line);
+				line = str_parse_line(line);
+				if (word_count(line) > 1)
+					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				_defaultRoot = line;
 			}
 			else
@@ -131,15 +214,281 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("index") == 0)
 		{
-			if (_defaultIndex.empty() )
-			{
-				line.erase(0, 5);
-				line.erase(line.size() - 1, line.size());
-				line = Utils::sTrim(line);
-				_defaultIndex = line;
-			}
-			else
-				throw (ExceptionMaker("Multiple overrides for default index directive inside same server context") );
+			line = str_parse_line(line);
+			split_string_to_vector(line, _defaultIndex);
 		}
 	}
+}
+
+
+/*		PARSING FOR SERVERCONFIG CLASS		*/
+
+uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
+{
+	size_t		vectorSize;
+	std::string	strHost;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strServerBlock.at(i).find("listen") == 0)
+		{
+			//	GET 2ND WORD
+			strHost = str_parse_line(strServerBlock.at(i) );
+			//	DETERMINE IF ':' IS PRESENT
+			//		IF YES, GET VALUE AT LEFT SIDE
+			if (strHost.find(':') != strHost.npos)
+				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
+			else
+			{
+			//		ELSE, DETERMINE IF ITS AN IP ADDR
+			//			RETURN IP IF YES, RETURN DEFAULT OTHERWISE
+				if (strHost.find('.') != strHost.npos)
+					return (Network::sToIPV4Packed(strHost) );
+				else
+					return (Network::sToIPV4Packed(DEFAULT_HOST) );
+			}
+		}
+	}
+
+	return (Network::sToIPV4Packed(DEFAULT_HOST) );
+}
+
+uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
+{
+	std::string	strPort;
+	size_t		vectorSize;
+	size_t		substrSize;
+	int			nPort;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strServerBlock.at(i).find("listen") == 0)
+		{
+			strPort = str_parse_line(strServerBlock.at(i) );
+
+			if (strPort.find(':') != strPort.npos)
+			{
+				substrSize = strPort.size() - strPort.find(':');
+				nPort = std::atoi(strPort.c_str() );
+				if (substrSize > 5 || nPort > 0xffff)
+					throw (ExceptionMaker("Port number is out of range") );
+				else
+					return (static_cast<uint16_t>(nPort) );
+			}
+			else
+				return (DEFAULT_PORT);
+		}
+	}
+
+	return (DEFAULT_PORT);
+}
+
+std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBlock)
+{
+	size_t	vectorSize;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strServerBlock.at(i).find("server_name") == 0)
+		{
+			return (str_parse_line(strServerBlock.at(i)) );
+		}
+	}
+
+	return (DEFAULT_SERVER_NAME);
+}
+
+
+LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
+{
+	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
+	(void)strLocationBlock;
+	return (L_STATIC);
+}
+
+
+/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
+
+std::string	ConfigParser::parseLocation(std::string locationLine)
+{
+	locationLine.erase(0, 8);
+	locationLine = Utils::sTrim(locationLine);
+	str_parse_line(locationLine);
+
+//	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
+	if (!locationLine.empty() || word_count(locationLine) != 1)
+		return (locationLine);
+	else
+		throw (ExceptionMaker("Invalid number of arguments in \"location\" directive") );
+}
+
+std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strLocationBlock.at(i).find("root") == 0)
+		{
+				line = str_parse_line(line);
+				if (word_count(line) > 1)
+					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
+				return (line);
+		}
+	}
+
+	if (_defaultRoot.empty() )
+		return (DEFAULT_ROOT);
+	else
+		return (_defaultRoot);
+}
+
+void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("index") == 0)
+		{
+			line = str_parse_line(line);
+			split_string_to_vector(line, indexFiles);
+		}
+	}
+	
+	if (indexFiles.empty() )
+	{
+		if (_defaultIndex.empty() )
+			indexFiles.push_back(DEFAULT_INDEX);
+		else
+		{
+			for (size_t i = 0; i < _defaultIndex.size(); i++)
+				indexFiles.push_back(_defaultIndex.at(i) );
+		}
+	}
+}
+
+uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBlock)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	long unsigned int	ulConvert;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("client_max_body_size") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (strLocationBlock.at(i).find("client_max_body_size") == 0)
+					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			if (word_count(line) > 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
+			strStream << line;
+			strStream >> ulConvert;
+			if (line.size() > 10 || ulConvert > 0xffffffff)
+				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
+			else
+				return (static_cast<uint32_t>(ulConvert) );
+		}
+	}
+
+	return (DEFAULT_MAX_BODY_SIZE);	
+}
+
+
+//	ERROR PAGES
+
+//	REDIRECTIONS
+
+//	ALLOWED METHODS
+void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	std::string			method;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("allow_methods") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (line.find("allow_methods") == 0)
+					throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			strStream << line;
+
+			while (strStream >> method)
+			{
+				if (method == "GET")
+					methodsAllowed.push_back(Http::M_GET);
+				else if (method == "POST")
+					methodsAllowed.push_back(Http::M_POST);
+				else if (method == "DELETE")
+					methodsAllowed.push_back(Http::M_DELETE);
+				else
+					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive") );
+			}
+		}
+	}
+
+	if (methodsAllowed.empty() )
+	{
+		methodsAllowed.push_back(Http::M_GET);
+	}
+}
+
+/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
+
+bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);	
+		if (line.find("autoindex") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (line.find("autoindex") == 0)
+					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
+			}
+
+			line = str_parse_line(line);
+			if (word_count(line) > 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
+
+			if (line == "on")
+				return (true);
+			else if (line == "off")
+				return (false);
+			else
+				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive") );
+		}
+	}
+
+	return (DEFAULT_AUTO_INDEX);	
 }

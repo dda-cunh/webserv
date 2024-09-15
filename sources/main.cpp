@@ -1,4 +1,5 @@
 #include "../includes/classes/ServerManager.hpp"
+#include "../includes/classes/ConfigParser.hpp"
 #include "../includes/webserv.hpp"
 
 #define DEFAULT_CONFIG_PATH "test_files/configs/default.conf"
@@ -27,6 +28,6 @@ int	main(int ac, char **av)
 		return (1);
 	}
 
-//	ServerManager server(blocks);
+	ServerManager server(blocks);
 	return (0);
 }

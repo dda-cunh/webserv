@@ -1,18 +1,37 @@
 #include "../../includes/classes/ServerLocation.hpp"
 
 
+//	BASE CLASS
+
 ServerLocation::ServerLocation(void)
 {
-	this->_location = "/";
-	this->_rootDir = "./test_files";
-	this->_indexFile = "index.html";
-	this->_maxBodySize = 1000000;
-	this->_errorPages[404] = "./test_files/error_pages/404.html";
-	this->_errorPages[405] = "./test_files/error_pages/405.html";
-	this->_errorPages[500] = "./test_files/error_pages/500.html";
-	//	leave redirections empty for now
+	this->_location = DEFAULT_LOCATION;
+	this->_rootDir = DEFAULT_ROOT;
+	this->_indexFiles.push_back(DEFAULT_INDEX);
+	this->_maxBodySize = DEFAULT_MAX_BODY_SIZE;
+	this->_errorPages[404] = DEFAULT_404;
+	this->_errorPages[405] = DEFAULT_405;
+	this->_errorPages[500] = DEFAULT_500;
+	
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
+}
+
+ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
+{
+	//	PARSE DIRECTIVES FROM VECTOR
+	this->_location = ConfigParser::parseLocation(strLocationBlock.at(0) );
+	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
+	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
+	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
+
+	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS INTO this->_errorPages
+
+	//	SAME WITH REDIRECTIONS
+
+	//	AND ALLOWED METHODS
+	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
+
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -28,9 +47,15 @@ ServerLocation::~ServerLocation(void)
 
 ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 {
+	size_t	indexVectorSize;
+
 	this->_location = serverLocation.getLocation();
 	this->_rootDir = serverLocation.getRootDir();
-	this->_indexFile = serverLocation.getIndexFilename();
+
+	indexVectorSize = serverLocation.getIndexVectorSize();
+	for (size_t i = 0; i < indexVectorSize; i++)
+		this->_indexFiles.push_back(serverLocation.getIndexFileName(i) );
+	
 	this->_maxBodySize = serverLocation.getMaxBodySize();
 	
 	for (IntStrMap::const_iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
@@ -55,9 +80,12 @@ std::string	ServerLocation::getRootDir(void) const
 	return (this->_rootDir);
 }
 
-std::string	ServerLocation::getIndexFilename(void) const
+std::string	ServerLocation::getIndexFileName(size_t i) const
 {
-	return (this->_indexFile);
+	if (i < this->_indexFiles.size() )
+		return (this->_indexFiles.at(i) );
+	else
+		throw (ExceptionMaker("Index for index files out of range") );
 }
 
 uint32_t	ServerLocation::getMaxBodySize(void) const
@@ -97,11 +125,13 @@ size_t	ServerLocation::getMethodsAllowedSize(void) const
 
 std::string	ServerLocation::getErrPagePath(int status) const
 {
+	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
 	return (this->_errorPages.at(status));
 }
 
 std::string	ServerLocation::getRedirection(int status) const
 {
+	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
 	return (this->_redirections.at(status));
 }
 
@@ -118,12 +148,27 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 	return (false);
 }
 
+size_t	ServerLocation::getIndexVectorSize(void) const
+{
+	return (this->_indexFiles.size() );
+}
+
+//	DERIVED CLASSES
+
+//		STATIC SITE
 LocationStatic::LocationStatic(void)
 {
 	this->_autoIndex = false;
 }
 
-LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation()
+
+LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
+{
+	this->_autoIndex = 	ConfigParser::parseAutoIndex(strLocationBlock);
+}
+
+
+LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation(locationStatic)
 {
 	if (this != &locationStatic)
 		*this = locationStatic;
@@ -148,11 +193,75 @@ bool	LocationStatic::getAutoIndex(void) const
 }
 
 
+/*
+//		REVERSE PROXY (FOR FILE UPLOADS)
+LocationRevProxy::LocationRevProxy(void)
+{
+	//	what will default proxy pass be?
+	this->_uploadDirectory = "/upload";
+}
+
+
+LocationRevProxy::LocationRevProxy(std::vector<std::string> strLocationBlock)
+{
+
+}
+
+
+LocationRevProxy::~LocationRevProxy(void)
+{
+	return ;
+}
+
+std::string	LocationRevProxy::getUploadDir(void)
+{
+	return (this->_uploadDirectory);
+}
+
+
+//		CGI
+
+LocationCGI::LocationCGI(void)
+{
+	//	INIT WITH DEFAULT VALUES
+}
+
+LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock)
+{
+
+}
+
+LocationCGI::LocationCGI(const LocationCGI &locationCGI)
+{
+	if (this != &locationCGI)
+		*this = locationCGI;
+}
+
+LocationCGI	LocationCGI::&operator=(const LocationCGI &locationCGI)
+{
+	//	COPY VALUES
+
+	return (*this);
+}
+
+LocationCGI::~LocationCGI(void)
+{
+	return ;
+}
+*/
+
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {
+	size_t	indexVectorSize;
+
 	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
 	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
-	out << "\tIndex: " << locationStatic.getIndexFilename() << std::endl;
+
+	out << "\tIndex files: " << std::endl;
+	indexVectorSize = locationStatic.getIndexVectorSize();
+	for (size_t i = 0; i < indexVectorSize; i++)
+		out << "\t\t" << locationStatic.getIndexFileName(i) << std::endl;
+
 	out << "\tMax body size: " << locationStatic.getMaxBodySize() << std::endl;
 
 	out << "\tError pages:" << std::endl;
@@ -171,3 +280,29 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 
 	return (out);
 }
+
+/*
+std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
+{
+	out << "\tLocation: " << locationCGI.getLocation() << std::endl;
+	out << "\tRoot: " << locationCGI.getRootDir() << std::endl;
+	out << "\tIndex: " << locationCGI.getIndexFilename() << std::endl;
+	out << "\tMax body size: " << locationCGI.getMaxBodySize() << std::endl;
+
+	out << "\tError pages:" << std::endl;
+	for (IntStrMap::iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
+
+	out << "\tRedirections:" << std::endl;
+	for (IntStrMap::iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
+
+	out << "Allowed methods:" << std::endl;
+	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
+		out << "\t\t" << locationCGI.getMethodByIndex(i) << std::endl;
+
+
+
+	return (out);
+}
+*/
