@@ -5,18 +5,6 @@ std::string					ConfigParser::_defaultRoot;
 std::vector<std::string>	ConfigParser::_defaultIndex;
 
 
-/*
-static void	print_vector(std::vector<std::string> block)
-{
-	size_t	vectorSize;
-
-	vectorSize = block.size();
-	for (size_t i = 0; i < vectorSize; i++)
-		std::cout << block.at(i) << std::endl;
-	std::cout << "==================================" << std::endl;
-}
-*/
-
 static void	erase_comments(std::string &line)
 {
 	size_t	pos;
@@ -71,29 +59,16 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (!configFile.is_open())
 		throw (ExceptionMaker("Unable to open configuration file") );
 
-	//	READ configFile UNTIL EOF
 	while (!configFile.eof() )
 	{
 		_loadServerContext(configFile);
 		if (_strServerBlock.empty() )
 			break ;
 
-
-
-		//	ADD SYNTAX CHECK LATER
-
-
-
 		_overrideDefaults();
-		
-		//	FOR DEBUGGING
-/*		print_vector(_strServerBlock);
-		std::cout << "Default override for root: " << _defaultRoot << std::endl;
-		std::cout << "Default override for index: " << _defaultIndex << std::endl;
-*/
+
 		configs.push_back(ServerConfig(_strServerBlock) );
 	
-
 		_strServerBlock.clear();
 		_defaultRoot.clear();
 		_defaultIndex.clear();
@@ -103,12 +78,6 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
 
-	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
-	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
-/*
-	for (size_t i = 0; i < configs.size(); i++)
-		std::cout << configs.at(i) << std::endl;
-*/
 }
 
 
@@ -119,7 +88,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	
 	brackets = 0;
 
-	//	SKIP FILE UNTIL START OF CONTEXT
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
@@ -146,13 +114,11 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 	}
 
-	//	LOAD CONTEXT INTO STATIC VECTOR
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
 		line = Utils::sTrim(line);
 
-		//	UPDATE BRACKET LEVEL
 		if (line.empty() )
 			continue ;
 		else if (line.at(line.size() - 1) == '{')
@@ -175,11 +141,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 }
 
 
-
-//		SYNTAX CHECK METHODS GO HERE
-
-
-
 void	ConfigParser::_overrideDefaults(void)
 {
 	size_t		vectorSize;
@@ -189,7 +150,6 @@ void	ConfigParser::_overrideDefaults(void)
 	for (size_t i = 0; i < vectorSize; i++)
 	{
 		line = _strServerBlock.at(i);
-		//	IF location CONTEXT IS FOUND, SKIP TO END OF location CONTEXT
 		if (line.find("location") == 0)
 		{
 			while (line.at(line.size() - 1) != '}')
@@ -198,8 +158,6 @@ void	ConfigParser::_overrideDefaults(void)
 				line = _strServerBlock.at(i);
 			}
 		}
-		//	SEARCH FOR root AND index DIRECTIVES
-		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR root DIRECTIVE
 		if (line.find("root") == 0)
 		{
 			if (_defaultRoot.empty() )
@@ -221,8 +179,6 @@ void	ConfigParser::_overrideDefaults(void)
 }
 
 
-/*		PARSING FOR SERVERCONFIG CLASS		*/
-
 uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 {
 	size_t		vectorSize;
@@ -233,16 +189,11 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 	{
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
-			//	GET 2ND WORD
 			strHost = str_parse_line(strServerBlock.at(i) );
-			//	DETERMINE IF ':' IS PRESENT
-			//		IF YES, GET VALUE AT LEFT SIDE
 			if (strHost.find(':') != strHost.npos)
 				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
 			else
 			{
-			//		ELSE, DETERMINE IF ITS AN IP ADDR
-			//			RETURN IP IF YES, RETURN DEFAULT OTHERWISE
 				if (strHost.find('.') != strHost.npos)
 					return (Network::sToIPV4Packed(strHost) );
 				else
@@ -304,13 +255,10 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 
 Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
 {
-	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
 	(void)strLocationBlock;
 	return (Utils::L_STATIC);
 }
 
-
-/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
 
 std::string	ConfigParser::parseLocation(std::string locationLine)
 {
@@ -318,7 +266,6 @@ std::string	ConfigParser::parseLocation(std::string locationLine)
 	locationLine = Utils::sTrim(locationLine);
 	str_parse_line(locationLine);
 
-//	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
 	if (!locationLine.empty() || word_count(locationLine) != 1)
 		return (locationLine);
 	else
@@ -410,12 +357,6 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 	return (DEFAULT_MAX_BODY_SIZE);	
 }
 
-
-//	ERROR PAGES
-
-//	REDIRECTIONS
-
-//	ALLOWED METHODS
 void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
 {
 	size_t				vectorSize;
@@ -458,7 +399,6 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 	}
 }
 
-/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
 
 bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 {

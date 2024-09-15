@@ -1,11 +1,9 @@
 #pragma once
 
 #include "../webserv.hpp"
-//#include "ConfigParser.hpp"
 #include "ServerLocation.hpp"
 
 
-//	DEFAULTS
 #define DEFAULT_HOST "127.0.0.1"
 #define DEFAULT_PORT 1024
 #define DEFAULT_SERVER_NAME "webserv.ft"
@@ -27,26 +25,20 @@ class	ServerConfig
 
 		ServerConfig &operator = (const ServerConfig &serverConfig);
 
-		//	SETTERS FOR CONSTRUCTOR
-
-
-		//			GETTERS
-
 		uint32_t			getHost(void) const;
 		uint16_t			getPort(void) const;
 		std::string			getServerName(void) const;
 		size_t				getLocationBlocksSize(void) const;
 		ServerLocation		*getLocationFromIndex(size_t i) const;
 		ServerLocation		*getLocationFromPath(std::string path) const;
-		Utils::LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
-		//	=============================
+		Utils::LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;
 
-	private:
-		uint32_t		_host;			//	listen
-		uint16_t		_port;			//	port
-		std::string		_serverName;	//	server_name
+	private:								//	KEYWORDS
+		uint32_t		_host;				//	listen
+		uint16_t		_port;				//	listen
+		std::string		_serverName;		//	server_name
 
-		LocationBlocks	_locationBlocks;
+		LocationBlocks	_locationBlocks;	//	location
 };
 
 std::ostream & operator << (std::ostream &out, const ServerConfig &serverConfig);

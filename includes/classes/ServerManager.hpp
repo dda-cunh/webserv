@@ -3,8 +3,6 @@
 #include "../webserv.hpp"
 #include "TCPSocket.hpp"
 #include "ServerConfig.hpp"
-//#include "ServerLocation.hpp"
-
 #include <sys/epoll.h>
 
 #define SM_EP_EV_LEN 1024
