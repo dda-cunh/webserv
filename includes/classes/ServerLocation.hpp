@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../webserv.hpp"
+#include "ConfigParser.hpp"
 
 
 //	DEFAULTS
@@ -42,7 +43,7 @@ class	ServerLocation
 		std::string					getRedirection(int status) const;
 		bool						methodIsAllowed(Http::METHOD method) const;
 
-		size_t						getIndexVectorSize(void);
+		size_t						getIndexVectorSize(void) const;
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [...] {
@@ -59,7 +60,7 @@ class	LocationStatic: public ServerLocation
 {
 	public:
 		LocationStatic(void);
-//		LocationStatic(std::vector<std::string> strLocationBlock);
+		LocationStatic(std::vector<std::string> strLocationBlock);
 		LocationStatic(const LocationStatic &locationStatic);
 		virtual ~LocationStatic(void);
 

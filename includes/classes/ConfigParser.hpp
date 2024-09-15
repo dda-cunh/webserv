@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ServerManager.hpp"
+//#include "ServerConfig.hpp"
 
 
 typedef std::vector<ServerConfig>	ServerBlocks;
+
 
 class	ConfigParser
 {
@@ -16,7 +18,7 @@ class	ConfigParser
 		static uint16_t				parsePort(std::vector<std::string> strServerBlock);
 		static std::string			parseServerName(std::vector<std::string> strServerBlock);
 
-		static LOCATION_BLOCK_TYPE	parseStrLocationType(std::vector<std::string> strLocationBlock);
+		static Utils::LOCATION_BLOCK_TYPE	parseStrLocationType(std::vector<std::string> strLocationBlock);
 
 
 			/*		PARSE FROM STR VECTOR TO SERVERLOCATION OBJECT		*/

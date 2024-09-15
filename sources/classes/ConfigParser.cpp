@@ -2,7 +2,7 @@
 
 std::vector<std::string>	ConfigParser::_strServerBlock;
 std::string					ConfigParser::_defaultRoot;
-std::string					ConfigParser::_defaultIndex;
+std::vector<std::string>	ConfigParser::_defaultIndex;
 
 
 /*
@@ -92,6 +92,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		std::cout << "Default override for index: " << _defaultIndex << std::endl;
 */
 		configs.push_back(ServerConfig(_strServerBlock) );
+	
 
 		_strServerBlock.clear();
 		_defaultRoot.clear();
@@ -301,11 +302,11 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 }
 
 
-LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
+Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
 {
 	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
 	(void)strLocationBlock;
-	return (L_STATIC);
+	return (Utils::L_STATIC);
 }
 
 
@@ -326,7 +327,8 @@ std::string	ConfigParser::parseLocation(std::string locationLine)
 
 std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock)
 {
-	size_t	vectorSize;
+	size_t		vectorSize;
+	std::string	line;
 
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
@@ -340,10 +342,10 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 		}
 	}
 
-	if (this->_defaultRoot.empty() )
+	if (_defaultRoot.empty() )
 		return (DEFAULT_ROOT);
 	else
-		return (this->_defaultRoot);
+		return (_defaultRoot);
 }
 
 void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles)
@@ -364,7 +366,7 @@ void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, st
 	
 	if (indexFiles.empty() )
 	{
-		if (this->_defaultIndex.empty() )
+		if (_defaultIndex.empty() )
 			indexFiles.push_back(DEFAULT_INDEX);
 		else
 		{
@@ -378,6 +380,7 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 {
 	size_t				vectorSize;
 	std::string			line;
+	std::stringstream	strStream;
 	long unsigned int	ulConvert;
 
 	vectorSize = strLocationBlock.size();
@@ -395,8 +398,9 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 			line = str_parse_line(line);
 			if (word_count(line) > 1)
 				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
-			ulConvert = std::strtoul(line);
-			if (line.size() > 10 || unConvert > 0xffffffff)
+			strStream << line;
+			strStream >> ulConvert;
+			if (line.size() > 10 || ulConvert > 0xffffffff)
 				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
 			else
 				return (static_cast<uint32_t>(ulConvert) );
@@ -437,11 +441,11 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 			while (strStream >> method)
 			{
 				if (method == "GET")
-					methodsAllowed.push_back(M_GET);
+					methodsAllowed.push_back(Http::M_GET);
 				else if (method == "POST")
-					methodsAllowed.push_back(M_POST);
+					methodsAllowed.push_back(Http::M_POST);
 				else if (method == "DELETE")
-					methodsAllowed.push_back(M_DELETE);
+					methodsAllowed.push_back(Http::M_DELETE);
 				else
 					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive") );
 			}
@@ -450,7 +454,7 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 
 	if (methodsAllowed.empty() )
 	{
-		methodsAllowed.push_back("GET");
+		methodsAllowed.push_back(Http::M_GET);
 	}
 }
 

@@ -34,20 +34,20 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 			}
 			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
 			{
-				case (L_STATIC):
+				case (Utils::L_STATIC):
 					this->_locationBlocks.insert(this->_locationBlocks.begin(), new LocationStatic(strLocationBlock) );
 					break ;
-				case (L_REV_PROXY):
+				case (Utils::L_REV_PROXY):
 					throw (ExceptionMaker("This feature has not been implemented yet") );
 					break ;
-				case (L_CGI):
+				case (Utils::L_CGI):
 					throw (ExceptionMaker("This feature has not been implemented yet") );
 					break ;
-				case (L_UNHANDLED):
+				case (Utils::L_UNHANDLED):
 					throw (ExceptionMaker("Invalid Location type") );
 					break ;
 			}
-			strServerBlock.clear();
+			strLocationBlock.clear();
 		}
 	}
 	if (this->_locationBlocks.empty() )
@@ -86,15 +86,15 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 
 		switch (this->getLocationType(location))
 		{
-			case (L_STATIC):
+			case (Utils::L_STATIC):
 				this->_locationBlocks.push_back(new LocationStatic(*(dynamic_cast<LocationStatic*>(location) ) ) );
 				break ;
-			case (L_REV_PROXY):
+			case (Utils::L_REV_PROXY):
 				break ;
-			case (L_CGI):
+			case (Utils::L_CGI):
 			//	this->_locationBlocks.push_back(new LocationCGI(location));
 				break ;
-			case (L_UNHANDLED):
+			case (Utils::L_UNHANDLED):
 				//	throw exception
 				break ;
 //			default:
@@ -146,16 +146,16 @@ ServerLocation	*ServerConfig::getLocationFromPath(std::string path) const
 	return (NULL);
 }
 
-LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
+Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
-		return (L_STATIC);
+		return (Utils::L_STATIC);
 //	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
 //		return (L_REV_PROXY);
 //	else if (dynamic_cast<LocationCGI *>(location) != NULL)
 //		return (L_CGI);
 	else
-		return (L_UNHANDLED);
+		return (Utils::L_UNHANDLED);
 }
 
 std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
@@ -176,15 +176,15 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 		//	MUST USE FUCKING DYNAMIC CAST
 		switch (serverConfig.getLocationType(location))
 		{
-			case (L_STATIC):
+			case (Utils::L_STATIC):
 				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
 				break ;
-			case (L_REV_PROXY):
+			case (Utils::L_REV_PROXY):
 				break ;
-			case (L_CGI):
+			case (Utils::L_CGI):
 				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
-			case (L_UNHANDLED):
+			case (Utils::L_UNHANDLED):
 				//	THROW EXCEPTION
 				break ;
 		}		

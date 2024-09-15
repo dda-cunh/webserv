@@ -20,7 +20,7 @@ ServerLocation::ServerLocation(void)
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
 	//	PARSE DIRECTIVES FROM VECTOR
-	this->_location = ConfigParser::parseLocation(strLocationBlock);
+	this->_location = ConfigParser::parseLocation(strLocationBlock.at(0) );
 	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
 	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
 	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
@@ -31,6 +31,7 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 
 	//	AND ALLOWED METHODS
 	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
+
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -64,7 +65,7 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 		this->_redirections[itt->first] = itt->second;
 
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
-		this->_methodsAllowed[i] = serverLocation.getMethodByIndex(i);
+		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
 
 	return (*this);
 }
@@ -147,7 +148,7 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 	return (false);
 }
 
-size_t	ServerLocation::getIndexVectorSize(void)
+size_t	ServerLocation::getIndexVectorSize(void) const
 {
 	return (this->_indexFiles.size() );
 }
@@ -161,7 +162,7 @@ LocationStatic::LocationStatic(void)
 }
 
 
-LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): serverLocation(strLocationBlock)
+LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
 {
 	this->_autoIndex = 	ConfigParser::parseAutoIndex(strLocationBlock);
 }
