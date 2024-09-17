@@ -26,9 +26,9 @@ class	ConfigParser
 		static std::string	parseRootDir(std::vector<std::string> strLocationBlock);
 		static void			parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles);
 		static uint32_t		parseMaxBodySize(std::vector<std::string> strLocationBlock);
-/*		static void			parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages);
-		static void			parseRedirections(std::vector<std::string> strLocationBlock, IntStrMap &redirections);
-*/		static void			parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
+		static void			parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages);
+//		static void			parseRedirections(std::vector<std::string> strLocationBlock, IntStrMap &redirections);
+		static void			parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
 
 			/*		FOR LOCATIONSTATIC		*/
 		static bool			parseAutoIndex(std::vector<std::string> strLocationBlock);
@@ -52,4 +52,5 @@ class	ConfigParser
 
 		static std::string				_defaultRoot;
 		static std::vector<std::string>	_defaultIndex;
+		static IntStrMap				_defaultErrorPages;
 };

@@ -1,8 +1,10 @@
 #include "../../includes/classes/ConfigParser.hpp"
 
 std::vector<std::string>	ConfigParser::_strServerBlock;
+
 std::string					ConfigParser::_defaultRoot;
 std::vector<std::string>	ConfigParser::_defaultIndex;
+IntStrMap					ConfigParser::_defaultErrorPages;
 
 
 /*
@@ -33,8 +35,7 @@ static std::string	str_parse_line(std::string line)
 	val = line;
 
 	val.erase(0, val.find_first_of(" \t") );
-	if (val.at(val.size() - 1) == ';' || val.at(val.size() - 1) == '{')
-		val.erase(val.size() - 1, 1);
+	val.erase(val.find_last_of("{;"), 1);
 	val = Utils::sTrim(val);
 
 	return (val);
@@ -97,6 +98,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		_strServerBlock.clear();
 		_defaultRoot.clear();
 		_defaultIndex.clear();
+		_defaultErrorPages.clear();
 	}
 
 	configFile.close();
@@ -183,6 +185,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 void	ConfigParser::_overrideDefaults(void)
 {
 	size_t		vectorSize;
+	int			nVal;
 	std::string	line;
 
 	vectorSize = _strServerBlock.size();
@@ -205,7 +208,7 @@ void	ConfigParser::_overrideDefaults(void)
 			if (_defaultRoot.empty() )
 			{
 				line = str_parse_line(line);
-				if (word_count(line) > 1)
+				if (word_count(line) != 1)
 					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				_defaultRoot = line;
 			}
@@ -216,6 +219,17 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			line = str_parse_line(line);
 			split_string_to_vector(line, _defaultIndex);
+		}
+		else if (line.find("error_page") == 0)
+		{
+			line = str_parse_line(line);
+			if (word_count(line) != 2)
+				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
+			nVal = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
+			if (_defaultErrorPages.find(nVal) == _defaultErrorPages.end() )
+				_defaultErrorPages[nVal] = line.substr(line.find_last_of(" \t") + 1);
+			else
+				throw (ExceptionMaker("Multiple settings for the same error page in server context") );
 		}
 	}
 }
@@ -410,12 +424,80 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 	return (DEFAULT_MAX_BODY_SIZE);	
 }
 
+void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages)
+{
+	size_t				vectorSize;
+	std::string			line;
+	int					errCode;
 
-//	ERROR PAGES
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("error_page") == 0)
+		{
+			line = str_parse_line(line);
+			if (word_count(line) != 2)
+				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
+			errCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
+			if (errorPages.find(errCode) != errorPages.end() )
+				throw (ExceptionMaker("Multiple settings for the same error page in location context") );
+			errorPages[errCode] = line.substr(line.find_last_of(" \t") + 1);
+		}
+	}
+
+	
+	if (errorPages.find(400) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(400) == _defaultErrorPages.end() )
+			errorPages[400] = DEFAULT_400;
+		else
+			errorPages[400] = _defaultErrorPages[400];
+	}
+
+	if (errorPages.find(403) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(403) == _defaultErrorPages.end() )
+			errorPages[403] = DEFAULT_403;
+		else
+			errorPages[403] = _defaultErrorPages[403];
+	}
+
+	if (errorPages.find(404) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(404) == _defaultErrorPages.end() )
+			errorPages[404] = DEFAULT_404;
+		else
+			errorPages[404] = _defaultErrorPages[404];
+	}
+
+	if (errorPages.find(405) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(405) == _defaultErrorPages.end() )
+			errorPages[405] = DEFAULT_405;
+		else
+			errorPages[405] = _defaultErrorPages[405];
+	}
+
+	if (errorPages.find(500) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(500) == _defaultErrorPages.end() )
+			errorPages[500] = DEFAULT_500;
+		else
+			errorPages[500] = _defaultErrorPages[500];
+	}
+
+	if (errorPages.find(501) == errorPages.end() )
+	{
+		if (_defaultErrorPages.find(501) == _defaultErrorPages.end() )
+			errorPages[501] = DEFAULT_501;
+		else
+			errorPages[501] = _defaultErrorPages[501];
+	}
+}
 
 //	REDIRECTIONS
 
-//	ALLOWED METHODS
 void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
 {
 	size_t				vectorSize;
@@ -431,7 +513,7 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 		{
 			while (++i < vectorSize)
 			{
-				if (line.find("allow_methods") == 0)
+				if (strLocationBlock.at(i).find("allow_methods") == 0)
 					throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
 			}
 
