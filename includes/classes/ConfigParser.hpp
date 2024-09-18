@@ -27,7 +27,7 @@ class	ConfigParser
 		static void			parseIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles);
 		static uint32_t		parseMaxBodySize(std::vector<std::string> strLocationBlock);
 		static void			parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages);
-//		static void			parseRedirections(std::vector<std::string> strLocationBlock, IntStrMap &redirections);
+		static void			parseRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections);
 		static void			parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
 
 			/*		FOR LOCATIONSTATIC		*/

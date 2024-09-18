@@ -111,6 +111,12 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	for (size_t i = 0; i < configs.size(); i++)
 		std::cout << configs.at(i) << std::endl;
 */
+
+	for (size_t i = 0; i < configs.size(); i++)
+	{
+		std::cout << configs.at(i) << std::endl;
+		std::cout << "=============================" << std::endl;
+	}
 }
 
 
@@ -328,9 +334,7 @@ Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::s
 
 std::string	ConfigParser::parseLocation(std::string locationLine)
 {
-	locationLine.erase(0, 8);
-	locationLine = Utils::sTrim(locationLine);
-	str_parse_line(locationLine);
+	locationLine = str_parse_line(locationLine);
 
 //	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
 	if (!locationLine.empty() || word_count(locationLine) != 1)
@@ -446,7 +450,7 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		}
 	}
 
-	
+
 	if (errorPages.find(400) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(400) == _defaultErrorPages.end() )
@@ -496,7 +500,29 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 	}
 }
 
-//	REDIRECTIONS
+void	ConfigParser::parseRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections)
+{
+	size_t		vectorSize;
+	std::string	line;
+	std::string	uri;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("rewrite") == 0)
+		{
+			line = str_parse_line(line);
+			if (word_count(line) == 0)
+				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
+			uri = line.substr(0, line.find_first_of(" \t") );
+			if (redirections.find(uri) == redirections.end() )
+				redirections[uri] = line.substr(line.find_last_of(" \t") );
+			else
+				throw (ExceptionMaker("Duplicate redirection provided in \"rewrite\" directives") );
+		}
+	}
+}
 
 void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
 {
@@ -518,8 +544,10 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 			}
 
 			line = str_parse_line(line);
-			strStream << line;
+			if (word_count(line) == 0)
+				throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
 
+			strStream << line;
 			while (strStream >> method)
 			{
 				if (method == "GET")

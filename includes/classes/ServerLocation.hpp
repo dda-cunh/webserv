@@ -54,7 +54,7 @@ class	ServerLocation
 		std::vector<std::string>	_indexFiles;		//		index
 		uint32_t					_maxBodySize;		//		client_max_body_size
 		IntStrMap 					_errorPages;		//		error_page
-		StrStrMap					_redirections;		//		return
+		StrStrMap					_redirections;		//		rewrite
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
 };
 
