@@ -29,6 +29,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 		{
 			while (line.at(line.size() - 1) != '}')
 			{
+				line = Utils::sTrim(line);
 				strLocationBlock.push_back(line);
 				line = strServerBlock.at(++i);
 			}
