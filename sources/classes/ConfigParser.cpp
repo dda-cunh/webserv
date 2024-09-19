@@ -5,6 +5,7 @@ std::vector<std::string>	ConfigParser::_strServerBlock;
 std::string					ConfigParser::_defaultRoot;
 std::vector<std::string>	ConfigParser::_defaultIndex;
 IntStrMap					ConfigParser::_defaultErrorPages;
+StrStrMap					ConfigParser::_defaultRedirections;
 
 
 /*
@@ -237,6 +238,16 @@ void	ConfigParser::_overrideDefaults(void)
 				_defaultErrorPages[nVal] = line.substr(line.find_last_of(" \t") + 1);
 			else
 				throw (ExceptionMaker("Multiple settings for the same error page in server context") );
+		}
+		else if (line.find("rewrite") == 0)
+		{
+			line = str_parse_line(line);
+			if (word_count(line) != 2)
+				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
+			if (_defaultRedirections.find(line.substr(0, line.find_first_of(" \t") ) ) == _defaultRedirections.end() )
+				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
+			else
+				throw (ExceptionMaker("Multiple settings for the same redirection in server context") );
 		}
 	}
 }
@@ -527,6 +538,12 @@ void	ConfigParser::parseRedirections(std::vector<std::string> strLocationBlock, 
 			else
 				throw (ExceptionMaker("Duplicate redirection provided in \"rewrite\" directives") );
 		}
+	}
+
+	for (StrStrMap::iterator itt = _defaultRedirections.begin(); itt != _defaultRedirections.end(); itt++)
+	{
+		if (redirections.find(itt->first) == redirections.end() )
+			redirections[itt->first] = itt->second;
 	}
 }
 
