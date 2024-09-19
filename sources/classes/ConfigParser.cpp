@@ -35,7 +35,8 @@ static std::string	str_parse_line(std::string line)
 	val = line;
 
 	val.erase(0, val.find_first_of(" \t") );
-	val.erase(val.find_last_of("{;"), 1);
+	if (val.find_last_of("{;") != val.npos)
+		val.erase(val.find_last_of("{;"), 1);
 	val = Utils::sTrim(val);
 
 	return (val);
@@ -253,8 +254,14 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 	{
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
-			//	GET 2ND WORD
 			strHost = str_parse_line(strServerBlock.at(i) );
+			while (++i < vectorSize)
+			{
+				if (strServerBlock.at(i).find("listen") == 0)
+					throw (ExceptionMaker("\"listen\" directive is duplicate") );
+			}
+
+			//	GET 2ND WORD
 			//	DETERMINE IF ':' IS PRESENT
 			//		IF YES, GET VALUE AT LEFT SIDE
 			if (strHost.find(':') != strHost.npos)
@@ -278,7 +285,6 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 {
 	std::string	strPort;
 	size_t		vectorSize;
-	size_t		substrSize;
 	int			nPort;
 
 	vectorSize = strServerBlock.size();
@@ -289,16 +295,15 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 			strPort = str_parse_line(strServerBlock.at(i) );
 
 			if (strPort.find(':') != strPort.npos)
-			{
-				substrSize = strPort.size() - strPort.find(':');
-				nPort = std::atoi(strPort.c_str() );
-				if (substrSize > 5 || nPort > 0xffff)
-					throw (ExceptionMaker("Port number is out of range") );
-				else
-					return (static_cast<uint16_t>(nPort) );
-			}
-			else
+				strPort = strPort.substr(strPort.find(':') + 1);
+			else if (strPort.find('.') != strPort.npos)
 				return (DEFAULT_PORT);
+
+			nPort = std::atoi(strPort.c_str() );
+			if (strPort.size() > 5 || nPort > 0xffff)
+				throw (ExceptionMaker("Port number is out of range") );
+			
+			return (static_cast<uint16_t>(nPort) );
 		}
 	}
 
