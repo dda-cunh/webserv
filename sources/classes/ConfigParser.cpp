@@ -356,7 +356,8 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		if (strLocationBlock.at(i).find("root") == 0)
+		line = strLocationBlock.at(i);
+		if (line.find("root") == 0)
 		{
 				line = str_parse_line(line);
 				if (word_count(line) > 1)
