@@ -4,6 +4,7 @@ std::vector<std::string>	ConfigParser::_strServerBlock;
 
 std::string					ConfigParser::_defaultRoot;
 std::vector<std::string>	ConfigParser::_defaultIndex;
+uint32_t					ConfigParser::_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
 IntStrMap					ConfigParser::_defaultErrorPages;
 StrStrMap					ConfigParser::_defaultRedirections;
 std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
@@ -71,6 +72,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	std::ifstream	configFile;
 	std::string		line;
 
+
 	configFile.open(path);
 	if (!configFile.is_open())
 		throw (ExceptionMaker("Unable to open configuration file") );
@@ -99,21 +101,23 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	
 
 		_strServerBlock.clear();
+
 		_defaultRoot.clear();
 		_defaultIndex.clear();
+		_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
 		_defaultErrorPages.clear();
+		_defaultRedirections.clear();
+		_defaultMethodsAllowed.clear();
 	}
 
 	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
 
+
 	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
 	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
-/*
-	for (size_t i = 0; i < configs.size(); i++)
-		std::cout << configs.at(i) << std::endl;
-*/
+
 
 	for (size_t i = 0; i < configs.size(); i++)
 	{
@@ -193,15 +197,17 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 
 void	ConfigParser::_overrideDefaults(void)
 {
-	size_t		vectorSize;
-	int			nVal;
-	std::string	line;
+	size_t				vectorSize;
+	int					nVal;
+	unsigned long int	ulVal;
+	std::stringstream	strStream;
+	std::string			line;
 
 	vectorSize = _strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
 		line = _strServerBlock.at(i);
-		//	IF location CONTEXT IS FOUND, SKIP TO END OF location CONTEXT
+
 		if (line.find("location") == 0)
 		{
 			while (line.find('}') == line.npos)
@@ -210,8 +216,7 @@ void	ConfigParser::_overrideDefaults(void)
 				line = _strServerBlock.at(i);
 			}
 		}
-		//	SEARCH FOR root AND index DIRECTIVES
-		//	THROW EXCEPTION IF MULTIPLE DEFAULTS ARE FOUND FOR root DIRECTIVE
+
 		if (line.find("root") == 0)
 		{
 			if (_defaultRoot.empty() )
@@ -228,6 +233,32 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			line = str_parse_line(line);
 			split_string_to_vector(line, _defaultIndex);
+		}
+		else if (line.find("client_max_body_size") == 0)
+		{
+			for (size_t j = i + 1; j < vectorSize; j++)
+			{
+				if (_strServerBlock.at(j).find("location") == 0)
+				{
+					while (_strServerBlock.at(j).find('}') == _strServerBlock.at(j).npos)
+						j++;
+				}
+
+				if (_strServerBlock.at(j).find("client_max_body_size") == 0)
+					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate in server context") );
+			}
+
+			line = str_parse_line(line);
+
+			if (word_count(line) != 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
+
+			strStream << line;
+			strStream >> ulVal;
+			if (line.size() > 10 || ulVal > 0xffffffff)
+				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
+			else
+				_defaultMaxBodySize = static_cast<uint32_t>(ulVal);
 		}
 		else if (line.find("error_page") == 0)
 		{
@@ -361,7 +392,6 @@ std::string	ConfigParser::parseLocation(std::string locationLine)
 {
 	locationLine = str_parse_line(locationLine);
 
-//	REPLACE THE SECOND CONDITIONAL WITH A FUNCTION FOR WORD COUNT
 	if (!locationLine.empty() || word_count(locationLine) != 1)
 		return (locationLine);
 	else
@@ -451,7 +481,7 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 		}
 	}
 
-	return (DEFAULT_MAX_BODY_SIZE);	
+	return (_defaultMaxBodySize);	
 }
 
 void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages)
@@ -630,7 +660,7 @@ bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 		{
 			while (++i < vectorSize)
 			{
-				if (line.find("autoindex") == 0)
+				if (strLocationBlock.at(i).find("autoindex") == 0)
 					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
 			}
 
@@ -647,5 +677,5 @@ bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 		}
 	}
 
-	return (DEFAULT_AUTO_INDEX);	
+	return (_defaultMaxBodySize);	
 }

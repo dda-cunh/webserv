@@ -52,6 +52,7 @@ class	ConfigParser
 
 		static std::string				_defaultRoot;
 		static std::vector<std::string>	_defaultIndex;
+		static uint32_t					_defaultMaxBodySize;
 		static IntStrMap				_defaultErrorPages;
 		static StrStrMap				_defaultRedirections;
 		static std::vector<std::string>	_defaultMethodsAllowed;
