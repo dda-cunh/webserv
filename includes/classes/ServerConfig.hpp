@@ -32,12 +32,12 @@ class	ServerConfig
 
 		//			GETTERS
 
-		uint32_t			getHost(void) const;
-		uint16_t			getPort(void) const;
-		std::string			getServerName(void) const;
-		size_t				getLocationBlocksSize(void) const;
-		ServerLocation		*getLocationFromIndex(size_t i) const;
-		ServerLocation		*getLocationFromPath(std::string path) const;
+		uint32_t					getHost(void) const;
+		uint16_t					getPort(void) const;
+		std::string					getServerName(void) const;
+		size_t						getLocationBlocksSize(void) const;
+		ServerLocation				*getLocationFromIndex(size_t i) const;
+		ServerLocation				*getLocationFromPath(std::string path) const;
 		Utils::LOCATION_BLOCK_TYPE getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
 		//	=============================
 

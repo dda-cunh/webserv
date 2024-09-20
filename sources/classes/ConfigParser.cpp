@@ -6,6 +6,7 @@ std::string					ConfigParser::_defaultRoot;
 std::vector<std::string>	ConfigParser::_defaultIndex;
 IntStrMap					ConfigParser::_defaultErrorPages;
 StrStrMap					ConfigParser::_defaultRedirections;
+std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
 
 
 /*
@@ -36,8 +37,8 @@ static std::string	str_parse_line(std::string line)
 	val = line;
 
 	val.erase(0, val.find_first_of(" \t") );
-	if (val.find_last_of("{;") != val.npos)
-		val.erase(val.find_last_of("{;"), 1);
+	if (val.find_first_of("{;") != val.npos)
+		val.erase(val.find_first_of(";{"));
 	val = Utils::sTrim(val);
 
 	return (val);
@@ -203,7 +204,7 @@ void	ConfigParser::_overrideDefaults(void)
 		//	IF location CONTEXT IS FOUND, SKIP TO END OF location CONTEXT
 		if (line.find("location") == 0)
 		{
-			while (line.at(line.size() - 1) != '}')
+			while (line.find('}') == line.npos)
 			{
 				i++;
 				line = _strServerBlock.at(i);
@@ -221,7 +222,7 @@ void	ConfigParser::_overrideDefaults(void)
 				_defaultRoot = line;
 			}
 			else
-				throw (ExceptionMaker("Multiple overrides for default root directive inside same server context") );
+				throw (ExceptionMaker("Multiple overrides for default \"root\" directive inside same server context") );
 		}
 		else if (line.find("index") == 0)
 		{
@@ -248,6 +249,14 @@ void	ConfigParser::_overrideDefaults(void)
 				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
 			else
 				throw (ExceptionMaker("Multiple settings for the same redirection in server context") );
+		}
+		else if (line.find("allow_methods") == 0)
+		{
+			line = str_parse_line(line);
+			if (_defaultMethodsAllowed.empty() )
+				split_string_to_vector(line, _defaultMethodsAllowed);
+			else
+				throw (ExceptionMaker("Multiple overrides for default \"allow_methods\" directive inside same server context") );
 		}
 	}
 }
@@ -587,7 +596,22 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 
 	if (methodsAllowed.empty() )
 	{
-		methodsAllowed.push_back(Http::M_GET);
+		if (_defaultMethodsAllowed.empty() )
+			methodsAllowed.push_back(Http::M_GET);
+		else
+		{
+			for (size_t i = 0; i < _defaultMethodsAllowed.size(); i++)
+			{
+				if (_defaultMethodsAllowed.at(i) == "GET")
+					methodsAllowed.push_back(Http::M_GET);
+				else if (_defaultMethodsAllowed.at(i) == "POST")
+					methodsAllowed.push_back(Http::M_POST);
+				else if (_defaultMethodsAllowed.at(i) == "DELETE")
+					methodsAllowed.push_back(Http::M_DELETE);
+				else
+					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive in server context") );
+			}
+		}
 	}
 }
 
