@@ -131,6 +131,8 @@ size_t	ServerConfig::getLocationBlocksSize(void) const
 
 ServerLocation	*ServerConfig::getLocationFromIndex(size_t i) const
 {
+	if (i >= this->_locationBlocks.size() )
+		throw (ExceptionMaker("Location index is out of bounds") );
 	return (this->_locationBlocks.at(i));
 }
 
