@@ -84,11 +84,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		if (_strServerBlock.empty() )
 			break ;
 
-
-
-		//	ADD SYNTAX CHECK LATER
-
-
+		SyntaxChecker::syntaxCheckServerBlock(strServerBlock);
 
 		_overrideDefaults();
 		
@@ -138,7 +134,7 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
-		Utils::sTrim(line);
+		line = Utils::sTrim(line);
 
 		if (line.empty() )
 			continue ;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../webserv.hpp"
-//#include "ConfigParser.hpp"
 #include "ServerLocation.hpp"
 
 

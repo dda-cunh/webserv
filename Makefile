@@ -24,6 +24,7 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
 												TCPSocket.cpp \
 												ServerManager.cpp \
 												ConfigParser.cpp \
+												SyntaxChecker.cpp \
 												ServerConfig.cpp \
 												ServerLocation.cpp) \
 					$(addprefix $(NAMES_DIR),	Utils.cpp \
