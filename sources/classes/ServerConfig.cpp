@@ -1,5 +1,6 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
+	/*	CONSTRUCTORS	*/
 
 ServerConfig::ServerConfig(void)
 {
@@ -28,6 +29,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 		{
 			while (line.at(line.size() - 1) != '}')
 			{
+				line = Utils::sTrim(line);
 				strLocationBlock.push_back(line);
 				line = strServerBlock.at(++i);
 			}
@@ -91,14 +93,21 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
+			//	this->_locationBlocks.push_back(new LocationCGI(location));
 				break ;
 			case (Utils::L_UNHANDLED):
+				//	throw exception
 				break ;
+//			default:
+				//	throw exception?
+
 		}
 	}
 
 	return (*this);
 }
+
+	/*	GETTERS	*/
 
 uint32_t	ServerConfig::getHost(void) const
 {
@@ -142,6 +151,10 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *locatio
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
 		return (Utils::L_STATIC);
+//	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
+//		return (L_REV_PROXY);
+//	else if (dynamic_cast<LocationCGI *>(location) != NULL)
+//		return (L_CGI);
 	else
 		return (Utils::L_UNHANDLED);
 }
@@ -161,6 +174,7 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 	{
 		location = serverConfig.getLocationFromIndex(i);
 		out << "LocationBlock nr. " << i << ":" << std::endl;
+		//	MUST USE FUCKING DYNAMIC CAST
 		switch (serverConfig.getLocationType(location))
 		{
 			case (Utils::L_STATIC):
@@ -169,8 +183,10 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
+				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
+				//	THROW EXCEPTION
 				break ;
 		}		
 		out << std::endl;

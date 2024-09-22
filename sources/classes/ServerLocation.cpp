@@ -26,12 +26,11 @@ ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
 
 	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS INTO this->_errorPages
-
+	ConfigParser::parseErrorPages(strLocationBlock, this->_errorPages);
 	//	SAME WITH REDIRECTIONS
-
+	ConfigParser::parseRedirections(strLocationBlock, this->_redirections);
 	//	AND ALLOWED METHODS
 	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
-
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -61,7 +60,7 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 	for (IntStrMap::const_iterator itt = serverLocation.getErrPageIttBegin(); itt != serverLocation.getErrPageIttEnd(); itt++)
 		this->_errorPages[itt->first] = itt->second;
 
-	for (IntStrMap::const_iterator itt = serverLocation.getRedirectionIttBegin(); itt != serverLocation.getRedirectionIttEnd(); itt++)
+	for (StrStrMap::const_iterator itt = serverLocation.getRedirectionIttBegin(); itt != serverLocation.getRedirectionIttEnd(); itt++)
 		this->_redirections[itt->first] = itt->second;
 
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
@@ -103,12 +102,12 @@ IntStrMap::const_iterator	ServerLocation::getErrPageIttEnd(void) const
 	return (this->_errorPages.end());
 }
 
-IntStrMap::const_iterator	ServerLocation::getRedirectionIttBegin(void) const
+StrStrMap::const_iterator	ServerLocation::getRedirectionIttBegin(void) const
 {
 	return (this->_redirections.begin());
 }
 
-IntStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
+StrStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
 {
 	return (this->_redirections.end());
 }
@@ -129,10 +128,10 @@ std::string	ServerLocation::getErrPagePath(int status) const
 	return (this->_errorPages.at(status));
 }
 
-std::string	ServerLocation::getRedirection(int status) const
+std::string	ServerLocation::getRedirection(std::string url) const
 {
 	//	THIS FUNCTION MUST HANDLE EDGE CASES!!!!!
-	return (this->_redirections.at(status));
+	return (this->_redirections.at(url));
 }
 
 bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
@@ -269,7 +268,7 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "\tRedirections:" << std::endl;
-	for (IntStrMap::const_iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
+	for (StrStrMap::const_iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "\tAllowed methods:" << std::endl;
