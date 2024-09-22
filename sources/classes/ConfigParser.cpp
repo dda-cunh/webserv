@@ -10,18 +10,6 @@ StrStrMap					ConfigParser::_defaultRedirections;
 std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
 
 
-/*
-static void	print_vector(std::vector<std::string> block)
-{
-	size_t	vectorSize;
-
-	vectorSize = block.size();
-	for (size_t i = 0; i < vectorSize; i++)
-		std::cout << block.at(i) << std::endl;
-	std::cout << "==================================" << std::endl;
-}
-*/
-
 static void	erase_comments(std::string &line)
 {
 	size_t	pos;
@@ -77,31 +65,15 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (!configFile.is_open())
 		throw (ExceptionMaker("Unable to open configuration file") );
 
-	//	READ configFile UNTIL EOF
 	while (!configFile.eof() )
 	{
 		_loadServerContext(configFile);
 		if (_strServerBlock.empty() )
 			break ;
-
-
-
-		//	ADD SYNTAX CHECK LATER
-
-
-
 		_overrideDefaults();
-		
-		//	FOR DEBUGGING
-/*		print_vector(_strServerBlock);
-		std::cout << "Default override for root: " << _defaultRoot << std::endl;
-		std::cout << "Default override for index: " << _defaultIndex << std::endl;
-*/
-		configs.push_back(ServerConfig(_strServerBlock) );
-	
+		configs.push_back(ServerConfig(_strServerBlock) );	
 
 		_strServerBlock.clear();
-
 		_defaultRoot.clear();
 		_defaultIndex.clear();
 		_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
@@ -114,11 +86,8 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
 
-
-	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
-	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
-
-
+//	THIS FOR LOOP IS FOR DEBUGGING
+//	IT PRINTS OUT THE DATA THAT WAS LOADED INTO EACH ServerConfig OBJECT
 	for (size_t i = 0; i < configs.size(); i++)
 	{
 		std::cout << configs.at(i) << std::endl;
@@ -134,7 +103,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	
 	brackets = 0;
 
-	//	SKIP FILE UNTIL START OF CONTEXT
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
@@ -161,13 +129,11 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 	}
 
-	//	LOAD CONTEXT INTO STATIC VECTOR
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
 		line = Utils::sTrim(line);
 
-		//	UPDATE BRACKET LEVEL
 		if (line.empty() )
 			continue ;
 		else if (line.at(line.size() - 1) == '{')
@@ -188,12 +154,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	if (brackets != 0)
 		throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 }
-
-
-
-//		SYNTAX CHECK METHODS GO HERE
-
-
 
 void	ConfigParser::_overrideDefaults(void)
 {
@@ -293,8 +253,6 @@ void	ConfigParser::_overrideDefaults(void)
 }
 
 
-/*		PARSING FOR SERVERCONFIG CLASS		*/
-
 uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 {
 	size_t		vectorSize;
@@ -312,15 +270,10 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 					throw (ExceptionMaker("\"listen\" directive is duplicate") );
 			}
 
-			//	GET 2ND WORD
-			//	DETERMINE IF ':' IS PRESENT
-			//		IF YES, GET VALUE AT LEFT SIDE
 			if (strHost.find(':') != strHost.npos)
 				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
 			else
 			{
-			//		ELSE, DETERMINE IF ITS AN IP ADDR
-			//			RETURN IP IF YES, RETURN DEFAULT OTHERWISE
 				if (strHost.find('.') != strHost.npos)
 					return (Network::sToIPV4Packed(strHost) );
 				else
@@ -380,13 +333,9 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 
 Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::string> strLocationBlock)
 {
-	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
 	(void)strLocationBlock;
 	return (Utils::L_STATIC);
 }
-
-
-/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
 
 std::string	ConfigParser::parseLocation(std::string locationLine)
 {
@@ -506,7 +455,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		}
 	}
 
-
 	if (errorPages.find(400) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(400) == _defaultErrorPages.end() )
@@ -514,7 +462,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		else
 			errorPages[400] = _defaultErrorPages[400];
 	}
-
 	if (errorPages.find(403) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(403) == _defaultErrorPages.end() )
@@ -522,7 +469,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		else
 			errorPages[403] = _defaultErrorPages[403];
 	}
-
 	if (errorPages.find(404) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(404) == _defaultErrorPages.end() )
@@ -530,7 +476,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		else
 			errorPages[404] = _defaultErrorPages[404];
 	}
-
 	if (errorPages.find(405) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(405) == _defaultErrorPages.end() )
@@ -538,7 +483,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		else
 			errorPages[405] = _defaultErrorPages[405];
 	}
-
 	if (errorPages.find(500) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(500) == _defaultErrorPages.end() )
@@ -546,7 +490,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		else
 			errorPages[500] = _defaultErrorPages[500];
 	}
-
 	if (errorPages.find(501) == errorPages.end() )
 	{
 		if (_defaultErrorPages.find(501) == _defaultErrorPages.end() )
@@ -645,7 +588,6 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 	}
 }
 
-/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
 
 bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 {
