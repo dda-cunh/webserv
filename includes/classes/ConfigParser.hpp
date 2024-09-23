@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ServerManager.hpp"
-#include "SyntaxParser.hpp"
+#include "SyntaxChecker.hpp"
 
 
 typedef std::vector<ServerConfig>	ServerBlocks;

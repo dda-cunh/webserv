@@ -84,7 +84,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		if (_strServerBlock.empty() )
 			break ;
 
-		SyntaxChecker::syntaxCheckServerBlock(strServerBlock);
+		SyntaxChecker::syntaxCheckServerBlock(_strServerBlock);
 
 		_overrideDefaults();
 		
