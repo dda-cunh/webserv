@@ -24,6 +24,7 @@ namespace	Utils
 	const char PATH_SEPARATOR = '/';
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
+	size_t					sWordCount(std::string line);
 	std::string				lowerStr(std::string const&);
 	std::string				sTrim(std::string const&);
 	void					log(std::string const&, LogLevel const&);

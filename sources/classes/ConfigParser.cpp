@@ -31,33 +31,6 @@ static void	erase_comments(std::string &line)
 		line.erase(pos, line.size());
 }
 
-static std::string	str_parse_line(std::string line)
-{
-	std::string	val;
-
-	val = line;
-
-	val.erase(0, val.find_first_of(" \t") );
-	if (val.find_first_of("{;") != val.npos)
-		val.erase(val.find_first_of(";{"));
-	val = Utils::sTrim(val);
-
-	return (val);
-}
-
-static size_t	word_count(std::string line)
-{
-	std::istringstream	strStream(line);
-	std::string			outStr;
-	size_t				count;
-
-	count = 0;
-	while (strStream >> outStr)
-		count++;
-
-	return (count);
-}
-
 static void	split_string_to_vector(std::string line, std::vector<std::string> &strVector)
 {
 	std::istringstream	strStream(line);
@@ -217,8 +190,8 @@ void	ConfigParser::_overrideDefaults(void)
 		{
 			if (_defaultRoot.empty() )
 			{
-				line = str_parse_line(line);
-				if (word_count(line) != 1)
+				line = SyntaxChecker::strParseLine(line);
+				if (Utils::sWordCount(line) != 1)
 					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				_defaultRoot = line;
 			}
@@ -227,7 +200,7 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("index") == 0)
 		{
-			line = str_parse_line(line);
+			line = SyntaxChecker::strParseLine(line);
 			split_string_to_vector(line, _defaultIndex);
 		}
 		else if (line.find("client_max_body_size") == 0)
@@ -244,9 +217,9 @@ void	ConfigParser::_overrideDefaults(void)
 					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate in server context") );
 			}
 
-			line = str_parse_line(line);
+			line = SyntaxChecker::strParseLine(line);
 
-			if (word_count(line) != 1)
+			if (Utils::sWordCount(line) != 1)
 				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
 
 			strStream << line;
@@ -258,8 +231,8 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("error_page") == 0)
 		{
-			line = str_parse_line(line);
-			if (word_count(line) != 2)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) != 2)
 				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
 			nVal = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
 			if (_defaultErrorPages.find(nVal) == _defaultErrorPages.end() )
@@ -269,8 +242,8 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("rewrite") == 0)
 		{
-			line = str_parse_line(line);
-			if (word_count(line) != 2)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) != 2)
 				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			if (_defaultRedirections.find(line.substr(0, line.find_first_of(" \t") ) ) == _defaultRedirections.end() )
 				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
@@ -279,7 +252,7 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("allow_methods") == 0)
 		{
-			line = str_parse_line(line);
+			line = SyntaxChecker::strParseLine(line);
 			if (_defaultMethodsAllowed.empty() )
 				split_string_to_vector(line, _defaultMethodsAllowed);
 			else
@@ -301,7 +274,7 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 	{
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
-			strHost = str_parse_line(strServerBlock.at(i) );
+			strHost = SyntaxChecker::strParseLine(strServerBlock.at(i) );
 			while (++i < vectorSize)
 			{
 				if (strServerBlock.at(i).find("listen") == 0)
@@ -339,7 +312,7 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 	{
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
-			strPort = str_parse_line(strServerBlock.at(i) );
+			strPort = SyntaxChecker::strParseLine(strServerBlock.at(i) );
 
 			if (strPort.find(':') != strPort.npos)
 				strPort = strPort.substr(strPort.find(':') + 1);
@@ -366,7 +339,7 @@ std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBloc
 	{
 		if (strServerBlock.at(i).find("server_name") == 0)
 		{
-			return (str_parse_line(strServerBlock.at(i)) );
+			return (SyntaxChecker::strParseLine(strServerBlock.at(i)) );
 		}
 	}
 
@@ -386,9 +359,9 @@ Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::s
 
 std::string	ConfigParser::parseLocation(std::string locationLine)
 {
-	locationLine = str_parse_line(locationLine);
+	locationLine = SyntaxChecker::strParseLine(locationLine);
 
-	if (!locationLine.empty() || word_count(locationLine) != 1)
+	if (!locationLine.empty() || Utils::sWordCount(locationLine) != 1)
 		return (locationLine);
 	else
 		throw (ExceptionMaker("Invalid number of arguments in \"location\" directive") );
@@ -405,8 +378,8 @@ std::string	ConfigParser::parseRootDir(std::vector<std::string> strLocationBlock
 		line = strLocationBlock.at(i);
 		if (line.find("root") == 0)
 		{
-				line = str_parse_line(line);
-				if (word_count(line) > 1)
+				line = SyntaxChecker::strParseLine(line);
+				if (Utils::sWordCount(line) > 1)
 					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 				return (line);
 		}
@@ -429,7 +402,7 @@ void	ConfigParser::parseIndexFiles(std::vector<std::string> strLocationBlock, st
 		line = strLocationBlock.at(i);
 		if (line.find("index") == 0)
 		{
-			line = str_parse_line(line);
+			line = SyntaxChecker::strParseLine(line);
 			split_string_to_vector(line, indexFiles);
 		}
 	}
@@ -465,8 +438,8 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate") );
 			}
 
-			line = str_parse_line(line);
-			if (word_count(line) > 1)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) > 1)
 				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
 			strStream << line;
 			strStream >> ulConvert;
@@ -492,8 +465,8 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		line = strLocationBlock.at(i);
 		if (line.find("error_page") == 0)
 		{
-			line = str_parse_line(line);
-			if (word_count(line) != 2)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) != 2)
 				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
 			errCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
 			if (errorPages.find(errCode) != errorPages.end() )
@@ -564,8 +537,8 @@ void	ConfigParser::parseRedirections(std::vector<std::string> strLocationBlock, 
 		line = strLocationBlock.at(i);
 		if (line.find("rewrite") == 0)
 		{
-			line = str_parse_line(line);
-			if (word_count(line) == 0)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) == 0)
 				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			uri = line.substr(0, line.find_first_of(" \t") );
 			if (redirections.find(uri) == redirections.end() )
@@ -601,8 +574,8 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 					throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
 			}
 
-			line = str_parse_line(line);
-			if (word_count(line) == 0)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) == 0)
 				throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
 
 			strStream << line;
@@ -660,8 +633,8 @@ bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
 			}
 
-			line = str_parse_line(line);
-			if (word_count(line) > 1)
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) > 1)
 				throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
 
 			if (line == "on")

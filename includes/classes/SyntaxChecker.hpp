@@ -21,13 +21,17 @@
 class	SyntaxChecker
 {
 	public:
-		static void	syntaxCheckServerBlock(std::vector<std::string> strServerBlock);
+		static void			syntaxCheckServerBlock(const std::vector<std::string> strServerBlock);
+
+		static std::string	strParseLine(std::string line);
 
 	private:
 		SyntaxChecker(void);
 		~SyntaxChecker(void);
 
 		static int	_directiveCheck(const std::string line);
+
+		static void	_syntaxCheckServer(const std::string line);
 
 		static std::vector<std::string>	_strLocationBlock;
 };
