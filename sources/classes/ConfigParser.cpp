@@ -317,20 +317,25 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 	return (DEFAULT_PORT);
 }
 
-std::string	ConfigParser::parseServerName(std::vector<std::string> strServerBlock)
+void	ConfigParser::parseServerName(std::vector<std::string> strServerBlock, std::vector<std::string> &serverNames)
 {
-	size_t	vectorSize;
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	std::string			strArg;
 
 	vectorSize = strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		if (strServerBlock.at(i).find("server_name") == 0)
+		line = strServerBlock.at(i);
+		if (line.find("server_name") == 0)
 		{
-			return (SyntaxChecker::strParseLine(strServerBlock.at(i)) );
+			line = SyntaxChecker::strParseLine(line);
+			strStream << line;
+			while (strStream >> strArg)
+				serverNames.push_back(strArg);
 		}
 	}
-
-	return (DEFAULT_SERVER_NAME);
 }
 
 
