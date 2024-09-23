@@ -40,7 +40,7 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 				_syntaxCheckServer(strServerBlock.at(i) );
 				break ;
 			case(DIRECTIVE_LISTEN):
-				//_syntaxCheckListen(strServerBlock, i);
+				_syntaxCheckListen(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_SERVER_NAME):
 				//_syntaxCheckServerName(strServerBlock, i);
@@ -93,12 +93,76 @@ int	SyntaxChecker::_directiveCheck(const std::string line)
 	return (-1);
 }
 
+
 void	SyntaxChecker::_syntaxCheckServer(const std::string line)
 {
-	std::cout << line << std::endl;
 	if (line != "server" && (line.find_first_of("{") != line.size() - 1 || line.find(';') != line.npos) )
 		throw (ExceptionMaker("Unexpected tokens in \"server\" directive") );
 
 	if (strParseLine(line) != "")
 		throw (ExceptionMaker("Invalid number of arguments in \"server\" directive") );
+}
+
+
+static void	syntax_check_IP(std::string line)
+{
+	std::string	strOctet;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (line.empty() )
+			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
+		
+		strOctet = line.substr(0, line.find('.') );
+
+		for (size_t j = 0; j < strOctet.size(); j++)
+		{
+			if (!std::isdigit(strOctet.at(j) ) )
+				throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
+		}
+
+		if (strOctet.size() > 3 || std::atoi(strOctet.c_str() ) > 255)
+			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
+
+		if (i < 3 && line.find('.') == line.npos)
+			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
+		
+		line.erase(0, line.find('.') + 1);
+	}
+}
+/*
+static void	syntax_check_port(std::string line)
+{
+
+}
+*/
+void	SyntaxChecker::_syntaxCheckListen(const std::vector<std::string> strServerBlock, const size_t i)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strServerBlock.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (strServerBlock.at(j).find("listen") == 0)
+			throw (ExceptionMaker("\"listen\" directive is duplicate") );
+	}
+
+	line = strServerBlock.at(i);
+	if (line.find_first_of(";") != line.size() - 1)
+		throw (ExceptionMaker("Expected ';' token at the end of \"listen\" directive") );
+
+	line = strParseLine(line);
+	if (Utils::sWordCount(line) != 1)
+		throw (ExceptionMaker("Incorrect number of arguments in \"listen\" directive") );
+
+	if (line.find(':') != line.npos)
+	{
+		syntax_check_IP(line.substr(0, line.find(':') ) );
+//		syntax_check_port(line.substr(line.find(':') + 1) );
+	}
+	else if (line.find('.') != line.npos)
+		syntax_check_IP(line);
+//	else
+//		syntax_check_port(line);
 }

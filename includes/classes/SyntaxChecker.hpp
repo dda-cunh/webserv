@@ -32,6 +32,7 @@ class	SyntaxChecker
 		static int	_directiveCheck(const std::string line);
 
 		static void	_syntaxCheckServer(const std::string line);
+		static void	_syntaxCheckListen(const std::vector<std::string> strServerBlock, const size_t i);
 
 		static std::vector<std::string>	_strLocationBlock;
 };

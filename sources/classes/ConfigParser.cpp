@@ -275,21 +275,11 @@ uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 		if (strServerBlock.at(i).find("listen") == 0)
 		{
 			strHost = SyntaxChecker::strParseLine(strServerBlock.at(i) );
-			while (++i < vectorSize)
-			{
-				if (strServerBlock.at(i).find("listen") == 0)
-					throw (ExceptionMaker("\"listen\" directive is duplicate") );
-			}
 
-			//	GET 2ND WORD
-			//	DETERMINE IF ':' IS PRESENT
-			//		IF YES, GET VALUE AT LEFT SIDE
 			if (strHost.find(':') != strHost.npos)
 				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
 			else
 			{
-			//		ELSE, DETERMINE IF ITS AN IP ADDR
-			//			RETURN IP IF YES, RETURN DEFAULT OTHERWISE
 				if (strHost.find('.') != strHost.npos)
 					return (Network::sToIPV4Packed(strHost) );
 				else
@@ -319,10 +309,16 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 			else if (strPort.find('.') != strPort.npos)
 				return (DEFAULT_PORT);
 
+			for (size_t j = 0; j < strPort.size(); j++)
+			{
+				if (!std::isdigit(strPort.at(j) ) )
+					throw (ExceptionMaker("Invalid port in \"listen\" directive") );
+			}
+
 			nPort = std::atoi(strPort.c_str() );
 			if (strPort.size() > 5 || nPort > 0xffff)
 				throw (ExceptionMaker("Port number is out of range") );
-			
+
 			return (static_cast<uint16_t>(nPort) );
 		}
 	}
