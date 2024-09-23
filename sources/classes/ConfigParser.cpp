@@ -309,16 +309,7 @@ uint16_t	ConfigParser::parsePort(std::vector<std::string> strServerBlock)
 			else if (strPort.find('.') != strPort.npos)
 				return (DEFAULT_PORT);
 
-			for (size_t j = 0; j < strPort.size(); j++)
-			{
-				if (!std::isdigit(strPort.at(j) ) )
-					throw (ExceptionMaker("Invalid port in \"listen\" directive") );
-			}
-
 			nPort = std::atoi(strPort.c_str() );
-			if (strPort.size() > 5 || nPort > 0xffff)
-				throw (ExceptionMaker("Port number is out of range") );
-
 			return (static_cast<uint16_t>(nPort) );
 		}
 	}

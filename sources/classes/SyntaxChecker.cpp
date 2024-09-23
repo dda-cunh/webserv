@@ -104,16 +104,16 @@ void	SyntaxChecker::_syntaxCheckServer(const std::string line)
 }
 
 
-static void	syntax_check_IP(std::string line)
+static void	syntax_check_IP(std::string strIP)
 {
 	std::string	strOctet;
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (line.empty() )
+		if (strIP.empty() )
 			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
 		
-		strOctet = line.substr(0, line.find('.') );
+		strOctet = strIP.substr(0, strIP.find('.') );
 
 		for (size_t j = 0; j < strOctet.size(); j++)
 		{
@@ -124,18 +124,25 @@ static void	syntax_check_IP(std::string line)
 		if (strOctet.size() > 3 || std::atoi(strOctet.c_str() ) > 255)
 			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
 
-		if (i < 3 && line.find('.') == line.npos)
+		if (i < 3 && strIP.find('.') == strIP.npos)
 			throw (ExceptionMaker("Invalid IP provided in \"listen\" directive") );
 		
-		line.erase(0, line.find('.') + 1);
+		strIP.erase(0, strIP.find('.') + 1);
 	}
 }
-/*
-static void	syntax_check_port(std::string line)
-{
 
+static void	syntax_check_port(std::string strPort)
+{
+	for (size_t i = 0; i < strPort.size(); i++)
+	{
+		if (!std::isdigit(strPort.at(i) ) )
+			throw (ExceptionMaker("Invalid port provided in \"listen\" directive") );
+	}
+
+	if (strPort.size() > 5 || std::atoi(strPort.c_str() ) > 0xffff)
+		throw (ExceptionMaker("Port provided in \"listen\" directive is out of range") );
 }
-*/
+
 void	SyntaxChecker::_syntaxCheckListen(const std::vector<std::string> strServerBlock, const size_t i)
 {
 	size_t		vectorSize;
@@ -159,10 +166,10 @@ void	SyntaxChecker::_syntaxCheckListen(const std::vector<std::string> strServerB
 	if (line.find(':') != line.npos)
 	{
 		syntax_check_IP(line.substr(0, line.find(':') ) );
-//		syntax_check_port(line.substr(line.find(':') + 1) );
+		syntax_check_port(line.substr(line.find(':') + 1) );
 	}
 	else if (line.find('.') != line.npos)
 		syntax_check_IP(line);
-//	else
-//		syntax_check_port(line);
+	else
+		syntax_check_port(line);
 }
