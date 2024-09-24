@@ -116,8 +116,11 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			_strServerBlock.push_back(line);
 			if (line.at(line.size() - 1) != '{')
 			{
-				std::getline(configFile, line);
-				line = Utils::sTrim(line);
+				do
+				{
+					std::getline(configFile, line);
+					line = Utils::sTrim(line);
+				} while (line == "");
 
 				if (line != "{")
 					throw (ExceptionMaker("Syntax error in Server context encapsulation") );
@@ -147,21 +150,13 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 		if (!line.empty() )
 			_strServerBlock.push_back(line);
 		
-
-		if (line.find("server ") == 0)
-			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
-		else if (brackets == 0)
+		if (brackets == 0)
 			break ;
 	}
 
 	if (brackets != 0)
 		throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 }
-
-
-
-//		SYNTAX CHECK METHODS GO HERE
-
 
 
 void	ConfigParser::_overrideDefaults(void)
@@ -333,7 +328,12 @@ void	ConfigParser::parseServerName(std::vector<std::string> strServerBlock, std:
 			line = SyntaxChecker::strParseLine(line);
 			strStream << line;
 			while (strStream >> strArg)
+			{
+				if (std::find(serverNames.begin(), serverNames.end(), strArg) != serverNames.end() )
+					throw (ExceptionMaker("Multiple instances of the same argument found in \"server_name\" directive") );
 				serverNames.push_back(strArg);
+			}
+			strStream.clear();
 		}
 	}
 }

@@ -1,7 +1,10 @@
 #include "../../includes/classes/SyntaxChecker.hpp"
 
-
 std::vector<std::string>	SyntaxChecker::_strLocationBlock;
+const std::string			SyntaxChecker::_directivesList[] = {"server", "listen", "server_name", "location",\
+																"root", "index", "client_max_body_size", "error_page",\
+																"rewrite", "allow_methods", "autoindex",\
+																""};
 
 
 std::string	SyntaxChecker::strParseLine(std::string line)
@@ -26,27 +29,31 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 	vectorSize = strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		if (strServerBlock.at(i) == "{" || strServerBlock.at(i) == "}")
+		if (strServerBlock.at(i) == "{")
+		{
+			if (strServerBlock.at(i - 1).find("server") == 0)
+				continue ;
+			else
+				throw (ExceptionMaker("Unexpected '{' token found") );
+		}
+		else if (strServerBlock.at(i) == "}")
 			continue ;
 
-		switch(_directiveCheck(strServerBlock.at(i)) )
+		switch (_directiveCheck(strServerBlock.at(i) ) )
 		{
 			case(DIRECTIVE_SERVER):
 				if (i != 0)
 					throw (ExceptionMaker("Nested \"server\" directive found") );
-				if (strServerBlock.at(i).at(strServerBlock.at(i).size() - 1) == '{' \
-					&& strServerBlock.at(i + 1) == "{")
-					throw (ExceptionMaker("Unexpected \"{\" token found") );
 				_syntaxCheckServer(strServerBlock.at(i) );
 				break ;
 			case(DIRECTIVE_LISTEN):
 				_syntaxCheckListen(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_SERVER_NAME):
-				//_syntaxCheckServerName(strServerBlock, i);
+				_syntaxCheckServerName(strServerBlock.at(i) );
 				break ;
 			case(DIRECTIVE_LOCATION):
-				//_syntaxCheckLocation(strServerBlock, i);
+				_syntaxCheckLocationBlock(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_ROOT):
 				//_syntaxCheckRoot(strServerBlock, i, CONTEXT_SERVER);
@@ -77,16 +84,12 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 
 int	SyntaxChecker::_directiveCheck(const std::string line)
 {
-	static const std::string	directivesList[] = {"server", "listen", "server_name", "location",\
-													"root", "index", "client_max_body_size", "error_page",\
-													"rewrite", "allow_methods", "autoindex",\
-													""};
 	std::string					directive;
 
 	directive = line.substr(0, line.find_first_of(" \t;{") );
-	for (int i = 0; directivesList[i] != ""; i++)
+	for (int i = 0; _directivesList[i] != ""; i++)
 	{
-		if (directive == directivesList[i])
+		if (directive == _directivesList[i])
 			return (i);
 	}
 
@@ -172,4 +175,81 @@ void	SyntaxChecker::_syntaxCheckListen(const std::vector<std::string> strServerB
 		syntax_check_IP(line);
 	else
 		syntax_check_port(line);
+}
+
+void	SyntaxChecker::_syntaxCheckServerName(const std::string line)
+{
+	if (line.find_first_of(";") != line.size() - 1)
+		throw (ExceptionMaker("Expected ';' token at the end of \"server_name\" directive") );
+
+	if (Utils::sWordCount(strParseLine(line) ) == 0)
+		throw (ExceptionMaker("Invalid number of arguments in \"server_name\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> strServerBlock, size_t &i)
+{
+	size_t	vectorSize;
+
+	while (strServerBlock.at(i) != "}")
+	{
+		_strLocationBlock.push_back(strServerBlock.at(i));
+		i++;
+	}
+	//	DO A SWITCH/CASE TO PARSE EACH DIRECTIVE UNTIL END OF LOCATION BLOCK
+	vectorSize = _strLocationBlock.size();
+	for (size_t j = 0; j < vectorSize; j++)
+	{
+		if (_strLocationBlock.at(j) == "{")
+		{
+			if (_strLocationBlock.at(j - 1).find("location") != 0)
+				throw (ExceptionMaker("Unexpected '{' token found") );
+			else
+				continue ;
+		}
+		else if (_strLocationBlock.at(j) == "}")
+			continue ;
+
+		switch (_directiveCheck(_strLocationBlock.at(j) ) )
+		{
+			case(DIRECTIVE_SERVER):
+				throw (ExceptionMaker("\"server\" directive is not allowed in Location context") );
+				break ;
+			case(DIRECTIVE_LISTEN):
+				throw (ExceptionMaker("\"listen\" directive is not allowed in Location context") );
+				break ;
+			case(DIRECTIVE_SERVER_NAME):
+				throw (ExceptionMaker("\"server_name\" directive is not allowed in Location context") );
+				break ;
+			case(DIRECTIVE_LOCATION):
+				if (j != 0)
+					throw (ExceptionMaker("Nested \"location\" directive found") );
+//				_syntaxCheckLocationDirective(strServerBlock, i);
+				break ;
+			case(DIRECTIVE_ROOT):
+				//_syntaxCheckRoot(strServerBlock, i, CONTEXT_SERVER);
+				break ;
+			case(DIRECTIVE_INDEX):
+				//_syntaxCheckIndex(strServerBlock.at(i) );
+				break ;
+			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
+				//_syntaxCheckClientMaxBodySize(strServerBlock, i, CONTEXT_SERVER);
+				break ;
+			case(DIRECTIVE_ERROR_PAGE):
+				//_syntaxCheckErrorPage(strServerBlock.at(i) );
+				break ;
+			case(DIRECTIVE_REWRITE):
+				//_syntaxCheckRewrite(strServerBlock.at(i) );
+				break ;
+			case(DIRECTIVE_ALLOW_METHODS):
+				//_syntaxCheckAllowMethods(strServerBlock, i, CONTEXT_SERVER);
+				break ;
+			case(DIRECTIVE_AUTOINDEX):
+				//_syntaxCheckAutoIndex(strServerBlock, i, CONTEXT_SERVER);
+				break ;
+			default:
+				throw (ExceptionMaker("Invalid directive in configuration file") );
+		}
+	}
+
+	_strLocationBlock.clear();
 }

@@ -18,6 +18,7 @@
 #define CONTEXT_SERVER 0
 #define CONTEXT_LOCATION 1
 
+
 class	SyntaxChecker
 {
 	public:
@@ -33,6 +34,9 @@ class	SyntaxChecker
 
 		static void	_syntaxCheckServer(const std::string line);
 		static void	_syntaxCheckListen(const std::vector<std::string> strServerBlock, const size_t i);
+		static void	_syntaxCheckServerName(const std::string line);
+		static void	_syntaxCheckLocationBlock(const std::vector<std::string> strServerBlock, size_t &i);
 
 		static std::vector<std::string>	_strLocationBlock;
+		static const std::string		_directivesList[];
 };

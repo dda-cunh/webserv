@@ -36,7 +36,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
 			{
 				case (Utils::L_STATIC):
-					this->_locationBlocks.insert(this->_locationBlocks.begin(), new LocationStatic(strLocationBlock) );
+					this->_locationBlocks.push_back(new LocationStatic(strLocationBlock) );
 					break ;
 				case (Utils::L_REV_PROXY):
 					throw (ExceptionMaker("This feature has not been implemented yet") );
