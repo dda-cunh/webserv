@@ -182,17 +182,7 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 
 		if (line.find("root") == 0)
-		{
-			if (_defaultRoot.empty() )
-			{
-				line = SyntaxChecker::strParseLine(line);
-				if (Utils::sWordCount(line) != 1)
-					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
-				_defaultRoot = line;
-			}
-			else
-				throw (ExceptionMaker("Multiple overrides for default \"root\" directive inside same server context") );
-		}
+			_defaultRoot = SyntaxChecker::strParseLine(line);
 		else if (line.find("index") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
@@ -233,7 +223,7 @@ void	ConfigParser::_overrideDefaults(void)
 			if (_defaultErrorPages.find(nVal) == _defaultErrorPages.end() )
 				_defaultErrorPages[nVal] = line.substr(line.find_last_of(" \t") + 1);
 			else
-				throw (ExceptionMaker("Multiple settings for the same error page in server context") );
+				throw (ExceptionMaker("Multiple error pages for the same edge status code in server context") );
 		}
 		else if (line.find("rewrite") == 0)
 		{
@@ -243,7 +233,7 @@ void	ConfigParser::_overrideDefaults(void)
 			if (_defaultRedirections.find(line.substr(0, line.find_first_of(" \t") ) ) == _defaultRedirections.end() )
 				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
 			else
-				throw (ExceptionMaker("Multiple settings for the same redirection in server context") );
+				throw (ExceptionMaker("Multiple redirections for the same url in server context") );
 		}
 		else if (line.find("allow_methods") == 0)
 		{

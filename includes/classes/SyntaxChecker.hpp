@@ -36,6 +36,8 @@ class	SyntaxChecker
 		static void	_syntaxCheckListen(const std::vector<std::string> strServerBlock, const size_t i);
 		static void	_syntaxCheckServerName(const std::string line);
 		static void	_syntaxCheckLocationBlock(const std::vector<std::string> strServerBlock, size_t &i);
+		static void	_syntaxCheckLocationDirective(const std::string line);
+		static void	_syntaxCheckRoot(const std::vector<std::string> block, const size_t i);
 
 		static std::vector<std::string>	_strLocationBlock;
 		static const std::string		_directivesList[];

@@ -25,50 +25,57 @@ std::string	SyntaxChecker::strParseLine(std::string line)
 void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strServerBlock)
 {
 	size_t		vectorSize;
+	std::string	line;
 
 	vectorSize = strServerBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		if (strServerBlock.at(i) == "{")
+		line = strServerBlock.at(i);
+
+		if (line == "{")
 		{
 			if (strServerBlock.at(i - 1).find("server") == 0)
 				continue ;
 			else
 				throw (ExceptionMaker("Unexpected '{' token found") );
 		}
-		else if (strServerBlock.at(i) == "}")
+		else if (line == "}")
 			continue ;
 
-		switch (_directiveCheck(strServerBlock.at(i) ) )
+		switch (_directiveCheck(line) )
 		{
 			case(DIRECTIVE_SERVER):
 				if (i != 0)
 					throw (ExceptionMaker("Nested \"server\" directive found") );
-				_syntaxCheckServer(strServerBlock.at(i) );
+				_syntaxCheckServer(line);
 				break ;
 			case(DIRECTIVE_LISTEN):
 				_syntaxCheckListen(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_SERVER_NAME):
-				_syntaxCheckServerName(strServerBlock.at(i) );
+				_syntaxCheckServerName(line);
 				break ;
 			case(DIRECTIVE_LOCATION):
+				if (line.at(line.size() - 1) != '{' && strServerBlock.at(i + 1) != "{")
+					throw (ExceptionMaker("Directive \"location\" has no opening \"{\"") );
+				else if (line.at(line.size() - 1) == '{' && strServerBlock.at(i + 1) == "{")
+					throw (ExceptionMaker("Unexpected '{' token found") );
 				_syntaxCheckLocationBlock(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_ROOT):
-				//_syntaxCheckRoot(strServerBlock, i, CONTEXT_SERVER);
+				_syntaxCheckRoot(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_INDEX):
-				//_syntaxCheckIndex(strServerBlock.at(i) );
+				//_syntaxCheckIndex(line );
 				break ;
 			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
 				//_syntaxCheckClientMaxBodySize(strServerBlock, i, CONTEXT_SERVER);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
-				//_syntaxCheckErrorPage(strServerBlock.at(i) );
+				//_syntaxCheckErrorPage(line );
 				break ;
 			case(DIRECTIVE_REWRITE):
-				//_syntaxCheckRewrite(strServerBlock.at(i) );
+				//_syntaxCheckRewrite(line );
 				break ;
 			case(DIRECTIVE_ALLOW_METHODS):
 				//_syntaxCheckAllowMethods(strServerBlock, i, CONTEXT_SERVER);
@@ -223,28 +230,28 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 			case(DIRECTIVE_LOCATION):
 				if (j != 0)
 					throw (ExceptionMaker("Nested \"location\" directive found") );
-//				_syntaxCheckLocationDirective(strServerBlock, i);
+				_syntaxCheckLocationDirective(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_ROOT):
-				//_syntaxCheckRoot(strServerBlock, i, CONTEXT_SERVER);
+				_syntaxCheckRoot(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_INDEX):
-				//_syntaxCheckIndex(strServerBlock.at(i) );
+				//_syntaxCheckIndex(strLocationBlock.at(i) );
 				break ;
 			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
-				//_syntaxCheckClientMaxBodySize(strServerBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckClientMaxBodySize(strLocationBlock, i, CONTEXT_SERVER);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
-				//_syntaxCheckErrorPage(strServerBlock.at(i) );
+				//_syntaxCheckErrorPage(strLocationBlock.at(i) );
 				break ;
 			case(DIRECTIVE_REWRITE):
-				//_syntaxCheckRewrite(strServerBlock.at(i) );
+				//_syntaxCheckRewrite(strLocationBlock.at(i) );
 				break ;
 			case(DIRECTIVE_ALLOW_METHODS):
-				//_syntaxCheckAllowMethods(strServerBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckAllowMethods(strLocationBlock, i, CONTEXT_SERVER);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(strServerBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckAutoIndex(strLocationBlock, i, CONTEXT_SERVER);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -252,4 +259,36 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 	}
 
 	_strLocationBlock.clear();
+}
+
+void	SyntaxChecker::_syntaxCheckLocationDirective(const std::string line)
+{
+	if (line.find(';') != line.npos)
+		throw (ExceptionMaker("Unexpected \";\" found in \"location\" directive") );
+	else if (Utils::sWordCount(strParseLine(line) ) != 1)
+		throw (ExceptionMaker("Incorrect number of arguments in \"location\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckRoot(const std::vector<std::string> block, const size_t i)
+{
+	size_t	vectorSize;
+
+	vectorSize = block.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (block.at(j).find("location") == 0)
+		{
+			while (j < vectorSize && block.at(j) != "}")
+				j++;
+		}
+
+		if (block.at(j).find("root") == 0)
+			throw (ExceptionMaker("\"root\" directive is duplicate") );
+	}
+
+	if (block.at(i).find(';') != block.at(i).size() - 1)
+		throw (ExceptionMaker("Expected ';' token at the end of \"root\" directive") );
+
+	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1)
+		throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
 }
