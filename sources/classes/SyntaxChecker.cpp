@@ -206,15 +206,21 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 	vectorSize = _strLocationBlock.size();
 	for (size_t j = 0; j < vectorSize; j++)
 	{
-		if (_strLocationBlock.at(j) == "{")
+		if (_strLocationBlock.at(j).find('{') != _strLocationBlock.at(j).npos)
 		{
-			if (_strLocationBlock.at(j - 1).find("location") != 0)
+			if (j > 1 || \
+				(j == 1 && _strLocationBlock.at(j - 1).find('{') != _strLocationBlock.at(j - 1).npos) )
 				throw (ExceptionMaker("Unexpected '{' token found") );
 			else
 				continue ;
 		}
-		else if (_strLocationBlock.at(j) == "}")
-			continue ;
+		else if (_strLocationBlock.at(j).find('}') != _strLocationBlock.at(j).npos)
+		{
+			if (_strLocationBlock.at(j) == "}")
+				continue ;
+			else
+				throw (ExceptionMaker("Unexpected '}' token found") );
+		}
 
 		switch (_directiveCheck(_strLocationBlock.at(j) ) )
 		{
@@ -236,7 +242,7 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 				_syntaxCheckRoot(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_INDEX):
-				//_syntaxCheckIndex(strLocationBlock.at(i) );
+				_syntaxCheckIndex(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
 				//_syntaxCheckClientMaxBodySize(strLocationBlock, i, CONTEXT_SERVER);
@@ -291,4 +297,11 @@ void	SyntaxChecker::_syntaxCheckRoot(const std::vector<std::string> block, const
 
 	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1)
 		throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckIndex(const std::string line)
+{
+	if (line.find(';') != line.size() - 1)
+		throw (ExceptionMaker("Expected ';' token at the end of \"index\" directive") );
+
 }

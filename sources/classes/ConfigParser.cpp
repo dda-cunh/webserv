@@ -37,7 +37,10 @@ static void	split_string_to_vector(std::string line, std::vector<std::string> &s
 	std::string			outStr;
 
 	while(strStream >> outStr)
+	{
+		outStr = Utils::sTrim(outStr);
 		strVector.push_back(outStr);
+	}
 }
 
 void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
@@ -231,7 +234,7 @@ void	ConfigParser::_overrideDefaults(void)
 			if (Utils::sWordCount(line) != 2)
 				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			if (_defaultRedirections.find(line.substr(0, line.find_first_of(" \t") ) ) == _defaultRedirections.end() )
-				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
+				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = Utils::sTrim(line.substr(line.find_last_of(" \t") ) );
 			else
 				throw (ExceptionMaker("Multiple redirections for the same url in server context") );
 		}
@@ -524,7 +527,7 @@ void	ConfigParser::parseRedirections(std::vector<std::string> strLocationBlock, 
 				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			uri = line.substr(0, line.find_first_of(" \t") );
 			if (redirections.find(uri) == redirections.end() )
-				redirections[uri] = line.substr(line.find_last_of(" \t") );
+				redirections[uri] = Utils::sTrim(line.substr(line.find_last_of(" \t") ) );
 			else
 				throw (ExceptionMaker("Duplicate redirection provided in \"rewrite\" directives") );
 		}
