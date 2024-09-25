@@ -72,7 +72,7 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 				_syntaxCheckClientMaxBodySize(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
-				//_syntaxCheckErrorPage(line );
+				_syntaxCheckErrorPage(line );
 				break ;
 			case(DIRECTIVE_REWRITE):
 				//_syntaxCheckRewrite(line );
@@ -249,16 +249,16 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 				_syntaxCheckClientMaxBodySize(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
-				//_syntaxCheckErrorPage(strLocationBlock.at(i) );
+				_syntaxCheckErrorPage(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_REWRITE):
-				//_syntaxCheckRewrite(strLocationBlock.at(i) );
+				//_syntaxCheckRewrite(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_ALLOW_METHODS):
-				//_syntaxCheckAllowMethods(strLocationBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckAllowMethods(_strLocationBlock, j, CONTEXT_SERVER);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(strLocationBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckAutoIndex(_strLocationBlock, j, CONTEXT_SERVER);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -345,4 +345,30 @@ void	SyntaxChecker::_syntaxCheckClientMaxBodySize(const std::vector<std::string>
 	strStream >> ulVal;
 	if (strArg.size() > 10 || ulVal > 0xffffffff)
 		throw (ExceptionMaker("Value provided as argument in \"client_max_body_size\" is out of range") );
+}
+
+void	SyntaxChecker::_syntaxCheckErrorPage(const std::string line)
+{
+	std::string	strArgs;
+	int			nStatus;
+
+	if (line.find(';') == line.npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"error_page\" directive") );
+	else if (line.find(';') != line.size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"error_page\" directive") );
+
+	strArgs = strParseLine(line);
+	if (Utils::sWordCount(strArgs) != 2)
+		throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
+
+	strArgs.erase(strArgs.find_first_of(" \t") );
+	for (size_t i = 0; i < strArgs.size(); i++)
+	{
+		if (!std::isdigit(strArgs.at(i) ) )
+			throw (ExceptionMaker("Status code provided in \"error_page\" directive must be numeric") );
+	}
+
+	nStatus = std::atoi(strArgs.c_str() );
+	if (strArgs.size() != 3 || nStatus < 300 || nStatus > 599)
+		throw (ExceptionMaker("Status code in \"error_page\" directive must be between 300 and 599") );
 }
