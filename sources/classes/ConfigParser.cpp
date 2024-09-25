@@ -165,8 +165,8 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 void	ConfigParser::_overrideDefaults(void)
 {
 	size_t				vectorSize;
-	int					nVal;
-	unsigned long int	ulVal;
+	int					nEdgeStatusCode;
+	uint32_t			unMaxBodySize;
 	std::stringstream	strStream;
 	std::string			line;
 
@@ -193,38 +193,20 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 		else if (line.find("client_max_body_size") == 0)
 		{
-			for (size_t j = i + 1; j < vectorSize; j++)
-			{
-				if (_strServerBlock.at(j).find("location") == 0)
-				{
-					while (_strServerBlock.at(j).find('}') == _strServerBlock.at(j).npos)
-						j++;
-				}
-
-				if (_strServerBlock.at(j).find("client_max_body_size") == 0)
-					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate in server context") );
-			}
-
 			line = SyntaxChecker::strParseLine(line);
 
-			if (Utils::sWordCount(line) != 1)
-				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
-
 			strStream << line;
-			strStream >> ulVal;
-			if (line.size() > 10 || ulVal > 0xffffffff)
-				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
-			else
-				_defaultMaxBodySize = static_cast<uint32_t>(ulVal);
+			strStream >> unMaxBodySize;
+			_defaultMaxBodySize = unMaxBodySize;
 		}
 		else if (line.find("error_page") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
 			if (Utils::sWordCount(line) != 2)
 				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
-			nVal = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
-			if (_defaultErrorPages.find(nVal) == _defaultErrorPages.end() )
-				_defaultErrorPages[nVal] = line.substr(line.find_last_of(" \t") + 1);
+			nEdgeStatusCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
+			if (_defaultErrorPages.find(nEdgeStatusCode) == _defaultErrorPages.end() )
+				_defaultErrorPages[nEdgeStatusCode] = line.substr(line.find_last_of(" \t") + 1);
 			else
 				throw (ExceptionMaker("Multiple error pages for the same edge status code in server context") );
 		}
@@ -409,7 +391,7 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 	size_t				vectorSize;
 	std::string			line;
 	std::stringstream	strStream;
-	long unsigned int	ulConvert;
+	uint32_t			unMaxBodySize;
 
 	vectorSize = strLocationBlock.size();
 	for (size_t i = 0; i < vectorSize; i++)
@@ -417,21 +399,10 @@ uint32_t	ConfigParser::parseMaxBodySize(std::vector<std::string> strLocationBloc
 		line = strLocationBlock.at(i);
 		if (line.find("client_max_body_size") == 0)
 		{
-			while (++i < vectorSize)
-			{
-				if (strLocationBlock.at(i).find("client_max_body_size") == 0)
-					throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate") );
-			}
-
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) > 1)
-				throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
 			strStream << line;
-			strStream >> ulConvert;
-			if (line.size() > 10 || ulConvert > 0xffffffff)
-				throw (ExceptionMaker("Value defined in \"client_max_body_size\" directive is too large") );
-			else
-				return (static_cast<uint32_t>(ulConvert) );
+			strStream >> unMaxBodySize;
+			return (unMaxBodySize);
 		}
 	}
 

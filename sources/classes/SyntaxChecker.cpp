@@ -66,10 +66,10 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 				_syntaxCheckRoot(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_INDEX):
-				//_syntaxCheckIndex(line );
+				_syntaxCheckIndex(line);
 				break ;
 			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
-				//_syntaxCheckClientMaxBodySize(strServerBlock, i, CONTEXT_SERVER);
+				_syntaxCheckClientMaxBodySize(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
 				//_syntaxCheckErrorPage(line );
@@ -199,10 +199,11 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 
 	while (strServerBlock.at(i) != "}")
 	{
-		_strLocationBlock.push_back(strServerBlock.at(i));
+		_strLocationBlock.push_back(strServerBlock.at(i) );
 		i++;
 	}
-	//	DO A SWITCH/CASE TO PARSE EACH DIRECTIVE UNTIL END OF LOCATION BLOCK
+	_strLocationBlock.push_back(strServerBlock.at(i) );
+
 	vectorSize = _strLocationBlock.size();
 	for (size_t j = 0; j < vectorSize; j++)
 	{
@@ -245,7 +246,7 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 				_syntaxCheckIndex(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
-				//_syntaxCheckClientMaxBodySize(strLocationBlock, i, CONTEXT_SERVER);
+				_syntaxCheckClientMaxBodySize(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
 				//_syntaxCheckErrorPage(strLocationBlock.at(i) );
@@ -301,7 +302,47 @@ void	SyntaxChecker::_syntaxCheckRoot(const std::vector<std::string> block, const
 
 void	SyntaxChecker::_syntaxCheckIndex(const std::string line)
 {
+	if (Utils::sWordCount(strParseLine(line) ) < 1)
+		throw (ExceptionMaker("Invalid number of arguments in \"index\" directive") );
 	if (line.find(';') != line.size() - 1)
 		throw (ExceptionMaker("Expected ';' token at the end of \"index\" directive") );
+}
 
+void	SyntaxChecker::_syntaxCheckClientMaxBodySize(const std::vector<std::string> block, const size_t i)
+{
+	size_t				vectorSize;
+	std::string			strArg;
+	std::stringstream	strStream;
+	unsigned long int	ulVal;
+
+	vectorSize = block.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (block.at(j).find("location") == 0)
+		{
+			while (j < vectorSize && block.at(j) != "}")
+				j++;
+		}
+
+		if (block.at(j).find("client_max_body_size") == 0)
+			throw (ExceptionMaker("\"client_max_body_size\" directive is duplicate") );
+	}
+
+	if (block.at(i).find(';') != block.at(i).size() - 1)
+		throw (ExceptionMaker("Expected ';' token at the end of \"client_max_body_size\" directive") );
+
+	strArg = strParseLine(block.at(i) );
+	if (Utils::sWordCount(strArg) != 1)
+		throw (ExceptionMaker("Invalid number of arguments in \"client_max_body_size\" directive") );
+
+	for (size_t j = 0; j < strArg.size(); j++)
+	{
+		if (!std::isdigit(strArg.at(j) ) )
+			throw (ExceptionMaker("Argument provided in \"client_max_body_size\" directive must be numeric") );
+	}
+
+	strStream << strArg;
+	strStream >> ulVal;
+	if (strArg.size() > 10 || ulVal > 0xffffffff)
+		throw (ExceptionMaker("Value provided as argument in \"client_max_body_size\" is out of range") );
 }
