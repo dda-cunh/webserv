@@ -42,6 +42,8 @@ class	SyntaxChecker
 		static void	_syntaxCheckIndex(const std::string line);
 		static void _syntaxCheckClientMaxBodySize(const std::vector<std::string> block, const size_t i);
 		static void _syntaxCheckErrorPage(const std::string line);
+		static void	_syntaxCheckRewrite(const std::string line);
+		static void	_syntaxCheckAllowMethods(const std::vector<std::string> block, const size_t i);
 
 		static std::vector<std::string>	_strLocationBlock;
 		static const std::string		_directivesList[];

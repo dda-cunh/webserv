@@ -72,16 +72,16 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 				_syntaxCheckClientMaxBodySize(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_ERROR_PAGE):
-				_syntaxCheckErrorPage(line );
+				_syntaxCheckErrorPage(line);
 				break ;
 			case(DIRECTIVE_REWRITE):
-				//_syntaxCheckRewrite(line );
+				_syntaxCheckRewrite(line);
 				break ;
 			case(DIRECTIVE_ALLOW_METHODS):
-				//_syntaxCheckAllowMethods(strServerBlock, i, CONTEXT_SERVER);
+				_syntaxCheckAllowMethods(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(strServerBlock, i, CONTEXT_SERVER);
+				//_syntaxCheckAutoIndex(strServerBlock, i);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -252,18 +252,20 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 				_syntaxCheckErrorPage(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_REWRITE):
-				//_syntaxCheckRewrite(_strLocationBlock.at(j) );
+				_syntaxCheckRewrite(_strLocationBlock.at(j) );
 				break ;
 			case(DIRECTIVE_ALLOW_METHODS):
-				//_syntaxCheckAllowMethods(_strLocationBlock, j, CONTEXT_SERVER);
+				_syntaxCheckAllowMethods(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(_strLocationBlock, j, CONTEXT_SERVER);
+				//_syntaxCheckAutoIndex(_strLocationBlock, j);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
 		}
 	}
+
+	//	DO A CHECK TO THROW ERROR IF BLOCK HAS MIXED DIRECTIVES FOR DIFFERENT TYPE OF LOCATION OBJ
 
 	_strLocationBlock.clear();
 }
@@ -371,4 +373,46 @@ void	SyntaxChecker::_syntaxCheckErrorPage(const std::string line)
 	nStatus = std::atoi(strArgs.c_str() );
 	if (strArgs.size() != 3 || nStatus < 300 || nStatus > 599)
 		throw (ExceptionMaker("Status code in \"error_page\" directive must be between 300 and 599") );
+}
+
+void	SyntaxChecker::_syntaxCheckRewrite(const std::string line)
+{
+	std::string	strArgs;
+
+	if (line.find(';') == line.npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"rewrite\" directive") );
+	else if (line.find(';') != line.size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"rewrite\" directive") );
+
+	strArgs = strParseLine(line);
+	if (Utils::sWordCount(strArgs) != 2)
+		throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckAllowMethods(const std::vector<std::string> block, const size_t i)
+{
+	size_t	vectorSize;
+	size_t	nArgWords;
+
+	vectorSize = block.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (block.at(j).find("location") == 0)
+		{
+			while (j < vectorSize && block.at(j) != "}")
+				j++;
+		}
+
+		if (block.at(j).find("allow_methods") == 0)
+			throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
+	}
+
+	if (block.at(i).find(';') == block.at(i).npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"allow_methods\" directive") );
+	else if (block.at(i).find(';') != block.at(i).size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"allow_methods\" directive") );
+
+	nArgWords = Utils::sWordCount(strParseLine(block.at(i) ) );
+	if (nArgWords == 0 || nArgWords > 3)
+		throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
 }

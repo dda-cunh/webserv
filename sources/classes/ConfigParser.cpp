@@ -53,7 +53,6 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (!configFile.is_open())
 		throw (ExceptionMaker("Unable to open configuration file") );
 
-	//	READ configFile UNTIL EOF
 	while (!configFile.eof() )
 	{
 		_loadServerContext(configFile);
@@ -65,10 +64,8 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		_overrideDefaults();
 		
 		//	FOR DEBUGGING
-/*		print_vector(_strServerBlock);
-		std::cout << "Default override for root: " << _defaultRoot << std::endl;
-		std::cout << "Default override for index: " << _defaultIndex << std::endl;
-*/
+//		print_vector(_strServerBlock);
+
 		configs.push_back(ServerConfig(_strServerBlock) );
 	
 
@@ -91,6 +88,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
 
 
+//	THIS IS FOR DEBUGGING ONLY
 	for (size_t i = 0; i < configs.size(); i++)
 	{
 		std::cout << configs.at(i) << std::endl;
@@ -106,7 +104,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 	
 	brackets = 0;
 
-	//	SKIP FILE UNTIL START OF CONTEXT
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
@@ -136,7 +133,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 			throw (ExceptionMaker("Syntax error in Server context encapsulation") );
 	}
 
-	//	LOAD CONTEXT INTO STATIC VECTOR
 	while (std::getline(configFile, line) )
 	{
 		erase_comments(line);
@@ -202,8 +198,6 @@ void	ConfigParser::_overrideDefaults(void)
 		else if (line.find("error_page") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) != 2)
-				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
 			nEdgeStatusCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
 			if (_defaultErrorPages.find(nEdgeStatusCode) == _defaultErrorPages.end() )
 				_defaultErrorPages[nEdgeStatusCode] = line.substr(line.find_last_of(" \t") + 1);
@@ -213,8 +207,6 @@ void	ConfigParser::_overrideDefaults(void)
 		else if (line.find("rewrite") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) != 2)
-				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			if (_defaultRedirections.find(line.substr(0, line.find_first_of(" \t") ) ) == _defaultRedirections.end() )
 				_defaultRedirections[line.substr(0, line.find_first_of(" \t") )] = Utils::sTrim(line.substr(line.find_last_of(" \t") ) );
 			else
@@ -228,6 +220,8 @@ void	ConfigParser::_overrideDefaults(void)
 			else
 				throw (ExceptionMaker("Multiple overrides for default \"allow_methods\" directive inside same server context") );
 		}
+
+		//	ADD DEFAULT OVERRIDE FOR AUTOINDEX
 	}
 }
 
@@ -422,8 +416,6 @@ void	ConfigParser::parseErrorPages(std::vector<std::string> strLocationBlock, In
 		if (line.find("error_page") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) != 2)
-				throw (ExceptionMaker("Invalid number of arguments in \"error_page\" directive") );
 			errCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
 			if (errorPages.find(errCode) != errorPages.end() )
 				throw (ExceptionMaker("Multiple settings for the same error page in location context") );
@@ -494,8 +486,6 @@ void	ConfigParser::parseRedirections(std::vector<std::string> strLocationBlock, 
 		if (line.find("rewrite") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) == 0)
-				throw (ExceptionMaker("Invalid number of arguments in \"rewrite\" directive") );
 			uri = line.substr(0, line.find_first_of(" \t") );
 			if (redirections.find(uri) == redirections.end() )
 				redirections[uri] = Utils::sTrim(line.substr(line.find_last_of(" \t") ) );
