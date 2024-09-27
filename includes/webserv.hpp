@@ -13,6 +13,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "classes/ExceptionMaker.hpp"
 //#include "classes/ConfigParser.hpp"

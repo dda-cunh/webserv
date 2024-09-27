@@ -4,6 +4,7 @@
 #include "ConfigParser.hpp"
 
 
+//	DEFAULTS
 #define DEFAULT_LOCATION "/"
 #define DEFAULT_ROOT "./test_files"
 #define DEFAULT_INDEX "index.html"
@@ -57,6 +58,7 @@ class	ServerLocation
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
 };
 
+//	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
 class	LocationStatic: public ServerLocation
 {
 	public:
@@ -71,7 +73,45 @@ class	LocationStatic: public ServerLocation
 
 	private:
 		bool	_autoIndex;			//		autoindex
+		//	try_files
 };
 
+//	NO NEED FOR A REVERSE PROXY; EITHER IMPLEMENT A CLASS JUST FOR UPLOADS
+//		OR INCORPORATE IT IN LOCATIONSTATIC
+/*
+class	LocationRevProxy: public ServerLocation
+{
+	public:
+		LocationRevProxy(void);
+		LocationRevProxy(std::vector<std::string> strLocationBlock);
+		~LocationRevProxy(void);
+
+		std::string	getUploadDir(void);
+
+	private:
+
+		std::string	_uploadDirectory;
+
+};
+
+class LocationCGI: public ServerLocation
+{
+	public:
+		LocationCGI(void);
+		LocationCGI(std::vector<std::string> strLocationBlock);
+		LocationCGI(const LocationCGI &locationCGI);
+		~LocationCGI(void);
+
+		LocationCGI	&operator = (const LocationCGI & locationCGI);
+
+	private:
+		//	fastcgi_pass
+		//	fastcgi_param
+		//	fastcgi_index
+		//	fastcgi_split_path_info
+}
+*/
 
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
+
+//std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);

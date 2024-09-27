@@ -1,11 +1,12 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
+	/*	CONSTRUCTORS	*/
 
 ServerConfig::ServerConfig(void)
 {
 	this->_host = Network::sToIPV4Packed("127.0.0.1");
 	this->_port = 80;
-	this->_serverName = "webserv.ft";
+	this->_serverNames.push_back("webserv.ft");
 
 	this->_locationBlocks.push_back(new LocationStatic);
 }
@@ -18,7 +19,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 
 	this->_host = ConfigParser::parseHost(strServerBlock);
 	this->_port = ConfigParser::parsePort(strServerBlock);
-	this->_serverName = ConfigParser::parseServerName(strServerBlock);
+	ConfigParser::parseServerName(strServerBlock, this->_serverNames);
 
 	sServBlkSize = strServerBlock.size();
 	for (size_t i = 0; i < sServBlkSize; i++)
@@ -35,7 +36,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
 			{
 				case (Utils::L_STATIC):
-					this->_locationBlocks.insert(this->_locationBlocks.begin(), new LocationStatic(strLocationBlock) );
+					this->_locationBlocks.push_back(new LocationStatic(strLocationBlock) );
 					break ;
 				case (Utils::L_REV_PROXY):
 					throw (ExceptionMaker("This feature has not been implemented yet") );
@@ -71,16 +72,18 @@ ServerConfig::~ServerConfig(void)
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 {
-	size_t	lbSize;
+	ServerLocation	*location;
+	size_t	vectorSize;
 
 	this->_host = serverConfig.getHost();
 	this->_port = serverConfig.getPort();
-	this->_serverName = serverConfig.getServerName();
 
-	lbSize = serverConfig.getLocationBlocksSize();
+	vectorSize = serverConfig.getServerNamesSize();
+	for (size_t i = 0; i < vectorSize; i++)
+		this->_serverNames.push_back(serverConfig.getServerName(i) );
 
-	ServerLocation	*location;
-	for (size_t i = 0; i < lbSize; i++)
+	vectorSize = serverConfig.getLocationBlocksSize();
+	for (size_t i = 0; i < vectorSize; i++)
 	{
 		location = serverConfig.getLocationFromIndex(i);
 
@@ -92,8 +95,10 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
+			//	this->_locationBlocks.push_back(new LocationCGI(location));
 				break ;
 			case (Utils::L_UNHANDLED):
+				throw (ExceptionMaker("Invalid Location type") );
 				break ;
 		}
 	}
@@ -101,6 +106,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	return (*this);
 }
 
+	/*	GETTERS	*/
 
 uint32_t	ServerConfig::getHost(void) const
 {
@@ -112,18 +118,17 @@ uint16_t	ServerConfig::getPort(void) const
 	return (this->_port);
 }
 
-std::string	ServerConfig::getServerName(void) const
+std::string	ServerConfig::getServerName(size_t i) const
 {
-	return (this->_serverName);
-}
-
-size_t	ServerConfig::getLocationBlocksSize(void) const
-{
-	return (this->_locationBlocks.size());
+	if (i >= this->_serverNames.size() )
+		throw (ExceptionMaker("Server name index is out of bounds") );
+	return (this->_serverNames.at(i) );
 }
 
 ServerLocation	*ServerConfig::getLocationFromIndex(size_t i) const
 {
+	if (i >= this->_locationBlocks.size() )
+		throw (ExceptionMaker("Location index is out of bounds") );
 	return (this->_locationBlocks.at(i));
 }
 
@@ -140,30 +145,48 @@ ServerLocation	*ServerConfig::getLocationFromPath(std::string path) const
 	return (NULL);
 }
 
+size_t	ServerConfig::getServerNamesSize(void) const
+{
+	return (this->_serverNames.size() );
+}
+
+size_t	ServerConfig::getLocationBlocksSize(void) const
+{
+	return (this->_locationBlocks.size() );
+}
+
+
 Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
 		return (Utils::L_STATIC);
+//	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
+//		return (L_REV_PROXY);
+//	else if (dynamic_cast<LocationCGI *>(location) != NULL)
+//		return (L_CGI);
 	else
 		return (Utils::L_UNHANDLED);
 }
 
 std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 {
-	size_t	lbSize;
+	ServerLocation	*location;
+	size_t	vectorSize;
 
 	out << "Host: " << Network::iPV4PackedTos(serverConfig.getHost() ) << std::endl;
 	out << "Port: " << serverConfig.getPort() << std::endl;
-	out << "Server name: " << serverConfig.getServerName() << std::endl;
 	
-	lbSize = serverConfig.getLocationBlocksSize();
-
-	ServerLocation	*location;
-	for (size_t i = 0; i < lbSize; i++)
+	vectorSize = serverConfig.getServerNamesSize();
+	out << "Server names: " << std::endl;
+	for (size_t i = 0; i < vectorSize; i++)
+		out << "\t" << serverConfig.getServerName(i) << std::endl;
+	
+	vectorSize = serverConfig.getLocationBlocksSize();
+	for (size_t i = 0; i < vectorSize; i++)
 	{
 		location = serverConfig.getLocationFromIndex(i);
 		out << "LocationBlock nr. " << i << ":" << std::endl;
-		//	MUST USE FUCKING DYNAMIC CAST
+
 		switch (serverConfig.getLocationType(location))
 		{
 			case (Utils::L_STATIC):
@@ -172,8 +195,10 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
+				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
+				//	THROW EXCEPTION
 				break ;
 		}		
 		out << std::endl;
