@@ -1,6 +1,5 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
-	/*	CONSTRUCTORS	*/
 
 ServerConfig::ServerConfig(void)
 {
@@ -10,26 +9,51 @@ ServerConfig::ServerConfig(void)
 
 	this->_locationBlocks.push_back(new LocationStatic);
 }
-/*
+
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
-	//	PARSE DIRECTIVES FROM VECTOR
-	//	PARSING FUNCTIONS SHOULD RETURN DEFAULT VALUES
-	//		FOR UNSPECIFIED DIRECTIVES
+	std::vector<std::string>	strLocationBlock;
+	std::string					line;
+	size_t						sServBlkSize;
+
 	this->_host = ConfigParser::parseHost(strServerBlock);
 	this->_port = ConfigParser::parsePort(strServerBlock);
 	this->_serverName = ConfigParser::parseServerName(strServerBlock);
 
-	//	LOOP THROUGH VECTOR FOR LOCATION BLOCKS
-	//		EVERYTIME THE KEYWORD "location" IS FOUND
-	//		KEEP READING UNTIL A LINE ENDING IN '}' IS FOUND
-	//		THEN LOAD THAT STUFF TO ANOTHER VECTOR
-	//		READ THE CONTENTS OF THAT VECTOR TO DETERMINE LOCATION TYPE
-	//		AND PASS IT AS ARGUMENT FOR this->_locationBlocks.insert()
-	//	IF NO LOCATION DIRECTIVE IS PRESENT, LOAD WITH DEFAULT 
-	//		(HARDCODED) VALUES (but first check if nginx works like that too)
+	sServBlkSize = strServerBlock.size();
+	for (size_t i = 0; i < sServBlkSize; i++)
+	{
+		line = strServerBlock.at(i);
+		if (line.find("location") == 0)
+		{
+			while (line.at(line.size() - 1) != '}')
+			{
+				line = Utils::sTrim(line);
+				strLocationBlock.push_back(line);
+				line = strServerBlock.at(++i);
+			}
+			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
+			{
+				case (Utils::L_STATIC):
+					this->_locationBlocks.insert(this->_locationBlocks.begin(), new LocationStatic(strLocationBlock) );
+					break ;
+				case (Utils::L_REV_PROXY):
+					throw (ExceptionMaker("This feature has not been implemented yet") );
+					break ;
+				case (Utils::L_CGI):
+					throw (ExceptionMaker("This feature has not been implemented yet") );
+					break ;
+				case (Utils::L_UNHANDLED):
+					throw (ExceptionMaker("Invalid Location type") );
+					break ;
+			}
+			strLocationBlock.clear();
+		}
+	}
+	if (this->_locationBlocks.empty() )
+		this->_locationBlocks.push_back(new LocationStatic);
 }
-*/
+
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
 {
 	if (this != &serverConfig)
@@ -62,27 +86,21 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 
 		switch (this->getLocationType(location))
 		{
-			case (L_STATIC):
+			case (Utils::L_STATIC):
 				this->_locationBlocks.push_back(new LocationStatic(*(dynamic_cast<LocationStatic*>(location) ) ) );
 				break ;
-			case (L_REV_PROXY):
+			case (Utils::L_REV_PROXY):
 				break ;
-			case (L_CGI):
-			//	this->_locationBlocks.push_back(new LocationCGI(location));
+			case (Utils::L_CGI):
 				break ;
-			case (L_UNHANDLED):
-				//	throw exception
+			case (Utils::L_UNHANDLED):
 				break ;
-//			default:
-				//	throw exception?
-
 		}
 	}
 
 	return (*this);
 }
 
-	/*	GETTERS	*/
 
 uint32_t	ServerConfig::getHost(void) const
 {
@@ -122,16 +140,12 @@ ServerLocation	*ServerConfig::getLocationFromPath(std::string path) const
 	return (NULL);
 }
 
-LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
+Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
-		return (L_STATIC);
-//	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
-//		return (L_REV_PROXY);
-//	else if (dynamic_cast<LocationCGI *>(location) != NULL)
-//		return (L_CGI);
+		return (Utils::L_STATIC);
 	else
-		return (L_UNHANDLED);
+		return (Utils::L_UNHANDLED);
 }
 
 std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
@@ -152,16 +166,14 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 		//	MUST USE FUCKING DYNAMIC CAST
 		switch (serverConfig.getLocationType(location))
 		{
-			case (L_STATIC):
+			case (Utils::L_STATIC):
 				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
 				break ;
-			case (L_REV_PROXY):
+			case (Utils::L_REV_PROXY):
 				break ;
-			case (L_CGI):
-				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
+			case (Utils::L_CGI):
 				break ;
-			case (L_UNHANDLED):
-				//	THROW EXCEPTION
+			case (Utils::L_UNHANDLED):
 				break ;
 		}		
 		out << std::endl;

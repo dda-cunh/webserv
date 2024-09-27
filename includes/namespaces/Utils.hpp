@@ -13,6 +13,14 @@ namespace	Utils
 		LOG_ERROR
 	};
 
+	typedef enum	e_location_block_type
+	{
+		L_UNHANDLED,
+		L_STATIC,
+		L_REV_PROXY,
+		L_CGI
+	}	LOCATION_BLOCK_TYPE;
+
 	const char PATH_SEPARATOR = '/';
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
