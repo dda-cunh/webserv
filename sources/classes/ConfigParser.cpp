@@ -11,18 +11,6 @@ std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
 bool						ConfigParser::_defaultAutoIndex;
 
 
-/*
-static void	print_vector(std::vector<std::string> block)
-{
-	size_t	vectorSize;
-
-	vectorSize = block.size();
-	for (size_t i = 0; i < vectorSize; i++)
-		std::cout << block.at(i) << std::endl;
-	std::cout << "==================================" << std::endl;
-}
-*/
-
 static void	erase_comments(std::string &line)
 {
 	size_t	pos;
@@ -63,12 +51,8 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		SyntaxChecker::syntaxCheckServerBlock(_strServerBlock);
 
 		_overrideDefaults();
-		
-		//	FOR DEBUGGING
-//		print_vector(_strServerBlock);
 
-		configs.push_back(ServerConfig(_strServerBlock) );
-	
+		configs.push_back(ServerConfig(_strServerBlock) );	
 
 		_strServerBlock.clear();
 
@@ -84,10 +68,6 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
-
-
-	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
-	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
 
 
 //	THIS IS FOR DEBUGGING ONLY
@@ -233,12 +213,9 @@ void	ConfigParser::_overrideDefaults(void)
 				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
 
 		}
-		//	ADD DEFAULT OVERRIDE FOR AUTOINDEX
 	}
 }
 
-
-/*		PARSING FOR SERVERCONFIG CLASS		*/
 
 uint32_t	ConfigParser::parseHost(std::vector<std::string> strServerBlock)
 {
@@ -327,8 +304,6 @@ Utils::LOCATION_BLOCK_TYPE	ConfigParser::parseStrLocationType(std::vector<std::s
 	return (Utils::L_STATIC);
 }
 
-
-/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
 
 std::string	ConfigParser::parseLocation(std::string locationLine)
 {
@@ -563,7 +538,6 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 	}
 }
 
-/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
 
 bool	ConfigParser::parseAutoIndex(std::vector<std::string> strLocationBlock)
 {

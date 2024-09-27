@@ -28,12 +28,6 @@ class	ConfigParser
 
 		static bool							parseAutoIndex(std::vector<std::string> strLocationBlock);
 
-//	MISSING FEATURES:
-//		FILE UPLOADS
-//		TRY_FILES DIRECTIVE
-//		CGI
-
-
 
 	private:
 		ConfigParser(void);

@@ -1,6 +1,5 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
-	/*	CONSTRUCTORS	*/
 
 ServerConfig::ServerConfig(void)
 {
@@ -95,7 +94,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
-			//	this->_locationBlocks.push_back(new LocationCGI(location));
 				break ;
 			case (Utils::L_UNHANDLED):
 				throw (ExceptionMaker("Invalid Location type") );
@@ -106,7 +104,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	return (*this);
 }
 
-	/*	GETTERS	*/
 
 uint32_t	ServerConfig::getHost(void) const
 {
@@ -160,10 +157,6 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *locatio
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
 		return (Utils::L_STATIC);
-//	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
-//		return (L_REV_PROXY);
-//	else if (dynamic_cast<LocationCGI *>(location) != NULL)
-//		return (L_CGI);
 	else
 		return (Utils::L_UNHANDLED);
 }
@@ -195,10 +188,8 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
-				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
-				//	THROW EXCEPTION
 				break ;
 		}		
 		out << std::endl;

@@ -24,10 +24,6 @@ class	ServerConfig
 
 		ServerConfig &operator = (const ServerConfig &serverConfig);
 
-		//	SETTERS FOR CONSTRUCTOR
-
-
-		//			GETTERS
 
 		uint32_t					getHost(void) const;
 		uint16_t					getPort(void) const;
@@ -38,8 +34,7 @@ class	ServerConfig
 		size_t						getServerNamesSize(void) const;
 		size_t						getLocationBlocksSize(void) const;
 
-		Utils::LOCATION_BLOCK_TYPE	getLocationType(ServerLocation *location) const;	//	MAYBE PUT THIS IN UTILS
-		//	=============================
+		Utils::LOCATION_BLOCK_TYPE	getLocationType(ServerLocation *location) const;
 
 	private:
 		uint32_t					_host;			//	listen

@@ -265,8 +265,6 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 		}
 	}
 
-	//	DO A CHECK TO THROW ERROR IF BLOCK HAS MIXED DIRECTIVES FOR DIFFERENT TYPE OF LOCATION OBJ
-
 	_strLocationBlock.clear();
 }
 
