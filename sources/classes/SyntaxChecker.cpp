@@ -81,7 +81,7 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 				_syntaxCheckAllowMethods(strServerBlock, i);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(strServerBlock, i);
+				_syntaxCheckAutoIndex(strServerBlock, i);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -258,7 +258,7 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 				_syntaxCheckAllowMethods(_strLocationBlock, j);
 				break ;
 			case(DIRECTIVE_AUTOINDEX):
-				//_syntaxCheckAutoIndex(_strLocationBlock, j);
+				_syntaxCheckAutoIndex(_strLocationBlock, j);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -415,4 +415,30 @@ void	SyntaxChecker::_syntaxCheckAllowMethods(const std::vector<std::string> bloc
 	nArgWords = Utils::sWordCount(strParseLine(block.at(i) ) );
 	if (nArgWords == 0 || nArgWords > 3)
 		throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckAutoIndex(const std::vector<std::string> block, const size_t i)
+{
+	size_t	vectorSize;
+
+	vectorSize = block.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (block.at(j).find("location") == 0)
+		{
+			while (j < vectorSize && block.at(j) != "}")
+				j++;
+		}
+
+		if (block.at(j).find("autoindex") == 0)
+			throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
+	}	
+
+	if (block.at(i).find(';') == block.at(i).npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"autoindex\" directive") );
+	else if (block.at(i).find(';') != block.at(i).size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"autoindex\" directive") );
+
+	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1 )
+		throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
 }

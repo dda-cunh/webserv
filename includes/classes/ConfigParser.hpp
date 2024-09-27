@@ -51,4 +51,5 @@ class	ConfigParser
 		static IntStrMap				_defaultErrorPages;
 		static StrStrMap				_defaultRedirections;
 		static std::vector<std::string>	_defaultMethodsAllowed;
+		static bool						_defaultAutoIndex;
 };

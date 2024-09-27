@@ -8,6 +8,7 @@ uint32_t					ConfigParser::_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
 IntStrMap					ConfigParser::_defaultErrorPages;
 StrStrMap					ConfigParser::_defaultRedirections;
 std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
+bool						ConfigParser::_defaultAutoIndex;
 
 
 /*
@@ -77,6 +78,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		_defaultErrorPages.clear();
 		_defaultRedirections.clear();
 		_defaultMethodsAllowed.clear();
+		_defaultAutoIndex = DEFAULT_AUTO_INDEX;
 	}
 
 	configFile.close();
@@ -220,7 +222,17 @@ void	ConfigParser::_overrideDefaults(void)
 			else
 				throw (ExceptionMaker("Multiple overrides for default \"allow_methods\" directive inside same server context") );
 		}
+		else if (line.find("autoindex") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			if (line == "on")
+				_defaultAutoIndex = true;
+			else if (line == "off")
+				_defaultAutoIndex = false;
+			else
+				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
 
+		}
 		//	ADD DEFAULT OVERRIDE FOR AUTOINDEX
 	}
 }
@@ -514,16 +526,7 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 		line = strLocationBlock.at(i);
 		if (line.find("allow_methods") == 0)
 		{
-			while (++i < vectorSize)
-			{
-				if (strLocationBlock.at(i).find("allow_methods") == 0)
-					throw (ExceptionMaker("\"allow_methods\" directive is duplicate") );
-			}
-
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) == 0)
-				throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
-
 			strStream << line;
 			while (strStream >> method)
 			{
