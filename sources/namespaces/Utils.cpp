@@ -40,6 +40,9 @@ namespace Utils
 		std::string::size_type	start;
 		std::string::size_type	end;
 
+		if (str.empty() )
+			return (str);
+
 		start = 0;
 		end = str.size();
 		while (std::isspace(str[start]))
