@@ -57,6 +57,7 @@ class	ServerLocation
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
 };
 
+
 class	LocationStatic: public ServerLocation
 {
 	public:

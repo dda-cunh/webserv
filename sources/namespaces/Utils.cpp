@@ -13,6 +13,19 @@ namespace Utils
 		return (count);
 	}
 
+	size_t	sWordCount(std::string line)
+	{
+		std::istringstream	strStream(line);
+		std::string			outStr;
+		size_t				count;
+
+		count = 0;
+		while (strStream >> outStr)
+			count++;
+
+		return (count);
+	}
+
 	std::string	lowerStr(std::string const& str)
 	{
 		std::string	lower_str(str);
@@ -26,6 +39,9 @@ namespace Utils
 	{
 		std::string::size_type	start;
 		std::string::size_type	end;
+
+		if (str.empty() )
+			return (str);
 
 		start = 0;
 		end = str.size();

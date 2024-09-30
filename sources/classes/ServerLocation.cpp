@@ -10,6 +10,7 @@ ServerLocation::ServerLocation(void)
 	this->_errorPages[404] = DEFAULT_404;
 	this->_errorPages[405] = DEFAULT_405;
 	this->_errorPages[500] = DEFAULT_500;
+	
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
 }
@@ -106,6 +107,8 @@ StrStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
 
 Http::METHOD	ServerLocation::getMethodByIndex(size_t i) const
 {
+	if (i >= this->_methodsAllowed.size() )
+		throw (ExceptionMaker("Allowed methods index is out of bounds") );
 	return (this->_methodsAllowed.at(i));
 }
 
@@ -116,11 +119,15 @@ size_t	ServerLocation::getMethodsAllowedSize(void) const
 
 std::string	ServerLocation::getErrPagePath(int status) const
 {
+	if (this->_errorPages.find(status) == this->_errorPages.end() )
+		throw (ExceptionMaker("Invalid edge status code") );
 	return (this->_errorPages.at(status));
 }
 
 std::string	ServerLocation::getRedirection(std::string url) const
 {
+	if (this->_redirections.find(url) == this->_redirections.end() )
+		throw (ExceptionMaker("No redirection found for URL provided") );
 	return (this->_redirections.at(url));
 }
 
