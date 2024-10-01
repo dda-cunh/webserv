@@ -13,10 +13,9 @@
 #define DIRECTIVE_ERROR_PAGE 7
 #define DIRECTIVE_REWRITE 8
 #define DIRECTIVE_ALLOW_METHODS 9
-#define DIRECTIVE_AUTOINDEX 10
-
-#define CONTEXT_SERVER 0
-#define CONTEXT_LOCATION 1
+#define DIRECTIVE_UPLOAD_STORE 10
+#define DIRECTIVE_AUTOINDEX 11
+#define DIRECTIVE_CGI_PASS 12
 
 
 class	SyntaxChecker
@@ -44,7 +43,11 @@ class	SyntaxChecker
 		static void _syntaxCheckErrorPage(const std::string line);
 		static void	_syntaxCheckRewrite(const std::string line);
 		static void	_syntaxCheckAllowMethods(const std::vector<std::string> block, const size_t i);
+		static void	_syntaxCheckUploadStore(const std::vector<std::string> block, const size_t i);
+
 		static void	_syntaxCheckAutoIndex(const std::vector<std::string> block, const size_t i);
+		//	AND THIS
+		static void	_syntaxCheckCgiPass(const std::vector<std::string> block, const size_t i);
 
 		static std::vector<std::string>	_strLocationBlock;
 		static const std::string		_directivesList[];

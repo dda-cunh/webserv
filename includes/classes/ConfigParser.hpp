@@ -25,6 +25,7 @@ class	ConfigParser
 		static void							parseErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages);
 		static void							parseRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections);
 		static void							parseAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
+		static std::string					parseUploadStore(std::vector<std::string> strLocationBlock);
 
 		static bool							parseAutoIndex(std::vector<std::string> strLocationBlock);
 
@@ -51,5 +52,8 @@ class	ConfigParser
 		static IntStrMap				_defaultErrorPages;
 		static StrStrMap				_defaultRedirections;
 		static std::vector<std::string>	_defaultMethodsAllowed;
+		static std::string				_defaultUploadPath;
+
 		static bool						_defaultAutoIndex;
+		static std::string				_defaultCgiPass;
 };

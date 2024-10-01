@@ -8,8 +8,10 @@ uint32_t					ConfigParser::_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
 IntStrMap					ConfigParser::_defaultErrorPages;
 StrStrMap					ConfigParser::_defaultRedirections;
 std::vector<std::string>	ConfigParser::_defaultMethodsAllowed;
-bool						ConfigParser::_defaultAutoIndex;
+std::string					ConfigParser::_defaultUploadPath;
 
+bool						ConfigParser::_defaultAutoIndex;
+std::string					ConfigParser::_defaultCgiPass;
 
 /*
 static void	print_vector(std::vector<std::string> block)
@@ -78,7 +80,10 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		_defaultErrorPages.clear();
 		_defaultRedirections.clear();
 		_defaultMethodsAllowed.clear();
+		_defaultUploadPath.clear();
+
 		_defaultAutoIndex = DEFAULT_AUTO_INDEX;
+		_defaultCgiPass.clear();
 	}
 
 	configFile.close();
@@ -140,7 +145,6 @@ void	ConfigParser::_loadServerContext(std::ifstream &configFile)
 		erase_comments(line);
 		line = Utils::sTrim(line);
 
-		//	UPDATE BRACKET LEVEL
 		if (line.empty() )
 			continue ;
 		else if (line.at(line.size() - 1) == '{')
@@ -222,6 +226,8 @@ void	ConfigParser::_overrideDefaults(void)
 			else
 				throw (ExceptionMaker("Multiple overrides for default \"allow_methods\" directive inside same server context") );
 		}
+		else if (line.find("upload_store") == 0)
+			_defaultUploadPath = SyntaxChecker::strParseLine(line);
 		else if (line.find("autoindex") == 0)
 		{
 			line = SyntaxChecker::strParseLine(line);
@@ -561,6 +567,22 @@ void	ConfigParser::parseAllowedMethods(std::vector<std::string> strLocationBlock
 			}
 		}
 	}
+}
+
+std::string	ConfigParser::parseUploadStore(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("upload_store") == 0)
+			return (SyntaxChecker::strParseLine(line) );
+	}
+
+	return (_defaultUploadPath);
 }
 
 /*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/

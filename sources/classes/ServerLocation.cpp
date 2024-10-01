@@ -19,18 +19,15 @@ ServerLocation::ServerLocation(void)
 
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
-	//	PARSE DIRECTIVES FROM VECTOR
 	this->_location = ConfigParser::parseLocation(strLocationBlock.at(0) );
 	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
 	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
 	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
 
-	//	FIND ERROR PAGES DIRECTIVE AND PARSE ITS RESPECTIVE KEY/VALUE PAIRS INTO this->_errorPages
 	ConfigParser::parseErrorPages(strLocationBlock, this->_errorPages);
-	//	SAME WITH REDIRECTIONS
 	ConfigParser::parseRedirections(strLocationBlock, this->_redirections);
-	//	AND ALLOWED METHODS
 	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
+	this->_uploadPath = ConfigParser::parseUploadStore(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -65,6 +62,8 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
 		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
+
+	this->_uploadPath = serverLocation.getUploadPath();
 
 	return (*this);
 }
@@ -149,6 +148,11 @@ bool	ServerLocation::methodIsAllowed(Http::METHOD method) const
 			return (true);
 	}
 	return (false);
+}
+
+std::string	ServerLocation::getUploadPath(void) const
+{
+	return (this->_uploadPath);
 }
 
 size_t	ServerLocation::getIndexVectorSize(void) const
@@ -260,7 +264,7 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
 	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
 
-	out << "\tIndex files: " << std::endl;
+	out << "\tIndex files:" << std::endl;
 	indexVectorSize = locationStatic.getIndexVectorSize();
 	for (size_t i = 0; i < indexVectorSize; i++)
 		out << "\t\t" << locationStatic.getIndexFileName(i) << std::endl;
@@ -278,6 +282,8 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 	out << "\tAllowed methods:" << std::endl;
 	for (size_t i = 0; i < locationStatic.getMethodsAllowedSize(); i++)
 		out << "\t\t" << locationStatic.getMethodByIndex(i) << std::endl;
+
+	out << "\tUpload path: " << locationStatic.getUploadPath() << std::endl;
 
 	out << "\tAutoindex: " << locationStatic.getAutoIndex() << std::endl;
 

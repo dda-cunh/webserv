@@ -34,6 +34,10 @@ class	ServerLocation
 		std::string					getRootDir(void) const;
 		std::string					getIndexFileName(size_t i) const;
 		uint32_t					getMaxBodySize(void) const;
+		std::string					getErrPagePath(int status) const;
+		std::string					getRedirection(std::string url) const;
+		bool						methodIsAllowed(Http::METHOD method) const;
+		std::string					getUploadPath(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
@@ -41,11 +45,6 @@ class	ServerLocation
 		StrStrMap::const_iterator	getRedirectionIttEnd(void) const;
 		Http::METHOD				getMethodByIndex(size_t i) const;
 		size_t						getMethodsAllowedSize(void) const;
-
-		std::string					getErrPagePath(int status) const;
-		std::string					getRedirection(std::string url) const;
-		bool						methodIsAllowed(Http::METHOD method) const;
-
 		size_t						getIndexVectorSize(void) const;
 
 	protected:											//	KEYWORDS
@@ -56,9 +55,10 @@ class	ServerLocation
 		IntStrMap 					_errorPages;		//		error_page
 		StrStrMap					_redirections;		//		rewrite
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
+		std::string					_uploadPath;		//		upload_store
 };
 
-//	OBJECTS OF THESE CLASSES CAN BE IDENTIFIED WITH DYNAMIC_CAST
+
 class	LocationStatic: public ServerLocation
 {
 	public:
@@ -73,27 +73,10 @@ class	LocationStatic: public ServerLocation
 
 	private:
 		bool	_autoIndex;			//		autoindex
-		//	try_files
 };
 
-//	NO NEED FOR A REVERSE PROXY; EITHER IMPLEMENT A CLASS JUST FOR UPLOADS
-//		OR INCORPORATE IT IN LOCATIONSTATIC
+
 /*
-class	LocationRevProxy: public ServerLocation
-{
-	public:
-		LocationRevProxy(void);
-		LocationRevProxy(std::vector<std::string> strLocationBlock);
-		~LocationRevProxy(void);
-
-		std::string	getUploadDir(void);
-
-	private:
-
-		std::string	_uploadDirectory;
-
-};
-
 class LocationCGI: public ServerLocation
 {
 	public:
@@ -105,10 +88,7 @@ class LocationCGI: public ServerLocation
 		LocationCGI	&operator = (const LocationCGI & locationCGI);
 
 	private:
-		//	fastcgi_pass
-		//	fastcgi_param
-		//	fastcgi_index
-		//	fastcgi_split_path_info
+		std::string	_cgiPass	//	cgi_pass;
 }
 */
 
