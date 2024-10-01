@@ -45,9 +45,9 @@ namespace Utils
 
 		start = 0;
 		end = str.size();
-		while (std::isspace(str[start]))
+		while (start < end && std::isspace(str[start]))
 			start++;
-		while (std::isspace(str[end - 1]))
+		while (end > start && std::isspace(str[end - 1]))
 			end--;
 		return (str.substr(start, end - start));
 	}
