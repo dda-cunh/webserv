@@ -19,15 +19,15 @@ ServerLocation::ServerLocation(void)
 
 ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
 {
-	this->_location = ConfigParser::parseLocation(strLocationBlock.at(0) );
-	this->_rootDir = ConfigParser::parseRootDir(strLocationBlock);
-	ConfigParser::parseIndexFiles(strLocationBlock, this->_indexFiles);
-	this->_maxBodySize = ConfigParser::parseMaxBodySize(strLocationBlock);
+	this->_location = this->_setLocation(strLocationBlock.at(0) );
+	this->_rootDir = this->_setRootDir(strLocationBlock);
+	this->_setIndexFiles(strLocationBlock, this->_indexFiles);
+	this->_maxBodySize = this->_setMaxBodySize(strLocationBlock);
 
-	ConfigParser::parseErrorPages(strLocationBlock, this->_errorPages);
-	ConfigParser::parseRedirections(strLocationBlock, this->_redirections);
-	ConfigParser::parseAllowedMethods(strLocationBlock, this->_methodsAllowed);
-	this->_uploadPath = ConfigParser::parseUploadStore(strLocationBlock);
+	this->_setErrorPages(strLocationBlock, this->_errorPages);
+	this->_setRedirections(strLocationBlock, this->_redirections);
+	this->_setAllowedMethods(strLocationBlock, this->_methodsAllowed);
+	this->_uploadPath = this->_setUploadStore(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -171,7 +171,7 @@ LocationStatic::LocationStatic(void)
 
 LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
 {
-	this->_autoIndex = 	ConfigParser::parseAutoIndex(strLocationBlock);
+	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
 }
 
 
@@ -197,6 +197,294 @@ LocationStatic	&LocationStatic::operator=(const LocationStatic &locationStatic)
 bool	LocationStatic::getAutoIndex(void) const
 {
 	return (this->_autoIndex);
+}
+
+
+
+std::string	ServerLocation::_setLocation(std::string locationLine)
+{
+	locationLine = SyntaxChecker::strParseLine(locationLine);
+
+	if (!locationLine.empty() || Utils::sWordCount(locationLine) != 1)
+		return (locationLine);
+	else
+		throw (ExceptionMaker("Invalid number of arguments in \"location\" directive") );
+}
+
+std::string	ServerLocation::_setRootDir(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("root") == 0)
+		{
+				line = SyntaxChecker::strParseLine(line);
+				if (Utils::sWordCount(line) > 1)
+					throw (ExceptionMaker("Invalid number of arguments in \"root\" directive") );
+				return (line);
+		}
+	}
+
+	if (ConfigParser::defaultRoot.empty() )
+		return (DEFAULT_ROOT);
+	else
+		return (ConfigParser::defaultRoot);
+}
+
+void	ServerLocation::_setIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("index") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			ConfigParser::strToVecSplit(line, indexFiles);
+		}
+	}
+	
+	if (indexFiles.empty() )
+	{
+		if (ConfigParser::defaultIndex.empty() )
+			indexFiles.push_back(DEFAULT_INDEX);
+		else
+		{
+			for (size_t i = 0; i < ConfigParser::defaultIndex.size(); i++)
+				indexFiles.push_back(ConfigParser::defaultIndex.at(i) );
+		}
+	}
+}
+
+uint32_t	ServerLocation::_setMaxBodySize(std::vector<std::string> strLocationBlock)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	uint32_t			unMaxBodySize;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("client_max_body_size") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			strStream << line;
+			strStream >> unMaxBodySize;
+			return (unMaxBodySize);
+		}
+	}
+
+	return (ConfigParser::defaultMaxBodySize);	
+}
+
+void	ServerLocation::_setErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages)
+{
+	size_t				vectorSize;
+	std::string			line;
+	int					errCode;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("error_page") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			errCode = std::atoi(line.substr(0, line.find_first_of(" \t") ).c_str() );
+			if (errorPages.find(errCode) != errorPages.end() )
+				throw (ExceptionMaker("Multiple settings for the same error page in location context") );
+			errorPages[errCode] = line.substr(line.find_last_of(" \t") + 1);
+		}
+	}
+
+
+	if (errorPages.find(400) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(400) == ConfigParser::defaultErrorPages.end() )
+			errorPages[400] = DEFAULT_400;
+		else
+			errorPages[400] = ConfigParser::defaultErrorPages[400];
+	}
+
+	if (errorPages.find(403) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(403) == ConfigParser::defaultErrorPages.end() )
+			errorPages[403] = DEFAULT_403;
+		else
+			errorPages[403] = ConfigParser::defaultErrorPages[403];
+	}
+
+	if (errorPages.find(404) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(404) == ConfigParser::defaultErrorPages.end() )
+			errorPages[404] = DEFAULT_404;
+		else
+			errorPages[404] = ConfigParser::defaultErrorPages[404];
+	}
+
+	if (errorPages.find(405) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(405) == ConfigParser::defaultErrorPages.end() )
+			errorPages[405] = DEFAULT_405;
+		else
+			errorPages[405] = ConfigParser::defaultErrorPages[405];
+	}
+
+	if (errorPages.find(500) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(500) == ConfigParser::defaultErrorPages.end() )
+			errorPages[500] = DEFAULT_500;
+		else
+			errorPages[500] = ConfigParser::defaultErrorPages[500];
+	}
+
+	if (errorPages.find(501) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(501) == ConfigParser::defaultErrorPages.end() )
+			errorPages[501] = DEFAULT_501;
+		else
+			errorPages[501] = ConfigParser::defaultErrorPages[501];
+	}
+}
+
+void	ServerLocation::_setRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections)
+{
+	size_t		vectorSize;
+	std::string	line;
+	std::string	uri;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("rewrite") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			uri = line.substr(0, line.find_first_of(" \t") );
+			if (redirections.find(uri) == redirections.end() )
+				redirections[uri] = Utils::sTrim(line.substr(line.find_last_of(" \t") ) );
+			else
+				throw (ExceptionMaker("Duplicate redirection provided in \"rewrite\" directives") );
+		}
+	}
+
+	for (StrStrMap::iterator itt = ConfigParser::defaultRedirections.begin(); itt != ConfigParser::defaultRedirections.end(); itt++)
+	{
+		if (redirections.find(itt->first) == redirections.end() )
+			redirections[itt->first] = itt->second;
+	}
+}
+
+void	ServerLocation::_setAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	std::string			method;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("allow_methods") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			strStream << line;
+			while (strStream >> method)
+			{
+				if (method == "GET")
+					methodsAllowed.push_back(Http::M_GET);
+				else if (method == "POST")
+					methodsAllowed.push_back(Http::M_POST);
+				else if (method == "DELETE")
+					methodsAllowed.push_back(Http::M_DELETE);
+				else
+					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive") );
+			}
+		}
+	}
+
+	if (methodsAllowed.empty() )
+	{
+		if (ConfigParser::defaultMethodsAllowed.empty() )
+			methodsAllowed.push_back(Http::M_GET);
+		else
+		{
+			for (size_t i = 0; i < ConfigParser::defaultMethodsAllowed.size(); i++)
+			{
+				if (ConfigParser::defaultMethodsAllowed.at(i) == "GET")
+					methodsAllowed.push_back(Http::M_GET);
+				else if (ConfigParser::defaultMethodsAllowed.at(i) == "POST")
+					methodsAllowed.push_back(Http::M_POST);
+				else if (ConfigParser::defaultMethodsAllowed.at(i) == "DELETE")
+					methodsAllowed.push_back(Http::M_DELETE);
+				else
+					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive in server context") );
+			}
+		}
+	}
+}
+
+std::string	ServerLocation::_setUploadStore(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("upload_store") == 0)
+			return (SyntaxChecker::strParseLine(line) );
+	}
+
+	return (ConfigParser::defaultUploadPath);
+}
+
+
+
+
+
+bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);	
+		if (line.find("autoindex") == 0)
+		{
+			while (++i < vectorSize)
+			{
+				if (strLocationBlock.at(i).find("autoindex") == 0)
+					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
+			}
+
+			line = SyntaxChecker::strParseLine(line);
+			if (Utils::sWordCount(line) > 1)
+				throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
+
+			if (line == "on")
+				return (true);
+			else if (line == "off")
+				return (false);
+			else
+				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive") );
+		}
+	}
+
+	return (ConfigParser::defaultAutoIndex);	
 }
 
 
@@ -315,3 +603,4 @@ std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
 	return (out);
 }
 */
+

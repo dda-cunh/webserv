@@ -47,15 +47,28 @@ class	ServerLocation
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
 
+
 	protected:											//	KEYWORDS
-		std::string					_location;			//		location [...] {
-		std::string					_rootDir;			//		root
-		std::vector<std::string>	_indexFiles;		//		index
-		uint32_t					_maxBodySize;		//		client_max_body_size
-		IntStrMap 					_errorPages;		//		error_page
-		StrStrMap					_redirections;		//		rewrite
-		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods
-		std::string					_uploadPath;		//		upload_store
+
+		std::string					_location;			//		location [PATH] {
+		std::string					_rootDir;			//		root [PATH]
+		std::vector<std::string>	_indexFiles;		//		index FILE0 [FILE 1..N]
+		uint32_t					_maxBodySize;		//		client_max_body_size [UINT]
+		IntStrMap 					_errorPages;		//		error_page [STATUS] [PATH]
+		StrStrMap					_redirections;		//		rewrite [URI | SERVERNAME] [URI | SERVERNAME]
+		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods [GET] [POST] [DELETE]
+		std::string					_uploadPath;		//		upload_store [PATH]
+
+
+	private:
+		std::string					_setLocation(std::string locationLine);
+		std::string					_setRootDir(std::vector<std::string> strLocationBlock);
+		void						_setIndexFiles(std::vector<std::string> strLocationBlock, std::vector<std::string> &indexFiles);
+		uint32_t					_setMaxBodySize(std::vector<std::string> strLocationBlock);
+		void						_setErrorPages(std::vector<std::string> strLocationBlock, IntStrMap &errorPages);
+		void						_setRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections);
+		void						_setAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
+		std::string					_setUploadStore(std::vector<std::string> strLocationBlock);
 };
 
 
@@ -71,8 +84,10 @@ class	LocationStatic: public ServerLocation
 
 		bool	getAutoIndex(void) const;
 
+		bool	_setAutoIndex(std::vector<std::string> strLocationBlock);
+
 	private:
-		bool	_autoIndex;			//		autoindex
+		bool	_autoIndex;			//		autoindex [on | off]
 };
 
 
@@ -88,7 +103,7 @@ class LocationCGI: public ServerLocation
 		LocationCGI	&operator = (const LocationCGI & locationCGI);
 
 	private:
-		std::string	_cgiPass	//	cgi_pass;
+		StrStrMap	_cgiPass	//	cgi_pass [EXT] [PATH];
 }
 */
 
