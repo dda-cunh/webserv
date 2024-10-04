@@ -463,15 +463,7 @@ bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
 		line = strLocationBlock.at(i);	
 		if (line.find("autoindex") == 0)
 		{
-			while (++i < vectorSize)
-			{
-				if (strLocationBlock.at(i).find("autoindex") == 0)
-					throw (ExceptionMaker("\"autoindex\" directive is duplicate") );
-			}
-
 			line = SyntaxChecker::strParseLine(line);
-			if (Utils::sWordCount(line) > 1)
-				throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
 
 			if (line == "on")
 				return (true);

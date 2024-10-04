@@ -17,7 +17,6 @@ namespace	Utils
 	{
 		L_UNHANDLED,
 		L_STATIC,
-		L_REV_PROXY,
 		L_CGI
 	}	LOCATION_BLOCK_TYPE;
 

@@ -38,9 +38,6 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 				case (Utils::L_STATIC):
 					this->_locationBlocks.push_back(new LocationStatic(strLocationBlock) );
 					break ;
-				case (Utils::L_REV_PROXY):
-					throw (ExceptionMaker("This feature has not been implemented yet") );
-					break ;
 				case (Utils::L_CGI):
 					this->_locationBlocks.push_back(new LocationCGI(strLocationBlock) );
 					break ;
@@ -91,8 +88,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 		{
 			case (Utils::L_STATIC):
 				this->_locationBlocks.push_back(new LocationStatic(*(dynamic_cast<LocationStatic*>(location) ) ) );
-				break ;
-			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
 				this->_locationBlocks.push_back(new LocationCGI(*(dynamic_cast<LocationCGI*>(location) ) ) );
@@ -300,13 +295,11 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_STATIC):
 				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
 				break ;
-			case (Utils::L_REV_PROXY):
-				break ;
 			case (Utils::L_CGI):
 				out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
-				//	THROW EXCEPTION
+				throw (ExceptionMaker("Unhandled Location type") );
 				break ;
 		}		
 		out << std::endl;
