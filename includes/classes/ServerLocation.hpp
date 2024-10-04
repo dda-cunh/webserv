@@ -91,7 +91,7 @@ class	LocationStatic: public ServerLocation
 };
 
 
-/*
+
 class LocationCGI: public ServerLocation
 {
 	public:
@@ -102,10 +102,17 @@ class LocationCGI: public ServerLocation
 
 		LocationCGI	&operator = (const LocationCGI & locationCGI);
 
+		std::string					getCgiPath(std::string ext) const;
+
+		StrStrMap::const_iterator	getCgiPathsBegin(void) const;
+		StrStrMap::const_iterator	getCgiPathsEnd(void) const;
+
 	private:
-		StrStrMap	_cgiPass	//	cgi_pass [EXT] [PATH];
-}
-*/
+		void						_setCgiPaths(std::vector<std::string> strLocationBlock);
+
+		StrStrMap	_cgiPaths;	//	cgi_path [EXT] [PATH];
+};
+
 
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
 

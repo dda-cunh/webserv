@@ -160,46 +160,6 @@ size_t	ServerLocation::getIndexVectorSize(void) const
 	return (this->_indexFiles.size() );
 }
 
-//	DERIVED CLASSES
-
-//		STATIC SITE
-LocationStatic::LocationStatic(void)
-{
-	this->_autoIndex = false;
-}
-
-
-LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
-{
-	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
-}
-
-
-LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation(locationStatic)
-{
-	if (this != &locationStatic)
-		*this = locationStatic;
-
-}
-
-LocationStatic::~LocationStatic(void)
-{
-	return ;
-}
-
-LocationStatic	&LocationStatic::operator=(const LocationStatic &locationStatic)
-{
-	this->_autoIndex = locationStatic.getAutoIndex();
-
-	return (*this);
-}
-
-bool	LocationStatic::getAutoIndex(void) const
-{
-	return (this->_autoIndex);
-}
-
-
 
 std::string	ServerLocation::_setLocation(std::string locationLine)
 {
@@ -452,6 +412,44 @@ std::string	ServerLocation::_setUploadStore(std::vector<std::string> strLocation
 
 
 
+//	DERIVED CLASSES
+
+//		STATIC SITE
+LocationStatic::LocationStatic(void)
+{
+	this->_autoIndex = false;
+}
+
+
+LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
+{
+	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
+}
+
+
+LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation(locationStatic)
+{
+	if (this != &locationStatic)
+		*this = locationStatic;
+
+}
+
+LocationStatic::~LocationStatic(void)
+{
+	return ;
+}
+
+LocationStatic	&LocationStatic::operator=(const LocationStatic &locationStatic)
+{
+	this->_autoIndex = locationStatic.getAutoIndex();
+
+	return (*this);
+}
+
+bool	LocationStatic::getAutoIndex(void) const
+{
+	return (this->_autoIndex);
+}
 
 
 bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
@@ -488,53 +486,27 @@ bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
 }
 
 
-/*
-//		REVERSE PROXY (FOR FILE UPLOADS)
-LocationRevProxy::LocationRevProxy(void)
-{
-	//	what will default proxy pass be?
-	this->_uploadDirectory = "/upload";
-}
-
-
-LocationRevProxy::LocationRevProxy(std::vector<std::string> strLocationBlock)
-{
-
-}
-
-
-LocationRevProxy::~LocationRevProxy(void)
-{
-	return ;
-}
-
-std::string	LocationRevProxy::getUploadDir(void)
-{
-	return (this->_uploadDirectory);
-}
-
-
 //		CGI
 
 LocationCGI::LocationCGI(void)
 {
-	//	INIT WITH DEFAULT VALUES
 }
 
-LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock)
+LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
 {
-
+	this->_setCgiPaths(strLocationBlock);	
 }
 
-LocationCGI::LocationCGI(const LocationCGI &locationCGI)
+LocationCGI::LocationCGI(const LocationCGI &locationCGI): ServerLocation(locationCGI)
 {
 	if (this != &locationCGI)
 		*this = locationCGI;
 }
 
-LocationCGI	LocationCGI::&operator=(const LocationCGI &locationCGI)
+LocationCGI	&LocationCGI::operator=(const LocationCGI &locationCGI)
 {
-	//	COPY VALUES
+	for (StrStrMap::const_iterator itt = locationCGI.getCgiPathsBegin(); itt != locationCGI.getCgiPathsEnd(); itt++)
+		this->_cgiPaths[itt->first] = itt->second;
 
 	return (*this);
 }
@@ -543,7 +515,48 @@ LocationCGI::~LocationCGI(void)
 {
 	return ;
 }
-*/
+
+
+std::string	LocationCGI::getCgiPath(std::string ext) const
+{
+	return (this->_cgiPaths.at(ext) );
+}
+
+
+StrStrMap::const_iterator	LocationCGI::getCgiPathsBegin(void) const
+{
+	return (this->_cgiPaths.begin() );
+}
+
+StrStrMap::const_iterator	LocationCGI::getCgiPathsEnd(void) const
+{
+	return (this->_cgiPaths.end() );
+}
+
+
+
+void	LocationCGI::_setCgiPaths(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+	std::string	ext;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("cgi_path") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			ext = line.substr(0, line.find_first_of(" \t") );
+			if (this->_cgiPaths.find(ext) == this->_cgiPaths.end() )
+				this->_cgiPaths[ext] = line.substr(line.find_last_of(" \t") );
+			else
+				throw (ExceptionMaker("Duplicate extension provided in \"cgi_path\" directive") );
+		}
+	}
+}
+
 
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {

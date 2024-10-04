@@ -4,7 +4,7 @@ std::vector<std::string>	SyntaxChecker::_strLocationBlock;
 const std::string			SyntaxChecker::_directivesList[] = {"server", "listen", "server_name", "location",\
 																"root", "index", "client_max_body_size", "error_page",\
 																"rewrite", "allow_methods", "upload_store", \
-																"autoindex", "cgi_pass" \
+																"autoindex", "cgi_path" \
 																""};
 
 
