@@ -87,8 +87,8 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(strServerBlock, i);
 				break ;
-			case (DIRECTIVE_CGI_PASS):
-				//	check syntax for cgi directive
+			case (DIRECTIVE_CGI_PATH):
+				_syntaxCheckCgiPath(line);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -270,8 +270,8 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(_strLocationBlock, j);
 				break ;
-			case (DIRECTIVE_CGI_PASS):
-				//	check syntax for cgi directive
+			case (DIRECTIVE_CGI_PATH):
+				_syntaxCheckCgiPath(_strLocationBlock.at(j) );
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -478,4 +478,21 @@ void	SyntaxChecker::_syntaxCheckAutoIndex(const std::vector<std::string> block, 
 
 	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1 )
 		throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckCgiPath(std::string line)
+{
+	std::string	strArgs;
+
+	if (line.find(';') == line.npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"cgi_path\" directive") );
+	else if (line.find(';') != line.size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"cgi_path\" directive") );
+
+	strArgs = strParseLine(line);
+	if (Utils::sWordCount(strArgs) != 2)
+		throw (ExceptionMaker("Invalid number of arguments in \"cgi_path\" directive") );
+
+	if (strArgs.substr(0, strArgs.find_first_of(" \t") ).find_last_of(".") != 0)
+		throw (ExceptionMaker("Invalid extension provided in \"cgi_path\" directive") );
 }

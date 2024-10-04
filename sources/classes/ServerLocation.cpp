@@ -591,29 +591,35 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 	return (out);
 }
 
-/*
+
 std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
 {
 	out << "\tLocation: " << locationCGI.getLocation() << std::endl;
 	out << "\tRoot: " << locationCGI.getRootDir() << std::endl;
-	out << "\tIndex: " << locationCGI.getIndexFilename() << std::endl;
+
+	out << "\tIndex files:" << std::endl;
+	for (size_t i = 0; i < locationCGI.getIndexVectorSize(); i++)
+		out << "\t\t" << locationCGI.getIndexFileName(i) << std::endl;
+
 	out << "\tMax body size: " << locationCGI.getMaxBodySize() << std::endl;
 
 	out << "\tError pages:" << std::endl;
-	for (IntStrMap::iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
+	for (IntStrMap::const_iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "\tRedirections:" << std::endl;
-	for (IntStrMap::iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
+	for (StrStrMap::const_iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
 		out << "\t\t" << itt->first << " " << itt->second << std::endl;
 
 	out << "Allowed methods:" << std::endl;
 	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
 		out << "\t\t" << locationCGI.getMethodByIndex(i) << std::endl;
 
+	out << "\tUpload path: " << locationCGI.getUploadPath() << std::endl;
 
+	out << "\tCGI:" << std::endl;
+	for (StrStrMap::const_iterator itt = locationCGI.getCgiPathsBegin(); itt != locationCGI.getCgiPathsEnd(); itt++)
+		out << "\t\t" << itt->first << " " << locationCGI.getCgiPath(itt->first) << std::endl;
 
 	return (out);
 }
-*/
-

@@ -115,5 +115,4 @@ class LocationCGI: public ServerLocation
 
 
 std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
-
-//std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);
+std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);

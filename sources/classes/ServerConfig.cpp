@@ -42,7 +42,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 					throw (ExceptionMaker("This feature has not been implemented yet") );
 					break ;
 				case (Utils::L_CGI):
-					throw (ExceptionMaker("This feature has not been implemented yet") );
+					this->_locationBlocks.push_back(new LocationCGI(strLocationBlock) );
 					break ;
 				case (Utils::L_UNHANDLED):
 					throw (ExceptionMaker("Invalid Location type") );
@@ -95,7 +95,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
-			//	this->_locationBlocks.push_back(new LocationCGI(location));
+				this->_locationBlocks.push_back(new LocationCGI(*(dynamic_cast<LocationCGI*>(location) ) ) );
 				break ;
 			case (Utils::L_UNHANDLED):
 				throw (ExceptionMaker("Invalid Location type") );
@@ -105,6 +105,27 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 
 	return (*this);
 }
+
+
+Utils::LOCATION_BLOCK_TYPE	ServerConfig::parseLocationType(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("autoindex") == 0)
+			return (Utils::L_STATIC);
+		else if (line.find("cgi_path") == 0)
+			return (Utils::L_CGI);
+	}
+
+	return (Utils::L_STATIC);
+}
+
+
 
 	/*	GETTERS	*/
 
@@ -162,8 +183,8 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *locatio
 		return (Utils::L_STATIC);
 //	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
 //		return (L_REV_PROXY);
-//	else if (dynamic_cast<LocationCGI *>(location) != NULL)
-//		return (L_CGI);
+	else if (dynamic_cast<LocationCGI *>(location) != NULL)
+		return (Utils::L_CGI);
 	else
 		return (Utils::L_UNHANDLED);
 }
@@ -251,12 +272,6 @@ void	ServerConfig::_setServerName(std::vector<std::string> strServerBlock, std::
 
 
 
-Utils::LOCATION_BLOCK_TYPE	ServerConfig::parseLocationType(std::vector<std::string> strLocationBlock)
-{
-	//	THIS FUNCTION WILL BE IMPLEMENTED LATER
-	(void)strLocationBlock;
-	return (Utils::L_STATIC);
-}
 
 
 
@@ -288,7 +303,7 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_REV_PROXY):
 				break ;
 			case (Utils::L_CGI):
-				// out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
+				out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
 				//	THROW EXCEPTION
