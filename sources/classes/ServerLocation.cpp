@@ -1,8 +1,6 @@
 #include "../../includes/classes/ServerLocation.hpp"
 
 
-//	BASE CLASS
-
 ServerLocation::ServerLocation(void)
 {
 	this->_location = DEFAULT_LOCATION;
@@ -63,7 +61,7 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
 		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
 
-	this->_uploadPath = serverLocation.getUploadPath();
+  this->_uploadPath = serverLocation.getUploadPath();
 
 	return (*this);
 }
@@ -478,8 +476,6 @@ bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
 }
 
 
-//		CGI
-
 LocationCGI::LocationCGI(void)
 {
 }
@@ -549,14 +545,13 @@ void	LocationCGI::_setCgiPaths(std::vector<std::string> strLocationBlock)
 	}
 }
 
-
 std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
 {
 	size_t	indexVectorSize;
 
 	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
 	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
-
+  
 	out << "\tIndex files:" << std::endl;
 	indexVectorSize = locationStatic.getIndexVectorSize();
 	for (size_t i = 0; i < indexVectorSize; i++)
@@ -582,7 +577,6 @@ std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStati
 
 	return (out);
 }
-
 
 std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
 {

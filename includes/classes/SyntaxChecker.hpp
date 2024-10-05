@@ -44,7 +44,6 @@ class	SyntaxChecker
 		static void	_syntaxCheckRewrite(const std::string line);
 		static void	_syntaxCheckAllowMethods(const std::vector<std::string> block, const size_t i);
 		static void	_syntaxCheckUploadStore(const std::vector<std::string> block, const size_t i);
-
 		static void	_syntaxCheckAutoIndex(const std::vector<std::string> block, const size_t i);
 		static void	_syntaxCheckCgiPath(std::string line);
 

@@ -1,6 +1,5 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
-	/*	CONSTRUCTORS	*/
 
 ServerConfig::ServerConfig(void)
 {
@@ -33,6 +32,7 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 				strLocationBlock.push_back(line);
 				line = strServerBlock.at(++i);
 			}
+
 			switch (this->parseLocationType(strLocationBlock) )
 			{
 				case (Utils::L_STATIC):
@@ -121,9 +121,6 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::parseLocationType(std::vector<std::stri
 }
 
 
-
-	/*	GETTERS	*/
-
 uint32_t	ServerConfig::getHost(void) const
 {
 	return (this->_host);
@@ -176,8 +173,6 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *locatio
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
 		return (Utils::L_STATIC);
-//	else if (dynamic_cast<LocationRevProxy *>(location) != NULL)
-//		return (L_REV_PROXY);
 	else if (dynamic_cast<LocationCGI *>(location) != NULL)
 		return (Utils::L_CGI);
 	else

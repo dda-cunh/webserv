@@ -4,7 +4,6 @@
 #include "ConfigParser.hpp"
 
 
-//	DEFAULTS
 #define DEFAULT_LOCATION "/"
 #define DEFAULT_ROOT "./test_files"
 #define DEFAULT_INDEX "index.html"
@@ -47,8 +46,10 @@ class	ServerLocation
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
 
+		size_t						getIndexVectorSize(void) const;
 
 	protected:											//	KEYWORDS
+
 
 		std::string					_location;			//		location [PATH] {
 		std::string					_rootDir;			//		root [PATH]
@@ -84,10 +85,11 @@ class	LocationStatic: public ServerLocation
 
 		bool	getAutoIndex(void) const;
 
-		bool	_setAutoIndex(std::vector<std::string> strLocationBlock);
 
 	private:
-		bool	_autoIndex;			//		autoindex [on | off]
+    bool	_setAutoIndex(std::vector<std::string> strLocationBlock);
+    
+    bool	_autoIndex;			//		autoindex [on | off]
 };
 
 

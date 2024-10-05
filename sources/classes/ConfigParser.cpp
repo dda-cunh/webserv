@@ -10,20 +10,10 @@ StrStrMap					ConfigParser::defaultRedirections;
 std::vector<std::string>	ConfigParser::defaultMethodsAllowed;
 std::string					ConfigParser::defaultUploadPath;
 
+
 bool						ConfigParser::defaultAutoIndex;
 //std::string					ConfigParser::defaultCgiPass;
 
-/*
-static void	print_vector(std::vector<std::string> block)
-{
-	size_t	vectorSize;
-
-	vectorSize = block.size();
-	for (size_t i = 0; i < vectorSize; i++)
-		std::cout << block.at(i) << std::endl;
-	std::cout << "==================================" << std::endl;
-}
-*/
 
 static void	erase_comments(std::string &line)
 {
@@ -33,6 +23,7 @@ static void	erase_comments(std::string &line)
 	if (pos != line.npos)
 		line.erase(pos, line.size());
 }
+
 
 void	ConfigParser::strToVecSplit(std::string line, std::vector<std::string> &strVector)
 {
@@ -65,34 +56,23 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		SyntaxChecker::syntaxCheckServerBlock(_strServerBlock);
 
 		_overrideDefaults();
-		
-		//	FOR DEBUGGING
-//		print_vector(_strServerBlock);
 
-		configs.push_back(ServerConfig(_strServerBlock) );
-	
+		configs.push_back(ServerConfig(_strServerBlock) );	
 
 		_strServerBlock.clear();
 
-		defaultRoot.clear();
-		defaultIndex.clear();
-		defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
-		defaultErrorPages.clear();
-		defaultRedirections.clear();
-		defaultMethodsAllowed.clear();
-		defaultUploadPath.clear();
-
-		defaultAutoIndex = DEFAULT_AUTO_INDEX;
-//		defaultCgiPass.clear();
+		_defaultRoot.clear();
+		_defaultIndex.clear();
+		_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
+		_defaultErrorPages.clear();
+		_defaultRedirections.clear();
+		_defaultMethodsAllowed.clear();
+		_defaultAutoIndex = DEFAULT_AUTO_INDEX;
 	}
 
 	configFile.close();
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
-
-
-	//	DO ONE FINAL PASS ON configs TO CHECK FOR INVALID CONFIGS
-	//	(SUCH AS DUPLICATE LOCATION BLOCKS)
 
 
 //	THIS IS FOR DEBUGGING ONLY
@@ -187,6 +167,7 @@ void	ConfigParser::_overrideDefaults(void)
 		}
 
 		if (line.find("root") == 0)
+
 			defaultRoot = SyntaxChecker::strParseLine(line);
 		else if (line.find("index") == 0)
 		{
@@ -237,21 +218,6 @@ void	ConfigParser::_overrideDefaults(void)
 				defaultAutoIndex = false;
 			else
 				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
-
 		}
-		//	ADD DEFAULT OVERRIDE FOR AUTOINDEX
 	}
 }
-
-
-/*		PARSING FOR SERVERCONFIG CLASS		*/
-
-
-
-
-/*		PARSING FOR SERVERLOCATION BASE CLASS		*/
-
-
-/*		PARSING FOR LOCATIONSTATIC DERIVED CLASS		*/
-
-

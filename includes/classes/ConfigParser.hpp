@@ -13,7 +13,8 @@ class	ConfigParser
 		static void		parseConfigs(const char *path, ServerBlocks &configs);
 
 		static void		strToVecSplit(std::string line, std::vector<std::string> &strVector);
-
+  
+  
 
 		static std::string				defaultRoot;
 		static std::vector<std::string>	defaultIndex;
@@ -24,7 +25,7 @@ class	ConfigParser
 		static std::string				defaultUploadPath;
 
 		static bool						defaultAutoIndex;
-//		static StrStrMap				defaultCgiPass;
+
 
 
 	private:
@@ -33,7 +34,5 @@ class	ConfigParser
 
 		static void							_loadServerContext(std::ifstream &configFile);
 		static void							_overrideDefaults(void);
-
-		static std::vector<std::string>		_strServerBlock;
 
 };
