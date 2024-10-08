@@ -4,7 +4,6 @@
 #include "Request.hpp"
 #include "ServerConfig.hpp"
 #include "ServerLocation.hpp"
-
 #include <vector>
 #include <algorithm> // std::find
 
@@ -14,12 +13,8 @@
 class Response
 {
 	public:
-		typedef std::vector<ServerConfig> ServerBlocks;
-
 		~Response();
-
-		std::string const &response() const;
-
+		std::string const &getResponse() const;
 		Response(Request const &, ServerBlocks const &);
 
 	private:
@@ -28,15 +23,9 @@ class Response
 		std::string _body;
 		std::string _response;
 		Request _request;
-		IntStrMap _error_pages;
-		StrStrMap _redirections;
 		ServerBlocks const &_serverBlocks;
-
 		ServerLocation *_matchedLocation;
-
-		Response();
-		Response(Response const &src);
-		Response &operator=(Response const &rhs);
+		std::string _redirectionPath;
 
 		void dispatchMethod();
 		void handleGETMethod();
@@ -44,15 +33,15 @@ class Response
 		void handleDELETEMethod();
 		void handleMethodNotAllowed();
 
-		void setLocation();
-		void setErrorPages();
+		void setMatchedLocation();
 		void setHeader(const std::string &, const std::string &);
 		void setCommonHeaders();
 		void setResponse();
+		void setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");
 
 		void readResource(const std::string &uri, bool isErrorResponse = false);
-		void setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");
-		std::string getResponseWithoutBody(); // TODO: Debug function, to be removed
+		std::string getHeadersStr();
 		bool isRedirection();
+		void handleRedirection();
 		void handleFileList();
 };
