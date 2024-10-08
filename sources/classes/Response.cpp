@@ -118,52 +118,63 @@ std::string extractFileNameFromQuery(const std::string &uri)
  *
  * This function will match the response to the right location/route
  */
-void Response::setLocation()
-{
-	/*
-		loop over Response._config locations
-		get the longest match between reques.uri and locations
-		Response._matchedLocation = longestmatch
+void Response::setLocation() {
+    ServerLocation *bestMatch = NULL;
+    std::string longestMatch;
 
-		Response will gain access to:
-		_matchedLocation
-			std::vector<Http::METHOD>	_allowedMethods
-			StrStrMap					_redirections
-			std::string					_root		MANDATORY, else wrong configuration
-			bool 						_autoindex
-			std::string					_uploadDirectory
-			IntStrMap 					_error_pages;
-	*/
-	_redirections = dummyGetRedirections();
+    for (size_t i = 0; i < _serverBlocks.size(); ++i) {
+        const ServerConfig &config = _serverBlocks[i];
+
+        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
+            ServerLocation *location = config.getLocationFromIndex(j);
+            std::string locationPath = location->getLocation();
+
+            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
+                longestMatch = locationPath;
+                bestMatch = location;
+            }
+        }
+    }
+
+    if (bestMatch == NULL) {
+        throw std::runtime_error("No valid location block found for the requested URI.");
+    }
+
+    _matchedLocation = bestMatch;
+
+    // Assuming _matchedLocation is of type LocationStatic
+    std::cout << "Matched location: " << *static_cast<LocationStatic*>(_matchedLocation) << std::endl;
 }
+
 
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
 
-Response::Response(Request const &request)
-	: _statusCode(Http::SC_OK),
-	  _headers(),
-	  _body(),
-	  _response(),
-	  _request(request)
+Response::Response(Request const &request, ServerBlocks const &server_blocks)
+    : _statusCode(Http::SC_OK),
+      _headers(),
+      _body(),
+      _response(),
+      _request(request),
+      _serverBlocks(server_blocks)
 {
-	setLocation(); // location needs to be matched first due to custom error pages requirement
-	setErrorPages();
+    setLocation();
 
-	if (_request.flag() == _400)
-		setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	else if (_request.method() == Http::M_UNHANDLED)
-		setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
-	else if (isRedirection())
-		;
-	else
-		dispatchMethod();
+    if (_request.flag() == _400) {
+        setStatusAndReadResource(Http::SC_BAD_REQUEST);
+    } else if (_request.method() == Http::M_UNHANDLED) {
+        setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
+    } else if (isRedirection()) {
+        // Handle redirection
+    } else {
+        dispatchMethod();
+    }
 
-	setCommonHeaders();
-	setResponse();
-	Utils::log("Response:", Utils::LOG_INFO);
-	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
+    setCommonHeaders();
+    setResponse();
+    Utils::log("Response:", Utils::LOG_INFO);
+    Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
 }
 
 /**************************************************************************/
@@ -397,13 +408,4 @@ void Response::setResponse()
 	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
 		_response += it->first + ": " + it->second + CRLF;
 	_response += CRLF + _body;
-}
-
-void Response::setErrorPages()
-{
-	IntStrMap default_error_pages = ErrorPages::getDefaultErrorPages();
-
-	// TODO: get custom error pages from config and replace the default ones when available
-
-	_error_pages = default_error_pages;
 }
