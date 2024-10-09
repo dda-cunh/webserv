@@ -1,4 +1,5 @@
 #include "../../includes/classes/Response.hpp"
+#include <sstream> // for std::ostringstream
 
 /**************************************************************************/
 
@@ -174,6 +175,8 @@ void Response::dispatchMethod()
 {
     if (!_matchedLocation->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
+	else if (_request.uri().find(".cgi") != std::string::npos)
+		handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
     else if (_request.method() == Http::M_POST)
@@ -337,6 +340,52 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 		}
 	}
 }
+
+void Response::handleCGI()
+{
+    std::string cgiPath = _matchedLocation->getRootDir() + _request.uri();
+    std::string scriptPath = cgiPath;
+
+    std::cout << "CGI Path: " << cgiPath << std::endl;
+    std::cout << "Script Path: " << scriptPath << std::endl;
+
+    setenv("REQUEST_METHOD", Http::methodToString(_request.method()).c_str(), 1);
+    std::cout << "REQUEST_METHOD: " << Http::methodToString(_request.method()) << std::endl;
+
+    setenv("PATH_INFO", scriptPath.c_str(), 1);
+    std::cout << "PATH_INFO: " << scriptPath << std::endl;
+
+    if (_request.method() == Http::M_POST)
+    {
+        setenv("CONTENT_TYPE", _request.header("Content-Type").c_str(), 1);
+        std::cout << "CONTENT_TYPE: " << _request.header("Content-Type") << std::endl;
+    }
+
+    int pipefd[2];
+    pipe(pipefd);
+    if (fork() == 0)
+    {
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        execl(cgiPath.c_str(), cgiPath.c_str(), scriptPath.c_str(), NULL);
+    }
+    close(pipefd[1]);
+    
+    char buffer[4096];
+    ssize_t bytesRead;
+    std::string output;
+    
+    while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
+    {
+        output.append(buffer, bytesRead);
+    }
+    
+    close(pipefd[0]);
+    _body = output;
+	std::cout << "CGI Output: " << _body << std::endl;
+	setHeader("Content-Type", "text/html");
+}
+
 
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
 {

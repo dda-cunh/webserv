@@ -32,6 +32,7 @@ class Response
 		void handlePOSTMethod();
 		void handleDELETEMethod();
 		void handleMethodNotAllowed();
+		void handleCGI();
 
 		void setMatchedLocation();
 		void setHeader(const std::string &, const std::string &);

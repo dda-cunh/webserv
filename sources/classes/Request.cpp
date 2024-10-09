@@ -128,7 +128,7 @@ void	Request::parseBody(ByteArr const& body)
 			{
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
 				{
-					this->_flag = _400;
+					// this->_flag = _400;
 					Utils::log("Content length doesn't match body length", Utils::LOG_WARNING);
 					return ;
 				}
