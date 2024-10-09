@@ -24,17 +24,6 @@ class	ServerConfig
 
 		ServerConfig &operator = (const ServerConfig &serverConfig);
 
-
-		uint32_t					getHost(void) const;
-		uint16_t					getPort(void) const;
-		std::string					getServerName(size_t i) const;
-		ServerLocation				*getLocationFromIndex(size_t i) const;
-		ServerLocation				*getLocationFromPath(std::string path) const;
-
-		size_t						getServerNamesSize(void) const;
-		size_t						getLocationBlocksSize(void) const;
-
-
 		uint32_t					getHost(void) const;
 		uint16_t					getPort(void) const;
 		std::string					getServerName(size_t i) const;

@@ -46,8 +46,6 @@ class	ServerLocation
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
 
-		size_t						getIndexVectorSize(void) const;
-
 	protected:											//	KEYWORDS
 
 

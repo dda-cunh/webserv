@@ -61,13 +61,13 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 
 		_strServerBlock.clear();
 
-		_defaultRoot.clear();
-		_defaultIndex.clear();
-		_defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
-		_defaultErrorPages.clear();
-		_defaultRedirections.clear();
-		_defaultMethodsAllowed.clear();
-		_defaultAutoIndex = DEFAULT_AUTO_INDEX;
+		defaultRoot.clear();
+		defaultIndex.clear();
+		defaultMaxBodySize = DEFAULT_MAX_BODY_SIZE;
+		defaultErrorPages.clear();
+		defaultRedirections.clear();
+		defaultMethodsAllowed.clear();
+		defaultAutoIndex = DEFAULT_AUTO_INDEX;
 	}
 
 	configFile.close();
