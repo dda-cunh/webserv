@@ -2,62 +2,70 @@
 import os
 import sys
 import cgi
-from http import HTTPStatus
+import cgitb
+
+cgitb.enable()
 
 UPLOAD_DIR = "public/uploads/"
 
+def debug_print(*args, **kwargs):
+    print(*args, **kwargs, file=sys.stderr)
+
+import logging
+
+logging.basicConfig(filename='cgi_debug.log', level=logging.DEBUG)
+
 def handle_file_upload():
-    print("Content-Type: text/html\n")
-    print("Starting file upload...")  # Debugging line
+    print("Content-Type: text/html")
+    print()
+    logging.debug("Starting file upload...")
     
-    form = cgi.FieldStorage()
-    print("Form parsed.")  # Debugging line
-    
-    if "file" in form:
-        file_item = form["file"]
-        print(f"File Item: {file_item}")  # Print the file item for debugging
+    try:
+        form = cgi.FieldStorage()
+        logging.debug("Form parsed successfully")
         
-        if file_item.filename:
-            file_path = os.path.join(UPLOAD_DIR, os.path.basename(file_item.filename))
-            with open(file_path, 'wb') as f:
-                f.write(file_item.file.read())
-            print("Status: 200 OK")
-            print(f"File '{file_item.filename}' uploaded successfully!")
-        else:
-            print("Status: 400 Bad Request")
-            print("No file was uploaded.")
-    else:
-        print("Status: 400 Bad Request")
-        print("Form doesn't contain 'file' field.")
+        if "file" not in form:
+            raise ValueError("No file uploaded")
+        
+        fileitem = form["file"]
+        if not fileitem.filename:
+            raise ValueError("Empty filename")
+        
+        fn = os.path.basename(fileitem.filename)
+        file_path = os.path.join(UPLOAD_DIR, fn)
+        
+        with open(file_path, 'wb') as f:
+            chunk_size = 8192
+            while True:
+                chunk = fileitem.file.read(chunk_size)
+                if not chunk:
+                    break
+                f.write(chunk)
+        
+        print(f"File '{fn}' uploaded successfully to {file_path}")
+        logging.debug(f"File uploaded: {file_path}")
+    
+    except Exception as e:
+        logging.exception("Error during file upload")
+        print("Status: 500 Internal Server Error")
+        print("Content-Type: text/html")
+        print()
+        print(f"An error occurred: {str(e)}")
 
-def handle_file_delete():
-    file_name = os.getenv("PATH_INFO", "").lstrip("/")
-    file_path = os.path.join(UPLOAD_DIR, file_name)
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        print("Status: 200 OK")
-        print(f"File '{file_name}' deleted successfully!")
-    else:
-        print("Status: 404 Not Found")
-        print(f"File '{file_name}' not found.")
 
 def main():
-    request_method = os.getenv("REQUEST_METHOD", "GET")
-
-    # Print environment variables for debugging
-    print("Environment Variables:")
-    for key, value in os.environ.items():
-        print(f"{key}: {value}")
+    debug_print("CGI Script Starting")
+    request_method = os.environ.get("REQUEST_METHOD", "GET")
+    debug_print(f"Request Method: {request_method}")
 
     if request_method == "POST":
         handle_file_upload()
-    elif request_method == "DELETE":
-        handle_file_delete()
     else:
         print("Status: 405 Method Not Allowed")
         print("Content-Type: text/html\n")
         print("Method not allowed.")
+
+    debug_print("CGI Script Ending")
 
 if __name__ == "__main__":
     main()

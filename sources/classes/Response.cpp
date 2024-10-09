@@ -1,5 +1,6 @@
 #include "../../includes/classes/Response.hpp"
 #include <sstream> // for std::ostringstream
+#include <sys/wait.h>
 
 /**************************************************************************/
 
@@ -350,40 +351,89 @@ void Response::handleCGI()
     std::cout << "Script Path: " << scriptPath << std::endl;
 
     setenv("REQUEST_METHOD", Http::methodToString(_request.method()).c_str(), 1);
-    std::cout << "REQUEST_METHOD: " << Http::methodToString(_request.method()) << std::endl;
-
     setenv("PATH_INFO", scriptPath.c_str(), 1);
-    std::cout << "PATH_INFO: " << scriptPath << std::endl;
 
     if (_request.method() == Http::M_POST)
     {
         setenv("CONTENT_TYPE", _request.header("Content-Type").c_str(), 1);
-        std::cout << "CONTENT_TYPE: " << _request.header("Content-Type") << std::endl;
+        setenv("CONTENT_LENGTH", _request.header("Content-Length").c_str(), 1);
     }
 
-    int pipefd[2];
-    pipe(pipefd);
-    if (fork() == 0)
-    {
-        dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[1]);
-        execl(cgiPath.c_str(), cgiPath.c_str(), scriptPath.c_str(), NULL);
+    int pipefd[2]; 
+    if (pipe(pipefd) == -1) {
+        std::cerr << "Pipe creation failed" << std::endl;
+        return;
     }
-    close(pipefd[1]);
-    
-    char buffer[4096];
-    ssize_t bytesRead;
-    std::string output;
-    
-    while ((bytesRead = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-    {
-        output.append(buffer, bytesRead);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process: handle CGI execution
+        close(pipefd[1]); // Close write-end of the pipe
+        
+        // Redirect stdin from the pipe if POST method
+        if (_request.method() == Http::M_POST) {
+            if (dup2(pipefd[0], STDIN_FILENO) == -1) {
+                std::cerr << "dup2 failed for stdin" << std::endl;
+                exit(1);
+            }
+        }
+        
+        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
+        close(pipefd[0]);
+
+        execl(cgiPath.c_str(), cgiPath.c_str(), NULL);
+        std::cerr << "execl failed: " << strerror(errno) << std::endl;
+        exit(1);
+    } 
+    else if (pid > 0) {
+        // Parent process
+        close(pipefd[0]); // Close read-end of the pipe
+        
+        // Write POST data to the child process via pipe
+        if (_request.method() == Http::M_POST) {
+            write(pipefd[1], _request.body().data(), _request.body().size());
+        }
+        close(pipefd[1]); // Close write-end after writing
+
+        char buffer[4096];
+        ssize_t bytesRead;
+        std::string output;
+
+        fd_set readfds;
+        struct timeval tv;
+        tv.tv_sec = 30;  // 30 second timeout
+        tv.tv_usec = 0;
+
+        while (true) {
+            FD_ZERO(&readfds);
+            FD_SET(pipefd[0], &readfds);
+
+            int ready = select(pipefd[0] + 1, &readfds, NULL, NULL, &tv);
+            if (ready == -1) {
+                std::cerr << "select() error" << std::endl;
+                break;
+            } else if (ready == 0) {
+                std::cerr << "CGI script timeout" << std::endl;
+                break;
+            }
+
+            bytesRead = read(pipefd[0], buffer, sizeof(buffer));
+            if (bytesRead <= 0) break;
+            output.append(buffer, bytesRead);
+        }
+
+        close(pipefd[0]);
+        int status;
+        waitpid(pid, &status, 0);
+
+        _body = output;
+        std::cout << "CGI Output: " << _body << std::endl;
+    } 
+    else {
+        std::cerr << "Fork failed in handleCGI: " << strerror(errno) << std::endl;
     }
-    
-    close(pipefd[0]);
-    _body = output;
-	std::cout << "CGI Output: " << _body << std::endl;
-	setHeader("Content-Type", "text/html");
+
+    setHeader("Content-Type", "text/html");
 }
 
 
