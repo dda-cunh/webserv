@@ -24,7 +24,6 @@ class	ServerConfig
 
 		ServerConfig &operator = (const ServerConfig &serverConfig);
 
-
 		uint32_t					getHost(void) const;
 		uint16_t					getPort(void) const;
 		std::string					getServerName(size_t i) const;
@@ -33,15 +32,24 @@ class	ServerConfig
 
 		size_t						getServerNamesSize(void) const;
 		size_t						getLocationBlocksSize(void) const;
-
 		Utils::LOCATION_BLOCK_TYPE	getLocationType(ServerLocation *location) const;
 
-	private:
-		uint32_t					_host;			//	listen
-		uint16_t					_port;			//	port
-		std::vector<std::string>	_serverNames;	//	server_name
 
-		LocationBlocks				_locationBlocks;
+
+	private:
+		//			SETTERS
+		uint32_t					_setHost(std::vector<std::string> strServerBlock);
+		uint16_t					_setPort(std::vector<std::string> strServerBlock);
+		void						_setServerName(std::vector<std::string> strServerBlock, std::vector<std::string> &serverNames);
+
+		Utils::LOCATION_BLOCK_TYPE	parseLocationType(std::vector<std::string> strLocationBlock);
+
+
+		uint32_t					_host;				//	listen IP[:PORT]
+		uint16_t					_port;				//	listen [IP:]PORT
+		std::vector<std::string>	_serverNames;		//	server_name SERVERNAME
+
+		LocationBlocks				_locationBlocks;	//	location [PATH] {
 };
 
 std::ostream & operator << (std::ostream &out, const ServerConfig &serverConfig);

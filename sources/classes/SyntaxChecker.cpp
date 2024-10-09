@@ -3,7 +3,8 @@
 std::vector<std::string>	SyntaxChecker::_strLocationBlock;
 const std::string			SyntaxChecker::_directivesList[] = {"server", "listen", "server_name", "location",\
 																"root", "index", "client_max_body_size", "error_page",\
-																"rewrite", "allow_methods", "autoindex",\
+																"rewrite", "allow_methods", "upload_store", \
+																"autoindex", "cgi_path" \
 																""};
 
 
@@ -44,44 +45,50 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 
 		switch (_directiveCheck(line) )
 		{
-			case(DIRECTIVE_SERVER):
+			case (DIRECTIVE_SERVER):
 				if (i != 0)
 					throw (ExceptionMaker("Nested \"server\" directive found") );
 				_syntaxCheckServer(line);
 				break ;
-			case(DIRECTIVE_LISTEN):
+			case (DIRECTIVE_LISTEN):
 				_syntaxCheckListen(strServerBlock, i);
 				break ;
-			case(DIRECTIVE_SERVER_NAME):
+			case (DIRECTIVE_SERVER_NAME):
 				_syntaxCheckServerName(line);
 				break ;
-			case(DIRECTIVE_LOCATION):
+			case (DIRECTIVE_LOCATION):
 				if (line.at(line.size() - 1) != '{' && strServerBlock.at(i + 1) != "{")
 					throw (ExceptionMaker("Directive \"location\" has no opening \"{\"") );
 				else if (line.at(line.size() - 1) == '{' && strServerBlock.at(i + 1) == "{")
 					throw (ExceptionMaker("Unexpected '{' token found") );
 				_syntaxCheckLocationBlock(strServerBlock, i);
 				break ;
-			case(DIRECTIVE_ROOT):
+			case (DIRECTIVE_ROOT):
 				_syntaxCheckRoot(strServerBlock, i);
 				break ;
-			case(DIRECTIVE_INDEX):
+			case (DIRECTIVE_INDEX):
 				_syntaxCheckIndex(line);
 				break ;
-			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
+			case (DIRECTIVE_CLIENT_MAX_BODY_SIZE):
 				_syntaxCheckClientMaxBodySize(strServerBlock, i);
 				break ;
-			case(DIRECTIVE_ERROR_PAGE):
+			case (DIRECTIVE_ERROR_PAGE):
 				_syntaxCheckErrorPage(line);
 				break ;
-			case(DIRECTIVE_REWRITE):
+			case (DIRECTIVE_REWRITE):
 				_syntaxCheckRewrite(line);
 				break ;
-			case(DIRECTIVE_ALLOW_METHODS):
+			case (DIRECTIVE_ALLOW_METHODS):
 				_syntaxCheckAllowMethods(strServerBlock, i);
 				break ;
-			case(DIRECTIVE_AUTOINDEX):
+			case (DIRECTIVE_UPLOAD_STORE):
+				_syntaxCheckUploadStore(strServerBlock, i);
+				break ;
+			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(strServerBlock, i);
+				break ;
+			case (DIRECTIVE_CGI_PATH):
+				_syntaxCheckCgiPath(line);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -225,40 +232,46 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 
 		switch (_directiveCheck(_strLocationBlock.at(j) ) )
 		{
-			case(DIRECTIVE_SERVER):
+			case (DIRECTIVE_SERVER):
 				throw (ExceptionMaker("\"server\" directive is not allowed in Location context") );
 				break ;
-			case(DIRECTIVE_LISTEN):
+			case (DIRECTIVE_LISTEN):
 				throw (ExceptionMaker("\"listen\" directive is not allowed in Location context") );
 				break ;
-			case(DIRECTIVE_SERVER_NAME):
+			case (DIRECTIVE_SERVER_NAME):
 				throw (ExceptionMaker("\"server_name\" directive is not allowed in Location context") );
 				break ;
-			case(DIRECTIVE_LOCATION):
+			case (DIRECTIVE_LOCATION):
 				if (j != 0)
 					throw (ExceptionMaker("Nested \"location\" directive found") );
 				_syntaxCheckLocationDirective(_strLocationBlock.at(j) );
 				break ;
-			case(DIRECTIVE_ROOT):
+			case (DIRECTIVE_ROOT):
 				_syntaxCheckRoot(_strLocationBlock, j);
 				break ;
-			case(DIRECTIVE_INDEX):
+			case (DIRECTIVE_INDEX):
 				_syntaxCheckIndex(_strLocationBlock.at(j) );
 				break ;
-			case(DIRECTIVE_CLIENT_MAX_BODY_SIZE):
+			case (DIRECTIVE_CLIENT_MAX_BODY_SIZE):
 				_syntaxCheckClientMaxBodySize(_strLocationBlock, j);
 				break ;
-			case(DIRECTIVE_ERROR_PAGE):
+			case (DIRECTIVE_ERROR_PAGE):
 				_syntaxCheckErrorPage(_strLocationBlock.at(j) );
 				break ;
-			case(DIRECTIVE_REWRITE):
+			case (DIRECTIVE_REWRITE):
 				_syntaxCheckRewrite(_strLocationBlock.at(j) );
 				break ;
-			case(DIRECTIVE_ALLOW_METHODS):
+			case (DIRECTIVE_ALLOW_METHODS):
 				_syntaxCheckAllowMethods(_strLocationBlock, j);
 				break ;
-			case(DIRECTIVE_AUTOINDEX):
+			case (DIRECTIVE_UPLOAD_STORE):
+				_syntaxCheckUploadStore(_strLocationBlock, j);
+				break ;
+			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(_strLocationBlock, j);
+				break ;
+			case (DIRECTIVE_CGI_PATH):
+				_syntaxCheckCgiPath(_strLocationBlock.at(j) );
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -415,6 +428,32 @@ void	SyntaxChecker::_syntaxCheckAllowMethods(const std::vector<std::string> bloc
 		throw (ExceptionMaker("Invalid number of arguments in \"allow_methods\" directive") );
 }
 
+void	SyntaxChecker::_syntaxCheckUploadStore(const std::vector<std::string> block, const size_t i)
+{
+	size_t	vectorSize;
+
+	vectorSize = block.size();
+	for (size_t j = i + 1; j < vectorSize; j++)
+	{
+		if (block.at(j).find("location") == 0)
+		{
+			while (j < vectorSize && block.at(j) != "}")
+				j++;
+		}
+
+		if (block.at(j).find("upload_store") == 0)
+			throw (ExceptionMaker("\"upload_store\" directive is duplicate") );
+	}
+
+	if (block.at(i).find(';') == block.at(i).npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"upload_store\" directive") );
+	else if (block.at(i).find(';') != block.at(i).size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"upload_store\" directive") );
+
+	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1 )
+		throw (ExceptionMaker("Invalid number of arguments in \"upload_store\" directive") );
+}
+
 void	SyntaxChecker::_syntaxCheckAutoIndex(const std::vector<std::string> block, const size_t i)
 {
 	size_t	vectorSize;
@@ -439,4 +478,21 @@ void	SyntaxChecker::_syntaxCheckAutoIndex(const std::vector<std::string> block, 
 
 	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1 )
 		throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
+}
+
+void	SyntaxChecker::_syntaxCheckCgiPath(std::string line)
+{
+	std::string	strArgs;
+
+	if (line.find(';') == line.npos)
+		throw (ExceptionMaker("Expected ';' token at the end of \"cgi_path\" directive") );
+	else if (line.find(';') != line.size() - 1)
+		throw (ExceptionMaker("Unexpected ';' token found in  \"cgi_path\" directive") );
+
+	strArgs = strParseLine(line);
+	if (Utils::sWordCount(strArgs) != 2)
+		throw (ExceptionMaker("Invalid number of arguments in \"cgi_path\" directive") );
+
+	if (strArgs.substr(0, strArgs.find_first_of(" \t") ).find_last_of(".") != 0)
+		throw (ExceptionMaker("Invalid extension provided in \"cgi_path\" directive") );
 }

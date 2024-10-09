@@ -16,9 +16,9 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 	std::string					line;
 	size_t						sServBlkSize;
 
-	this->_host = ConfigParser::parseHost(strServerBlock);
-	this->_port = ConfigParser::parsePort(strServerBlock);
-	ConfigParser::parseServerName(strServerBlock, this->_serverNames);
+	this->_host = this->_setHost(strServerBlock);
+	this->_port = this->_setPort(strServerBlock);
+	this->_setServerName(strServerBlock, this->_serverNames);
 
 	sServBlkSize = strServerBlock.size();
 	for (size_t i = 0; i < sServBlkSize; i++)
@@ -32,16 +32,14 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 				strLocationBlock.push_back(line);
 				line = strServerBlock.at(++i);
 			}
-			switch (ConfigParser::parseStrLocationType(strLocationBlock) )
+
+			switch (this->parseLocationType(strLocationBlock) )
 			{
 				case (Utils::L_STATIC):
 					this->_locationBlocks.push_back(new LocationStatic(strLocationBlock) );
 					break ;
-				case (Utils::L_REV_PROXY):
-					throw (ExceptionMaker("This feature has not been implemented yet") );
-					break ;
 				case (Utils::L_CGI):
-					throw (ExceptionMaker("This feature has not been implemented yet") );
+					this->_locationBlocks.push_back(new LocationCGI(strLocationBlock) );
 					break ;
 				case (Utils::L_UNHANDLED):
 					throw (ExceptionMaker("Invalid Location type") );
@@ -91,9 +89,8 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 			case (Utils::L_STATIC):
 				this->_locationBlocks.push_back(new LocationStatic(*(dynamic_cast<LocationStatic*>(location) ) ) );
 				break ;
-			case (Utils::L_REV_PROXY):
-				break ;
 			case (Utils::L_CGI):
+				this->_locationBlocks.push_back(new LocationCGI(*(dynamic_cast<LocationCGI*>(location) ) ) );
 				break ;
 			case (Utils::L_UNHANDLED):
 				throw (ExceptionMaker("Invalid Location type") );
@@ -102,6 +99,25 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	}
 
 	return (*this);
+}
+
+
+Utils::LOCATION_BLOCK_TYPE	ServerConfig::parseLocationType(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("autoindex") == 0)
+			return (Utils::L_STATIC);
+		else if (line.find("cgi_path") == 0)
+			return (Utils::L_CGI);
+	}
+
+	return (Utils::L_STATIC);
 }
 
 
@@ -157,9 +173,98 @@ Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *locatio
 {
 	if (dynamic_cast<LocationStatic *>(location) != NULL)
 		return (Utils::L_STATIC);
+	else if (dynamic_cast<LocationCGI *>(location) != NULL)
+		return (Utils::L_CGI);
 	else
 		return (Utils::L_UNHANDLED);
 }
+
+
+
+uint32_t	ServerConfig::_setHost(std::vector<std::string> strServerBlock)
+{
+	size_t		vectorSize;
+	std::string	strHost;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strServerBlock.at(i).find("listen") == 0)
+		{
+			strHost = SyntaxChecker::strParseLine(strServerBlock.at(i) );
+
+			if (strHost.find(':') != strHost.npos)
+				return (Network::sToIPV4Packed(strHost.substr(0, strHost.find(':') ) ) );
+			else
+			{
+				if (strHost.find('.') != strHost.npos)
+					return (Network::sToIPV4Packed(strHost) );
+				else
+					return (Network::sToIPV4Packed(DEFAULT_HOST) );
+			}
+		}
+	}
+
+	return (Network::sToIPV4Packed(DEFAULT_HOST) );
+}
+
+uint16_t	ServerConfig::_setPort(std::vector<std::string> strServerBlock)
+{
+	std::string	strPort;
+	size_t		vectorSize;
+	int			nPort;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		if (strServerBlock.at(i).find("listen") == 0)
+		{
+			strPort = SyntaxChecker::strParseLine(strServerBlock.at(i) );
+
+			if (strPort.find(':') != strPort.npos)
+				strPort = strPort.substr(strPort.find(':') + 1);
+			else if (strPort.find('.') != strPort.npos)
+				return (DEFAULT_PORT);
+
+			nPort = std::atoi(strPort.c_str() );
+			return (static_cast<uint16_t>(nPort) );
+		}
+	}
+
+	return (DEFAULT_PORT);
+}
+
+void	ServerConfig::_setServerName(std::vector<std::string> strServerBlock, std::vector<std::string> &serverNames)
+{
+	size_t				vectorSize;
+	std::string			line;
+	std::stringstream	strStream;
+	std::string			strArg;
+
+	vectorSize = strServerBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strServerBlock.at(i);
+		if (line.find("server_name") == 0)
+		{
+			line = SyntaxChecker::strParseLine(line);
+			strStream << line;
+			while (strStream >> strArg)
+			{
+				if (std::find(serverNames.begin(), serverNames.end(), strArg) != serverNames.end() )
+					throw (ExceptionMaker("Multiple instances of the same argument found in \"server_name\" directive") );
+				serverNames.push_back(strArg);
+			}
+			strStream.clear();
+		}
+	}
+}
+
+
+
+
+
+
 
 std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 {
@@ -185,11 +290,11 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 			case (Utils::L_STATIC):
 				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
 				break ;
-			case (Utils::L_REV_PROXY):
-				break ;
 			case (Utils::L_CGI):
+				out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
 				break ;
 			case (Utils::L_UNHANDLED):
+				throw (ExceptionMaker("Unhandled Location type") );
 				break ;
 		}		
 		out << std::endl;
