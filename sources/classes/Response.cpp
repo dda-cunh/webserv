@@ -32,36 +32,18 @@ std::string getResourceContentType(std::string uri)
 	return "text/plain";
 }
 
-// TODO: Get this from config and remove function
-std::vector<Http::METHOD> getAllowedMethods()
+/**
+ * @brief Generates the HTTP response headers string.
+ * @return A string containing the HTTP response headers.
+ */
+std::string Response::getHeadersStr()
 {
-	std::vector<Http::METHOD> allowedMethods;
-	allowedMethods.push_back(Http::M_GET);
-	allowedMethods.push_back(Http::M_DELETE);
-	allowedMethods.push_back(Http::M_POST);
-	// Add more methods or retrieve from config as needed
-	return allowedMethods;
-}
-
-// TODO: Get this from config and remove function
-StrStrMap dummyGetRedirections()
-{
-	StrStrMap redirections;
-
-	redirections["/old-path.html"] = "/new-path.html";
-	redirections["/old-file"] = "/new-file";
-
-	return redirections;
-}
-
-std::string Response::getResponseWithoutBody() // TODO: Debug function, to be removed
-{
-	std::string responseWithoutBody;
-	responseWithoutBody += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
-	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
-		responseWithoutBody += it->first + ": " + it->second + CRLF;
-	responseWithoutBody += CRLF;
-	return responseWithoutBody;
+    std::string responseHeaders;
+    responseHeaders += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
+    for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
+        responseHeaders += it->first + ": " + it->second + CRLF;
+    responseHeaders += CRLF;
+    return responseHeaders;
 }
 
 void Response::handleFileList()
@@ -114,56 +96,69 @@ std::string extractFileNameFromQuery(const std::string &uri)
 }
 
 /**
- * @brief 
- *
- * This function will match the response to the right location/route
+ * @brief Sets the best matching location block for the requested URI.
  */
-void Response::setLocation()
-{
-	/*
-		loop over Response._config locations
-		get the longest match between reques.uri and locations
-		Response._matchedLocation = longestmatch
+void Response::setMatchedLocation() {
+    ServerLocation *bestMatch = NULL;
+    std::string longestMatch;
 
-		Response will gain access to:
-		_matchedLocation
-			std::vector<Http::METHOD>	_allowedMethods
-			StrStrMap					_redirections
-			std::string					_root		MANDATORY, else wrong configuration
-			bool 						_autoindex
-			std::string					_uploadDirectory
-			IntStrMap 					_error_pages;
-	*/
-	_redirections = dummyGetRedirections();
+    for (size_t i = 0; i < _serverBlocks.size(); ++i) {
+        const ServerConfig &config = _serverBlocks[i];
+
+        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
+            ServerLocation *location = config.getLocationFromIndex(j);
+            std::string locationPath = location->getLocation();
+
+            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
+                longestMatch = locationPath;
+                bestMatch = location;
+            }
+        }
+    }
+
+    if (bestMatch == NULL) {
+        throw std::runtime_error("No valid location block found for the requested URI.");
+    }
+
+    _matchedLocation = bestMatch;
+
+    std::cout << "Matched location: " << *static_cast<LocationStatic*>(_matchedLocation) << std::endl;
 }
+
 
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
 
-Response::Response(Request const &request)
-	: _statusCode(Http::SC_OK),
-	  _headers(),
-	  _body(),
-	  _response(),
-	  _request(request)
+Response::Response(Request const &request, ServerBlocks const &server_blocks)
+    : _statusCode(Http::SC_OK),
+      _headers(),
+      _body(),
+      _response(),
+      _request(request),
+      _serverBlocks(server_blocks)
 {
-	setLocation(); // location needs to be matched first due to custom error pages requirement
-	setErrorPages();
+    try {
+		setMatchedLocation();
+	} catch (std::exception &e) {
+		Utils::log(e.what(), Utils::LOG_ERROR);
+		setStatusAndReadResource(Http::SC_NOT_FOUND);
+	}
+	
+    if (_request.flag() == _400) {
+        setStatusAndReadResource(Http::SC_BAD_REQUEST);
+    } else if (_request.method() == Http::M_UNHANDLED) {
+        setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
+    } else if (isRedirection()) {
+		handleRedirection();
+    } else {
+        dispatchMethod();
+    }
 
-	if (_request.flag() == _400)
-		setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	else if (_request.method() == Http::M_UNHANDLED)
-		setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
-	else if (isRedirection())
-		;
-	else
-		dispatchMethod();
-
-	setCommonHeaders();
-	setResponse();
-	Utils::log("Response:", Utils::LOG_INFO);
-	Utils::log(getResponseWithoutBody(), Utils::LOG_INFO);
+    setCommonHeaders();
+    setResponse();
+    Utils::log("Response:", Utils::LOG_INFO);
+    Utils::log(getHeadersStr(), Utils::LOG_INFO);
 }
 
 /**************************************************************************/
@@ -177,15 +172,14 @@ Response::Response(Request const &request)
  */
 void Response::dispatchMethod()
 {
-	std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
-	if (std::find(allowedMethods.begin(), allowedMethods.end(), _request.method()) == allowedMethods.end())
-		handleMethodNotAllowed();
-	else if (_request.method() == Http::M_GET)
-		handleGETMethod();
-	else if (_request.method() == Http::M_POST)
-		handlePOSTMethod();
-	else if (_request.method() == Http::M_DELETE)
-		handleDELETEMethod();
+    if (!_matchedLocation->methodIsAllowed(_request.method()))
+        handleMethodNotAllowed();
+    else if (_request.method() == Http::M_GET)
+        handleGETMethod();
+    else if (_request.method() == Http::M_POST)
+        handlePOSTMethod();
+    else if (_request.method() == Http::M_DELETE)
+        handleDELETEMethod();
 }
 
 /**
@@ -258,7 +252,7 @@ void Response::handlePOSTMethod()
 
 		_statusCode = Http::SC_CREATED;
 		setHeader("Location", filePath);
-		_body = "File uploaded successfully"; // TODO: Return HTML in the body
+		_body = "File uploaded successfully";
 	}
 	catch (ExceptionMaker &e)
 	{
@@ -275,8 +269,8 @@ void Response::handlePOSTMethod()
  */
 void Response::handleGETMethod()
 {
-	std::string root = "public/"; // TODO: get this from config
-	bool autoindex = true;		  // TODO: get this from config
+	std::string root = _matchedLocation->getRootDir();
+	bool autoindex = static_cast<LocationStatic*>(_matchedLocation)->getAutoIndex();
 
 	if (_request.uri() == "/files")
 	{
@@ -290,7 +284,7 @@ void Response::handleGETMethod()
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
-		uri = _statusCode == Http::SC_OK ? result.path : _error_pages[_statusCode];
+		uri = _statusCode == Http::SC_OK ? result.path : _matchedLocation->getErrPagePath(_statusCode);
 		readResource(uri);
 	}
 	else if (Utils::resourceExists(uri))
@@ -305,13 +299,12 @@ void Response::handleGETMethod()
 
 void Response::handleMethodNotAllowed()
 {
-	_statusCode = Http::SC_METHOD_NOT_ALLOWED;
-	std::vector<Http::METHOD> allowedMethods = getAllowedMethods(); // TODO: Get this from config
-	std::string allowedMethodsStr;
-	for (size_t i = 0; i < allowedMethods.size(); ++i)
-		allowedMethodsStr += Http::methodToString(allowedMethods[i]) + (i < allowedMethods.size() - 1 ? ", " : "");
-	setHeader("Allow", allowedMethodsStr);
-	readResource(_error_pages[_statusCode]);
+    _statusCode = Http::SC_METHOD_NOT_ALLOWED;
+    std::string allowedMethodsStr;
+    for (size_t i = 0; i < _matchedLocation->getMethodsAllowedSize(); ++i)
+        allowedMethodsStr += Http::methodToString(_matchedLocation->getMethodByIndex(i)) + (i < _matchedLocation->getMethodsAllowedSize() - 1 ? ", " : "");
+    setHeader("Allow", allowedMethodsStr);
+    readResource(_matchedLocation->getErrPagePath(_statusCode));
 }
 
 void Response::readResource(const std::string &uri, bool isErrorResponse)
@@ -351,26 +344,42 @@ void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::strin
 	if (!uri.empty())
 		readResource(uri);
 	else
-		readResource(_error_pages[_statusCode], true);
+		readResource(_matchedLocation->getErrPagePath(_statusCode), true);
 }
 
-bool Response::isRedirection()
-{
-	std::map<std::string, std::string>::iterator it = _redirections.find(_request.uri());
-	if (it != _redirections.end())
+bool Response::isRedirection() {
+    std::string requestPath = _request.uri();
+    std::string locationPath = _matchedLocation->getLocation();
+
+    if (requestPath.find(locationPath) == 0) {
+        std::string relativePath = requestPath.substr(locationPath.size());
+
+        StrStrMap::const_iterator it = _matchedLocation->getRedirectionIttBegin();
+        StrStrMap::const_iterator end = _matchedLocation->getRedirectionIttEnd();
+
+        for (; it != end; ++it) {
+            if (relativePath == it->first) {
+                _redirectionPath = locationPath + it->second;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Response::handleRedirection() {
+	if (!_redirectionPath.empty())
 	{
 		_statusCode = Http::SC_FOUND;
-		setHeader("Location", it->second);
-		return true;
+		setHeader("Location", _redirectionPath);
 	}
-	return false;
 }
 
 /**************************************************************************/
 
 /*******************************  GETTERS  *******************************/
 
-std::string const &Response::response() const
+std::string const &Response::getResponse() const
 {
 	return _response;
 }
@@ -391,19 +400,10 @@ void Response::setHeader(const std::string &key, const std::string &value)
 	_headers[key] = value;
 }
 
+/**
+ * @brief Sets the complete HTTP response including headers and body.
+ */
 void Response::setResponse()
 {
-	_response += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
-	for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); it++)
-		_response += it->first + ": " + it->second + CRLF;
-	_response += CRLF + _body;
-}
-
-void Response::setErrorPages()
-{
-	IntStrMap default_error_pages = ErrorPages::getDefaultErrorPages();
-
-	// TODO: get custom error pages from config and replace the default ones when available
-
-	_error_pages = default_error_pages;
+    _response = getHeadersStr() + _body;
 }
