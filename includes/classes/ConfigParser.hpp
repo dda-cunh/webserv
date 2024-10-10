@@ -32,8 +32,9 @@ class	ConfigParser
 		ConfigParser(void);
 		~ConfigParser(void);
 
-		static void							_loadServerContext(std::ifstream &configFile);
-		static void							_overrideDefaults(void);
+		static void	_loadServerContext(std::ifstream &configFile);
+		static void	_overrideDefaults(void);
+		static void	_validateConfigs(const ServerBlocks configs);
 
   		static std::vector<std::string>	_strServerBlock;
 };

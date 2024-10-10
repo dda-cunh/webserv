@@ -74,6 +74,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	if (configs.empty() )
 		throw (ExceptionMaker("Configuration file is empty") );
 
+	_validateConfigs(configs);
 
 //	THIS IS FOR DEBUGGING ONLY
 	for (size_t i = 0; i < configs.size(); i++)
@@ -220,4 +221,11 @@ void	ConfigParser::_overrideDefaults(void)
 				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
 		}
 	}
+}
+
+void	ConfigParser::_validateConfigs(const ServerBlocks configs)
+{
+	//	TWO SERVERS CANNOT BE LISTENING ON THE SAME HOST:PORT PAIR
+	//	TWO SERVERS CANNOT HAVE THE SAME NAME(?)
+	//	NO DUPLICATES IN allowedMetods
 }
