@@ -180,8 +180,6 @@ void Response::dispatchMethod()
 		handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
-    else if (_request.method() == Http::M_POST)
-        handlePOSTMethod();
     else if (_request.method() == Http::M_DELETE)
         handleDELETEMethod();
 }
@@ -221,49 +219,6 @@ void Response::handleDELETEMethod()
 	}
 }
 
-// TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
-void Response::handlePOSTMethod()
-{
-	if (_request.header("content-type").find("multipart/form-data") == std::string::npos)
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-
-	std::string fileName;
-	std::string fileContent;
-	if (!_request.parseFileContent(fileName, fileContent))
-	{
-		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	}
-
-	if (fileName.empty() || fileContent.empty())
-	{
-		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	}
-
-	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
-	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
-
-	try
-	{
-		std::ofstream outFile(filePath.c_str(), std::ios::binary);
-		if (!outFile)
-			throw ExceptionMaker("Error opening file for writing: " + filePath);
-
-		outFile.write(fileContent.data(), fileContent.size());
-		if (!outFile)
-			throw ExceptionMaker("Error writing to file: " + filePath);
-
-		_statusCode = Http::SC_CREATED;
-		setHeader("Location", filePath);
-		_body = "File uploaded successfully";
-	}
-	catch (ExceptionMaker &e)
-	{
-		e.log();
-		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-	}
-}
 
 /**
  * @brief Handles GET requests by serving files, directories, or JSON file lists.
@@ -341,101 +296,30 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 		}
 	}
 }
-
-void Response::handleCGI()
-{
+void Response::handleCGI() {
     std::string cgiPath = _matchedLocation->getRootDir() + _request.uri();
-    std::string scriptPath = cgiPath;
 
-    std::cout << "CGI Path: " << cgiPath << std::endl;
-    std::cout << "Script Path: " << scriptPath << std::endl;
+    setEnvironmentVariables(cgiPath, _request);
 
-    setenv("REQUEST_METHOD", Http::methodToString(_request.method()).c_str(), 1);
-    setenv("PATH_INFO", scriptPath.c_str(), 1);
+    int input_pipe[2], output_pipe[2];
+	try
+	{
+		createPipes(input_pipe, output_pipe);
 
-    if (_request.method() == Http::M_POST)
-    {
-        setenv("CONTENT_TYPE", _request.header("Content-Type").c_str(), 1);
-        setenv("CONTENT_LENGTH", _request.header("Content-Length").c_str(), 1);
+		pid_t pid = fork();
+		if (pid == 0)
+			handleChildProcess(input_pipe, output_pipe, cgiPath);
+		else if (pid > 0)
+			handleParentProcess(input_pipe, output_pipe, _request, *this, pid);
+		else
+			throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
     }
-
-    int pipefd[2]; 
-    if (pipe(pipefd) == -1) {
-        std::cerr << "Pipe creation failed" << std::endl;
-        return;
-    }
-
-    pid_t pid = fork();
-    if (pid == 0) {
-        // Child process: handle CGI execution
-        close(pipefd[1]); // Close write-end of the pipe
-        
-        // Redirect stdin from the pipe if POST method
-        if (_request.method() == Http::M_POST) {
-            if (dup2(pipefd[0], STDIN_FILENO) == -1) {
-                std::cerr << "dup2 failed for stdin" << std::endl;
-                exit(1);
-            }
-        }
-        
-        dup2(pipefd[1], STDOUT_FILENO); // Redirect stdout to pipe
-        close(pipefd[0]);
-
-        execl(cgiPath.c_str(), cgiPath.c_str(), NULL);
-        std::cerr << "execl failed: " << strerror(errno) << std::endl;
-        exit(1);
-    } 
-    else if (pid > 0) {
-        // Parent process
-        close(pipefd[0]); // Close read-end of the pipe
-        
-        // Write POST data to the child process via pipe
-        if (_request.method() == Http::M_POST) {
-            write(pipefd[1], _request.body().data(), _request.body().size());
-        }
-        close(pipefd[1]); // Close write-end after writing
-
-        char buffer[4096];
-        ssize_t bytesRead;
-        std::string output;
-
-        fd_set readfds;
-        struct timeval tv;
-        tv.tv_sec = 30;  // 30 second timeout
-        tv.tv_usec = 0;
-
-        while (true) {
-            FD_ZERO(&readfds);
-            FD_SET(pipefd[0], &readfds);
-
-            int ready = select(pipefd[0] + 1, &readfds, NULL, NULL, &tv);
-            if (ready == -1) {
-                std::cerr << "select() error" << std::endl;
-                break;
-            } else if (ready == 0) {
-                std::cerr << "CGI script timeout" << std::endl;
-                break;
-            }
-
-            bytesRead = read(pipefd[0], buffer, sizeof(buffer));
-            if (bytesRead <= 0) break;
-            output.append(buffer, bytesRead);
-        }
-
-        close(pipefd[0]);
-        int status;
-        waitpid(pid, &status, 0);
-
-        _body = output;
-        std::cout << "CGI Output: " << _body << std::endl;
-    } 
-    else {
-        std::cerr << "Fork failed in handleCGI: " << strerror(errno) << std::endl;
-    }
-
-    setHeader("Content-Type", "text/html");
+	catch (ExceptionMaker &e)
+	{
+		e.log();
+		setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+	}
 }
-
 
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
 {
@@ -497,6 +381,11 @@ void Response::setCommonHeaders()
 void Response::setHeader(const std::string &key, const std::string &value)
 {
 	_headers[key] = value;
+}
+
+void Response::setBody(const std::string &body)
+{
+	_body = body;
 }
 
 /**

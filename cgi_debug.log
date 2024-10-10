@@ -7,3 +7,178 @@ DEBUG:root:File uploaded: public/uploads/questions.txt
 DEBUG:root:Starting file upload...
 DEBUG:root:Form parsed successfully
 DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 24, in handle_file_upload
+    form = cgi.FieldStorage()
+  File "/home/facu/.pyenv/versions/3.9.6/lib/python3.9/cgi.py", line 480, in __init__
+    self.read_multi(environ, keep_blank_values, strict_parsing)
+  File "/home/facu/.pyenv/versions/3.9.6/lib/python3.9/cgi.py", line 617, in read_multi
+    first_line = self.fp.readline() # bytes
+OSError: [Errno 9] Bad file descriptor
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 24, in handle_file_upload
+    form = cgi.FieldStorage()
+  File "/home/facu/.pyenv/versions/3.9.6/lib/python3.9/cgi.py", line 480, in __init__
+    self.read_multi(environ, keep_blank_values, strict_parsing)
+  File "/home/facu/.pyenv/versions/3.9.6/lib/python3.9/cgi.py", line 617, in read_multi
+    first_line = self.fp.readline() # bytes
+OSError: [Errno 9] Bad file descriptor
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Starting file upload...
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:Starting file upload...
+DEBUG:root:Form parsed successfully
+DEBUG:root:File uploaded: public/uploads/ftroiter.jpg
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 17, in handle_file_upload
+    form = cgi.FieldStorage(environ=os.environ)
+           ^^^
+NameError: name 'cgi' is not defined. Did you forget to import 'cgi'
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 27, in handle_file_upload
+    header, file_data = part.split(b'\r\n\r\n', 1)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: must be str or None, not bytes
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 25, in handle_file_upload
+    parts = input_data.split(boundary)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: must be str or None, not bytes
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+ERROR:root:Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 23, in handle_file_upload
+    input_data = sys.stdin.read(content_length)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen codecs>", line 322, in decode
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 158: invalid start byte
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+DEBUG:root:File uploaded: public/uploads/lista viaje
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+DEBUG:root:File uploaded: public/uploads/lista viaje
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: POST
+DEBUG:root:Starting file upload...
+DEBUG:root:File uploaded: public/uploads/questions.txt
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: DELETE

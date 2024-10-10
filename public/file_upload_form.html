@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload File</title>
+</head>
 <body>
 
-<h2>Upload more cats using this form</h2>
-
-<form action="http://localhost:5050" method="post" enctype="multipart/form-data">
-	Select file to upload:
-	<input type="file" name="fileToUpload" id="fileToUpload">
-	<input type="submit" value="Upload File" name="submit">
+<h1>Upload File</h1>
+<form action="http://localhost:4242/cgi/file_handler.cgi" method="POST" enctype="multipart/form-data">
+    <label for="file">Select a file to upload:</label>
+    <input type="file" id="file" name="file" required>
+    <br><br>
+    <button type="submit">Upload</button>
 </form>
 
 </body>
