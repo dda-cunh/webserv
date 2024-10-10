@@ -225,7 +225,31 @@ void	ConfigParser::_overrideDefaults(void)
 
 void	ConfigParser::_validateConfigs(const ServerBlocks configs)
 {
-	//	TWO SERVERS CANNOT BE LISTENING ON THE SAME HOST:PORT PAIR
-	//	TWO SERVERS CANNOT HAVE THE SAME NAME(?)
-	//	NO DUPLICATES IN allowedMetods
+	size_t	vectorSize;
+
+	vectorSize = configs.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		for (size_t j = i + 1; j < vectorSize; j++)
+		{
+			if (configs.at(i).getHost() == configs.at(j).getHost() \
+				&& configs.at(i).getPort() == configs.at(j).getPort() )
+			{
+				for (size_t k = 0; k < configs.at(i).getServerNamesSize(); k++)
+				{
+					if (configs.at(i).getServerName(k) == configs.at(j).getServerName(k))
+						throw ("Found conflicting servernames for virtual servers with same host and port")
+				}
+			}
+		}
+
+		for (size_t j = 0; j < configs.at(i).getLocationBlocksSize(); j++)
+		{
+			for (size_t k = j + 1; k < configs.at(i).getLocationBlocksSize(); k++)
+			{
+				if (configs.at(i).getLocationFromIndex(j)->getLocation() == configs.at(i).getLocationFromIndex(k)->getLocation() )
+					throw (ExceptionMaker("Duplicate location found") );
+			}
+		}
+	}
 }
