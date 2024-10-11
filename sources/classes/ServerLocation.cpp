@@ -360,11 +360,23 @@ void	ServerLocation::_setAllowedMethods(std::vector<std::string> strLocationBloc
 			while (strStream >> method)
 			{
 				if (method == "GET")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_GET) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );
 					methodsAllowed.push_back(Http::M_GET);
+				}
 				else if (method == "POST")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_POST) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );
 					methodsAllowed.push_back(Http::M_POST);
+				}
 				else if (method == "DELETE")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_DELETE) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );
 					methodsAllowed.push_back(Http::M_DELETE);
+				}
 				else
 					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive") );
 			}
@@ -380,11 +392,23 @@ void	ServerLocation::_setAllowedMethods(std::vector<std::string> strLocationBloc
 			for (size_t i = 0; i < ConfigParser::defaultMethodsAllowed.size(); i++)
 			{
 				if (ConfigParser::defaultMethodsAllowed.at(i) == "GET")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_GET) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );
 					methodsAllowed.push_back(Http::M_GET);
+				}
 				else if (ConfigParser::defaultMethodsAllowed.at(i) == "POST")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_POST) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );
 					methodsAllowed.push_back(Http::M_POST);
+				}
 				else if (ConfigParser::defaultMethodsAllowed.at(i) == "DELETE")
+				{
+					if (std::find(methodsAllowed.begin(), methodsAllowed.end(), Http::M_DELETE) != methodsAllowed.end() )
+						throw (ExceptionMaker("Duplicate method found in \"allow_methods\" directive") );					
 					methodsAllowed.push_back(Http::M_DELETE);
+				}
 				else
 					throw (ExceptionMaker("Invalid argument in \"allow_methods\" directive in server context") );
 			}
