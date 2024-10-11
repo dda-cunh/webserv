@@ -237,8 +237,11 @@ void	ConfigParser::_validateConfigs(const ServerBlocks configs)
 			{
 				for (size_t k = 0; k < configs.at(i).getServerNamesSize(); k++)
 				{
-					if (configs.at(i).getServerName(k) == configs.at(j).getServerName(k))
-						throw ("Found conflicting servernames for virtual servers with same host and port")
+					for (size_t l = 0; l < configs.at(j).getServerNamesSize(); l++)
+					{
+						if (configs.at(i).getServerName(k) == configs.at(j).getServerName(l) )
+						throw (ExceptionMaker("Found conflicting servernames for virtual servers with same host and port") );
+					}
 				}
 			}
 		}
