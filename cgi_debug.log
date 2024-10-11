@@ -1,304 +1,12 @@
 DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 53, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------753503796836103859426151390
-DEBUG:root:Boundary: b'---------------------------753503796836103859426151390'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 65, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------3591419238214271373695397993
-DEBUG:root:Boundary: b'---------------------------3591419238214271373695397993'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 69, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 47, in handle_file_upload
-    raise ValueError("Empty filename")
-ValueError: Empty filename
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------422537207618008958783504039201
-DEBUG:root:Boundary: b'---------------------------422537207618008958783504039201'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------209765991915772871411451268717
-DEBUG:root:Boundary: b'---------------------------209765991915772871411451268717'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------16269166316422289693876810379
-DEBUG:root:Boundary: b'---------------------------16269166316422289693876810379'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10357
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------2709760385324417522393240582
-DEBUG:root:Boundary: b'---------------------------2709760385324417522393240582'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------26575042703703587016369667989
-DEBUG:root:Boundary: b'---------------------------26575042703703587016369667989'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------78359860436640455672282711080
-DEBUG:root:Boundary: b'---------------------------78359860436640455672282711080'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------127392390935070603003297310909
-DEBUG:root:Boundary: b'---------------------------127392390935070603003297310909'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------147768764130919229662537542891
-DEBUG:root:Boundary: b'---------------------------147768764130919229662537542891'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------223018185417148963712662681888
-DEBUG:root:Boundary: b'---------------------------223018185417148963712662681888'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 0
-DEBUG:root:Input data: b''...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------136511771415016039042214826397
-DEBUG:root:Boundary: b'---------------------------136511771415016039042214826397'
-DEBUG:root:Number of parts: 1
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-ERROR:root:Error during file upload
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 73, in handle_file_upload
-    raise ValueError("No valid file found in the upload data")
-ValueError: No valid file found in the upload data
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 10359
-DEBUG:root:Input data: b'-----------------------------19732087361734113355571623660\r\nContent-Disposition: form-data; name="fi'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------19732087361734113355571623660
-DEBUG:root:Boundary: b'---------------------------19732087361734113355571623660'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 10239
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="en.subject.txt"\r\nContent-Type: text/plain'
-DEBUG:root:File data length: 10137
-DEBUG:root:Found filename: b'en.subject.txt'
-DEBUG:root:File uploaded: public/uploads/en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10357
-DEBUG:root:Input data length: 10357
-DEBUG:root:Input data: b'-----------------------------7291901296013236851061075030\r\nContent-Disposition: form-data; name="fil'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------7291901296013236851061075030
-DEBUG:root:Boundary: b'---------------------------7291901296013236851061075030'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 10239
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="en.subject.txt"\r\nContent-Type: text/plain'
-DEBUG:root:File data length: 10137
-DEBUG:root:Found filename: b'en.subject.txt'
-DEBUG:root:File uploaded: public/uploads/en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-ERROR:root:Error during file deletion
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 116, in delete_file
-    raise ValueError("No filename provided for deletion")
-ValueError: No filename provided for deletion
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: en.subject.txt
+DEBUG:root:Request Method: GET
+DEBUG:root:Listing files...
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 3
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 3
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-ERROR:root:Error during file deletion
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 116, in delete_file
-    raise ValueError("No filename provided for deletion")
-ValueError: No filename provided for deletion
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-ERROR:root:Error during file deletion
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 116, in delete_file
-    raise ValueError("No filename provided for deletion")
-ValueError: No filename provided for deletion
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 3
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-ERROR:root:Error during file deletion
-Traceback (most recent call last):
-  File "/home/facu/Code/42/webserv/./public/cgi/file_handler.cgi", line 116, in delete_file
-    raise ValueError("No filename provided for deletion")
-ValueError: No filename provided for deletion
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 3
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: ftroiter.jpg
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
@@ -308,245 +16,108 @@ DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: DELETE
 DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: test.json
+DEBUG:root:Path Info: /en.subject.txt
+DEBUG:root:Filename: en.subject.txt
+DEBUG:root:File Path: public/uploads/en.subject.txt
+DEBUG:root:File deletion attempt: en.subject.txt
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: DELETE
 DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: test123.md
+DEBUG:root:Path Info: /20230712_180811.jpg
+DEBUG:root:Filename: 20230712_180811.jpg
+DEBUG:root:File Path: public/uploads/20230712_180811.jpg
+DEBUG:root:File deletion attempt: 20230712_180811.jpg
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
+DEBUG:root:Files listed: 1
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: POST
 DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 10359
-DEBUG:root:Input data: b'-----------------------------90262493113303869552564828777\r\nContent-Disposition: form-data; name="fi'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------90262493113303869552564828777
-DEBUG:root:Boundary: b'---------------------------90262493113303869552564828777'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 10239
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="en.subject.txt"\r\nContent-Type: text/plain'
-DEBUG:root:File data length: 10137
+DEBUG:root:Content Length: 10361
+DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------394916944214999735852645715762
 DEBUG:root:Found filename: b'en.subject.txt'
 DEBUG:root:File uploaded: public/uploads/en.subject.txt
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: POST
 DEBUG:root:Starting file upload...
 DEBUG:root:Content Length: 64534
-DEBUG:root:Input data length: 64534
-DEBUG:root:Input data: b'-----------------------------154637840136112042053882583740\r\nContent-Disposition: form-data; name="f'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------154637840136112042053882583740
-DEBUG:root:Boundary: b'---------------------------154637840136112042053882583740'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 64412
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="20230712_180811.jpg"\r\nContent-Type: image/jpeg'
-DEBUG:root:File data length: 64305
+DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------424134396310490184673199892594
 DEBUG:root:Found filename: b'20230712_180811.jpg'
 DEBUG:root:File uploaded: public/uploads/20230712_180811.jpg
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
+DEBUG:root:Files listed: 3
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
+DEBUG:root:Files listed: 3
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: DELETE
 DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
+DEBUG:root:Path Info: /20230712_180811.jpg
+DEBUG:root:Filename: 20230712_180811.jpg
+DEBUG:root:File Path: public/uploads/20230712_180811.jpg
 DEBUG:root:File deletion attempt: 20230712_180811.jpg
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 0
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: POST
 DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10361
-DEBUG:root:Input data length: 10361
-DEBUG:root:Input data: b'-----------------------------364318202921716397851334027013\r\nContent-Disposition: form-data; name="f'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------364318202921716397851334027013
-DEBUG:root:Boundary: b'---------------------------364318202921716397851334027013'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 10239
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="en.subject.txt"\r\nContent-Type: text/plain'
-DEBUG:root:File data length: 10137
-DEBUG:root:Found filename: b'en.subject.txt'
-DEBUG:root:File uploaded: public/uploads/en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 64532
-DEBUG:root:Input data length: 64532
-DEBUG:root:Input data: b'-----------------------------17164681552863457747556035541\r\nContent-Disposition: form-data; name="fi'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------17164681552863457747556035541
-DEBUG:root:Boundary: b'---------------------------17164681552863457747556035541'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 64412
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="20230712_180811.jpg"\r\nContent-Type: image/jpeg'
-DEBUG:root:File data length: 64305
+DEBUG:root:Content Length: 64534
+DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------233419751940226798832825877532
 DEBUG:root:Found filename: b'20230712_180811.jpg'
 DEBUG:root:File uploaded: public/uploads/20230712_180811.jpg
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
+DEBUG:root:Files listed: 3
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: DELETE
 DEBUG:root:Deleting file...
-DEBUG:root:File deletion attempt: en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: POST
-DEBUG:root:Starting file upload...
-DEBUG:root:Content Length: 10359
-DEBUG:root:Input data length: 10359
-DEBUG:root:Input data: b'-----------------------------64400094920545322402380107869\r\nContent-Disposition: form-data; name="fi'...
-DEBUG:root:Content-Type: multipart/form-data; boundary=---------------------------64400094920545322402380107869
-DEBUG:root:Boundary: b'---------------------------64400094920545322402380107869'
-DEBUG:root:Number of parts: 3
-DEBUG:root:Processing part 0, length: 0
-DEBUG:root:Skipping empty part 0
-DEBUG:root:Processing part 1, length: 10239
-DEBUG:root:Headers for part 1: b'\r\nContent-Disposition: form-data; name="file"; filename="en.subject.txt"\r\nContent-Type: text/plain'
-DEBUG:root:File data length: 10137
-DEBUG:root:Found filename: b'en.subject.txt'
-DEBUG:root:File uploaded: public/uploads/en.subject.txt
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: GET
-DEBUG:root:Listing files...
-DEBUG:root:Files listed: 2
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:Request Method: DELETE
-DEBUG:root:Deleting file...
+DEBUG:root:Path Info: /20230712_180811.jpg
+DEBUG:root:Filename: 20230712_180811.jpg
+DEBUG:root:File Path: public/uploads/20230712_180811.jpg
 DEBUG:root:File deletion attempt: 20230712_180811.jpg
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:Request Method: GET
 DEBUG:root:Listing files...
-DEBUG:root:Files listed: 1
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
-DEBUG:root:CGI Script Ending
-DEBUG:root:CGI Script Starting
+DEBUG:root:Request Method: GET
+DEBUG:root:Listing files...
+DEBUG:root:Files listed: 2
 DEBUG:root:CGI Script Ending
 DEBUG:root:CGI Script Starting
 DEBUG:root:CGI Script Ending

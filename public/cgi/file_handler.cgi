@@ -3,14 +3,13 @@ import os
 import sys
 import logging
 import json
-import urllib.parse
 
 UPLOAD_DIR = "public/uploads/"
 logging.basicConfig(filename='cgi_debug.log', level=logging.DEBUG)
 
-def respond_json(data):
+def json_response(success, message=None, error=None):
     print("Content-Type: application/json\n")
-    print(json.dumps(data))
+    print(json.dumps({"success": success, "message": message, "error": error}))
 
 def handle_file_upload():
     try:
@@ -29,44 +28,49 @@ def handle_file_upload():
         for part in parts:
             if part.strip() in (b'', b'--'):
                 continue
-            headers, file_data = part.split(b'\r\n\r\n', 1)
-            filename = next((h.split(b'filename=')[-1].strip(b'"') for h in headers.split(b'\r\n') if b'filename=' in h), None)
-            if filename:
-                file_path = os.path.join(UPLOAD_DIR, os.path.basename(filename.decode('utf-8')))
-                with open(file_path, 'wb') as f:
-                    f.write(file_data.rstrip(b'\r\n'))
-                respond_json({"success": True, "message": f"File '{filename.decode()}' uploaded successfully."})
-                return
+            try:
+                headers, file_data = part.split(b'\r\n\r\n', 1)
+            except ValueError:
+                continue
+            
+            for header in headers.split(b'\r\n'):
+                if b'filename=' in header:
+                    filename = os.path.basename(header.split(b'filename=')[-1].strip(b'"').decode('utf-8'))
+                    with open(os.path.join(UPLOAD_DIR, filename), 'wb') as f:
+                        f.write(file_data.rstrip(b'\r\n'))
+                    json_response(True, f"File '{filename}' uploaded successfully.")
+                    return
+        
         raise ValueError("No valid file found in the upload data")
     except Exception as e:
         logging.exception("Error during file upload")
-        respond_json({"success": False, "error": str(e)})
+        json_response(False, error=str(e))
         sys.exit(1)
 
 def list_files():
     try:
         files = [{"name": f, "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)), "modified": os.path.getmtime(os.path.join(UPLOAD_DIR, f))} for f in os.listdir(UPLOAD_DIR)]
-        respond_json(files)
+        json_response(True, message=files)
     except Exception as e:
         logging.exception("Error listing files")
-        respond_json({"error": str(e)})
+        json_response(False, error=str(e))
         sys.exit(1)
 
 def delete_file():
     try:
-        filename = urllib.parse.parse_qs(os.environ.get('QUERY_STRING', '')).get('filename', [''])[0]
+        filename = os.path.basename(os.environ.get('PATH_INFO', ''))
         if not filename:
-            raise ValueError("No filename provided for deletion")
+            raise ValueError("No file specified for deletion in the path")
         
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
-            respond_json({"success": True, "message": f"File '{filename}' deleted successfully."})
+            json_response(True, f"File '{filename}' deleted successfully.")
         else:
-            respond_json({"success": False, "message": f"File '{filename}' not found."})
+            json_response(False, f"File '{filename}' not found.")
     except Exception as e:
         logging.exception("Error during file deletion")
-        respond_json({"success": False, "error": str(e)})
+        json_response(False, error=str(e))
         sys.exit(1)
 
 def main():

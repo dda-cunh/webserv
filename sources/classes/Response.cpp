@@ -108,8 +108,6 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
       _serverBlocks(server_blocks)
 {
 	std::string body(request.body().begin(), request.body().end());
-    std::cout << "Request body data: " << body << std::endl;
-	std::cout << "Request URI: " << request.uri() << std::endl;
 
     try {
 		setMatchedLocation();
@@ -220,29 +218,39 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 		}
 	}
 }
-void Response::handleCGI() {
-    std::string cgiPath = _matchedLocation->getRootDir() + _request.uri();
 
-    setEnvironmentVariables(cgiPath, _request);
+void Response::handleCGI() {
+    std::string uri = _request.uri();
+    std::string rootDir = _matchedLocation->getRootDir();
+    
+    size_t cgiPos = uri.find(".cgi");
+
+    std::string cgiPath = rootDir + uri.substr(0, cgiPos + 4);
+    std::string pathInfo = uri.substr(cgiPos + 4);
+
+    std::cout << "CGI path: " << cgiPath << std::endl;
+    std::cout << "Path info: " << pathInfo << std::endl;
+
+    setEnvironmentVariables(pathInfo, _request);
 
     int input_pipe[2], output_pipe[2];
-	try
-	{
-		createPipes(input_pipe, output_pipe);
+    try
+    {
+        createPipes(input_pipe, output_pipe);
 
-		pid_t pid = fork();
-		if (pid == 0)
-			handleChildProcess(input_pipe, output_pipe, cgiPath);
-		else if (pid > 0)
-			handleParentProcess(input_pipe, output_pipe, _request, *this, pid);
-		else
-			throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
+        pid_t pid = fork();
+        if (pid == 0)
+            handleChildProcess(input_pipe, output_pipe, cgiPath);
+        else if (pid > 0)
+            handleParentProcess(input_pipe, output_pipe, _request, *this, pid);
+        else
+            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
     }
-	catch (ExceptionMaker &e)
-	{
-		e.log();
-		setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-	}
+    catch (ExceptionMaker &e)
+    {
+        e.log();
+        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+    }
 }
 
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)

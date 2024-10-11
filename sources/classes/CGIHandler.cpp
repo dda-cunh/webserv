@@ -9,8 +9,6 @@ void setEnvironmentVariables(const std::string& cgiPath, const Request& request)
     if (request.method() == Http::M_POST) {
         setenv("CONTENT_TYPE", request.header("Content-Type").c_str(), 1);
         setenv("CONTENT_LENGTH", request.header("Content-Length").c_str(), 1);
-    } else if (request.method() == Http::M_DELETE) {
-        setenv("QUERY_STRING", request.getQueryString().c_str(), 1);
     }
 }
 

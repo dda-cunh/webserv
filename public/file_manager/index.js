@@ -6,14 +6,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchFiles = async () => {
         try {
             const response = await fetch("/cgi/file_handler.cgi");
-            const files = await response.json();
-            fileList.innerHTML = files.map(file => `
-                <tr>
-                    <td>${file.name}</td>
-                    <td>${file.size}</td>
-                    <td><button onclick="deleteFile('${file.name}')">Delete</button></td>
-                </tr>
-            `).join('');
+            const result = await response.json();
+            if (result.success) {
+                fileList.innerHTML = result.message.map(file => `
+                    <tr>
+                        <td>${file.name}</td>
+                        <td>${file.size}</td>
+                        <td><button onclick="deleteFile('${file.name}')">Delete</button></td>
+                    </tr>
+                `).join('');
+            } else {
+                console.error("Error fetching files:", result.error);
+            }
         } catch (error) {
             console.error("Error fetching files:", error);
         }
@@ -21,8 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.deleteFile = async (fileName) => {
         try {
-            const response = await fetch(`/cgi/file_handler.cgi?filename=${encodeURIComponent(fileName)}`, { method: "DELETE" });
-            response.ok ? fetchFiles() : console.error("Error deleting file:", await response.text());
+            const response = await fetch(`/cgi/file_handler.cgi/${encodeURIComponent(fileName)}`, { method: "DELETE" });
+            const result = await response.json();
+            result.success ? fetchFiles() : console.error("Error deleting file:", result.error);
         } catch (error) {
             console.error("Error deleting file:", error);
         }
@@ -33,7 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("file", file);
         try {
             const response = await fetch("/cgi/file_handler.cgi", { method: "POST", body: formData });
-            response.ok ? fetchFiles() : console.error("Error uploading file:", await response.text());
+            const result = await response.json();
+            result.success ? fetchFiles() : console.error("Error uploading file:", result.error);
         } catch (error) {
             console.error("Error uploading file:", error);
         }

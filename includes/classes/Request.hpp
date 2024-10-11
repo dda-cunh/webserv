@@ -29,7 +29,6 @@ class Request
 		int const&					clientFD()					const;
 		std::string 				header(std::string const&)	const;
 		std::string					str()						const;
-		std::string 				getQueryString() 			const;
 
 		std::string					seekCRLF(ByteArr const&,
 										ByteArr::size_type &);
@@ -43,7 +42,6 @@ class Request
 		Http::METHOD				_method;
 		ResponseFlag				_flag;
 		std::string					_uri;
-		std::string					_queryString;
 		StrStrMap					_headers;
 		ByteArr						_body;
 
@@ -56,8 +54,6 @@ class Request
 		void						parseHeaderLine(std::string const&);
 		void						parseBody(ByteArr const&);
 		void						readClient();
-		void						parseQueryString();
 
 		static unsigned int const	_max_request_size;
-
 };

@@ -7,7 +7,6 @@ Request::Request(void)
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
-		_queryString(),
 		_headers(),
 		_body()
 {}
@@ -24,7 +23,6 @@ Request & Request::operator=(Request const & rhs)
 	this->_method = rhs.method();
 	this->_flag = rhs.flag();
 	this->_uri = rhs.uri();
-	this->_queryString = rhs.getQueryString();
 	this->_headers = rhs._headers;
 	this->_body = rhs.body();
 	return (*this);
@@ -41,7 +39,6 @@ Request::Request(int const& clientFD)
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
-		_queryString(),
 		_headers(),
 		_body()
 {
@@ -116,7 +113,6 @@ void	Request::readClient()
 		this->parseHeaderLine(line);
 	}
 	this->parseBody(ByteArr(request.begin() + request_i, request.end()));
-	this->parseQueryString();
 }
 
 void	Request::parseBody(ByteArr const& body)
@@ -132,7 +128,7 @@ void	Request::parseBody(ByteArr const& body)
 			{
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
 				{
-					// this->_flag = _400;
+					this->_flag = _400;
 					Utils::log("Content length doesn't match body length", Utils::LOG_WARNING);
 					return ;
 				}
@@ -224,20 +220,6 @@ void	Request::parseHeaderLine(std::string const& headerLine)
 		return ;
 	std::getline(ss, val);
 	this->putHeader(key, Utils::sTrim(val));
-}
-
-std::string Request::getQueryString() const {
-    return _queryString;
-}
-
-void Request::parseQueryString() {
-    size_t questionMarkPos = _uri.find('?');
-    if (questionMarkPos != std::string::npos) {
-        _queryString = _uri.substr(questionMarkPos + 1);
-        _uri = _uri.substr(0, questionMarkPos);
-    } else {
-        _queryString = "";
-    }
 }
 
 /**************************************************************************/
