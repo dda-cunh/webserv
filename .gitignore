@@ -6,3 +6,5 @@ TODO.md
 directory_listing.html
 notes.cpp
 questions.txt
+/public/uploads/*
+!/public/uploads/.keep

@@ -1,14 +1,32 @@
 <!DOCTYPE html>
+<html>
+
 <head>
-	<title>Cat Manager</title>
+    <title>Cat Manager</title>
 </head>
 
 <body>
-	<h1>Your Cats</h1>
-	<ul id="file-list">
-		<!-- Files will be listed here -->
-	</ul>
-	<script src="index.js"></script>
+    <h1>Your Cats</h1>
+    <table id="file-table" border="1">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Size (KB)</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="file-list">
+            <!-- Files will be listed here -->
+        </tbody>
+    </table>
+    <h2>Upload a new cat</h2>
+    <form id="upload-form">
+        <label for="file">Select a cat to upload:</label>
+        <input type="file" id="file" name="file" required>
+        <br><br>
+        <button type="submit">Upload</button>
+    </form>
+    <script src="index.js"></script>
 </body>
 
 </html>

@@ -48,39 +48,6 @@ std::string Response::getHeadersStr()
     return responseHeaders;
 }
 
-void Response::handleFileList()
-{
-	std::string directory = "public/uploads"; // TODO: Get this from config
-
-	try
-	{
-		std::vector<std::string> files = Directory::listFiles(directory);
-
-		std::ostringstream json;
-		json << "[";
-		for (size_t i = 0; i < files.size(); ++i)
-		{
-			json << "\"" << files[i] << "\"";
-			if (i < files.size() - 1)
-			{
-				json << ",";
-			}
-		}
-		json << "]";
-
-		_statusCode = Http::SC_OK;
-		_body = json.str();
-		_headers["Content-Type"] = "application/json";
-	}
-	catch (ExceptionMaker &e)
-	{
-		e.log();
-		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
-		_body = "{\"error\":\"Failed to list files in directory.\"}";
-		_headers["Content-Type"] = "application/json";
-	}
-}
-
 std::string extractFileNameFromQuery(const std::string &uri)
 {
 	std::string fileName;
@@ -140,6 +107,10 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
       _request(request),
       _serverBlocks(server_blocks)
 {
+	std::string body(request.body().begin(), request.body().end());
+    std::cout << "Request body data: " << body << std::endl;
+	std::cout << "Request URI: " << request.uri() << std::endl;
+
     try {
 		setMatchedLocation();
 	} catch (std::exception &e) {
@@ -180,62 +151,15 @@ void Response::dispatchMethod()
 		handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
-    else if (_request.method() == Http::M_DELETE)
-        handleDELETEMethod();
 }
 
 /**
- * @brief Deletes a specified file, handling errors and permissions.
- */
-void Response::handleDELETEMethod()
-{
-	if (_request.uri().find("/delete") != 0)
-		return setStatusAndReadResource(Http::SC_NOT_FOUND);
-
-	std::string fileName = extractFileNameFromQuery(_request.uri());
-	if (fileName.empty())
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-
-	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
-	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
-
-	if (Directory::isDirectory(filePath))
-		return setStatusAndReadResource(Http::SC_FORBIDDEN);
-	if (Utils::resourceExists(filePath))
-	{
-		if (remove(filePath.c_str()) != 0)
-		{
-			Utils::log("Error deleting file", Utils::LOG_ERROR);
-			setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-		}
-		else
-		{
-			_statusCode = Http::SC_NO_CONTENT;
-		}
-	}
-	else
-	{
-		setStatusAndReadResource(Http::SC_NOT_FOUND);
-	}
-}
-
-
-/**
- * @brief Handles GET requests by serving files, directories, or JSON file lists.
- *
- * - For "/files" URI, it invokes `handleFileList` to return a JSON list of files.
- * - For other URIs, it serves the requested file or directory listing, based on the existence and type of the resource.
+ * @brief  Serves the requested file or directory listing.
  */
 void Response::handleGETMethod()
 {
 	std::string root = _matchedLocation->getRootDir();
 	bool autoindex = static_cast<LocationStatic*>(_matchedLocation)->getAutoIndex();
-
-	if (_request.uri() == "/files")
-	{
-		handleFileList();
-		return;
-	}
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 

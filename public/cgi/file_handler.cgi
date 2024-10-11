@@ -2,82 +2,85 @@
 import os
 import sys
 import logging
+import json
+import urllib.parse
 
 UPLOAD_DIR = "public/uploads/"
-
 logging.basicConfig(filename='cgi_debug.log', level=logging.DEBUG)
 
-def handle_file_upload():
-    print("Content-Type: text/html")
-    print()
+def respond_json(data):
+    print("Content-Type: application/json\n")
+    print(json.dumps(data))
 
-    logging.debug("Starting file upload...")
-    
+def handle_file_upload():
     try:
-        # Get the content length from the environment
         content_length = int(os.environ.get('CONTENT_LENGTH', 0))
         if content_length == 0:
             raise ValueError("No file uploaded")
-
-        # Read the incoming data
-        input_data = sys.stdin.read(content_length)
-        content_type = os.environ.get('CONTENT_TYPE')
-        boundary = b'--' + content_type.split('boundary=')[-1].encode()
-
-        parts = input_data.encode('utf-8').split(boundary)  # Encode input_data to bytes
-
+        
+        input_data = sys.stdin.buffer.read(content_length)
+        content_type = os.environ.get('CONTENT_TYPE', '')
+        if 'boundary=' not in content_type:
+            raise ValueError("No boundary found in Content-Type")
+        
+        boundary = content_type.split('boundary=')[-1].encode()
+        parts = input_data.split(b'--' + boundary)
+        
         for part in parts:
-            if part == b'' or part == b'--\r\n':
+            if part.strip() in (b'', b'--'):
                 continue
-            
-            # Split header and file data
-            try:
-                headers, file_data = part.split(b'\r\n\r\n', 1)
-            except ValueError:
-                continue  # If there are no headers, skip
-
-            header_lines = headers.split(b'\r\n')
-            filename = None
-
-            for header in header_lines:
-                if b'filename=' in header:
-                    # Extract filename
-                    filename = header.split(b'filename=')[-1].strip(b'"')
-
-            if filename is not None:
-                filename = os.path.basename(filename.decode('utf-8'))
-                file_path = os.path.join(UPLOAD_DIR, filename)
-
+            headers, file_data = part.split(b'\r\n\r\n', 1)
+            filename = next((h.split(b'filename=')[-1].strip(b'"') for h in headers.split(b'\r\n') if b'filename=' in h), None)
+            if filename:
+                file_path = os.path.join(UPLOAD_DIR, os.path.basename(filename.decode('utf-8')))
                 with open(file_path, 'wb') as f:
-                    f.write(file_data.rstrip(b'\r\n--\r\n'))  # Remove trailing CRLF and boundary
-        
-                print(f"File '{filename}' uploaded successfully.")
-                logging.debug(f"File uploaded: {file_path}")
+                    f.write(file_data.rstrip(b'\r\n'))
+                respond_json({"success": True, "message": f"File '{filename.decode()}' uploaded successfully."})
                 return
-        
-        raise ValueError("Empty filename")
-
+        raise ValueError("No valid file found in the upload data")
     except Exception as e:
         logging.exception("Error during file upload")
-        print("Status: 500 Internal Server Error")
-        print("Content-Type: text/html")
-        print()
-        print("An error occurred.")
+        respond_json({"success": False, "error": str(e)})
+        sys.exit(1)
+
+def list_files():
+    try:
+        files = [{"name": f, "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)), "modified": os.path.getmtime(os.path.join(UPLOAD_DIR, f))} for f in os.listdir(UPLOAD_DIR)]
+        respond_json(files)
+    except Exception as e:
+        logging.exception("Error listing files")
+        respond_json({"error": str(e)})
+        sys.exit(1)
+
+def delete_file():
+    try:
+        filename = urllib.parse.parse_qs(os.environ.get('QUERY_STRING', '')).get('filename', [''])[0]
+        if not filename:
+            raise ValueError("No filename provided for deletion")
+        
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            respond_json({"success": True, "message": f"File '{filename}' deleted successfully."})
+        else:
+            respond_json({"success": False, "message": f"File '{filename}' not found."})
+    except Exception as e:
+        logging.exception("Error during file deletion")
+        respond_json({"success": False, "error": str(e)})
         sys.exit(1)
 
 def main():
     logging.debug("CGI Script Starting")
     request_method = os.environ.get("REQUEST_METHOD", "GET")
-    logging.debug(f"Request Method: {request_method}")
-
     if request_method == "POST":
         handle_file_upload()
+    elif request_method == "GET":
+        list_files()
+    elif request_method == "DELETE":
+        delete_file()
     else:
-        print("Status: 405 Method Not Allowed")
-        print("Content-Type: text/html\n")
-        print("Method not allowed.")
+        print("Status: 405 Method Not Allowed\nContent-Type: text/html\n\nMethod not allowed.")
         sys.exit(2)
-        
     logging.debug("CGI Script Ending")
 
 if __name__ == "__main__":

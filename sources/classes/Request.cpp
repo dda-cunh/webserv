@@ -7,6 +7,7 @@ Request::Request(void)
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
+		_queryString(),
 		_headers(),
 		_body()
 {}
@@ -23,6 +24,7 @@ Request & Request::operator=(Request const & rhs)
 	this->_method = rhs.method();
 	this->_flag = rhs.flag();
 	this->_uri = rhs.uri();
+	this->_queryString = rhs.getQueryString();
 	this->_headers = rhs._headers;
 	this->_body = rhs.body();
 	return (*this);
@@ -39,6 +41,7 @@ Request::Request(int const& clientFD)
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
+		_queryString(),
 		_headers(),
 		_body()
 {
@@ -113,6 +116,7 @@ void	Request::readClient()
 		this->parseHeaderLine(line);
 	}
 	this->parseBody(ByteArr(request.begin() + request_i, request.end()));
+	this->parseQueryString();
 }
 
 void	Request::parseBody(ByteArr const& body)
@@ -222,48 +226,18 @@ void	Request::parseHeaderLine(std::string const& headerLine)
 	this->putHeader(key, Utils::sTrim(val));
 }
 
-// Parses the file content from a POST request with a file upload
-// TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
-bool Request::parseFileContent(std::string &fileName, std::string &fileContent) const
-{
-    std::string boundary;
-    std::string contentTypeHeader = header("Content-Type");
+std::string Request::getQueryString() const {
+    return _queryString;
+}
 
-    size_t boundaryPos = contentTypeHeader.find("boundary=");
-    if (boundaryPos != std::string::npos)
-		boundary = "--" + contentTypeHeader.substr(boundaryPos + 9);
-	else
-		return false;
-
-    std::string requestBody(_body.begin(), _body.end());
-
-    size_t boundaryStart = requestBody.find(boundary);
-    if (boundaryStart == std::string::npos)
-		return false;
-
-    size_t fileNamePos = requestBody.find("filename=\"", boundaryStart);
-    if (fileNamePos == std::string::npos)
-		return false;
-
-    fileNamePos += 10;
-    size_t fileNameEnd = requestBody.find("\"", fileNamePos);
-    if (fileNameEnd == std::string::npos)
-		return false;
-
-    fileName = requestBody.substr(fileNamePos, fileNameEnd - fileNamePos);
-
-    size_t fileContentStart = requestBody.find(CRLF, fileNameEnd);
-    if (fileContentStart == std::string::npos)
-		return false;
-
-    fileContentStart += 4;
-    size_t fileContentEnd = requestBody.find(boundary, fileContentStart);
-    if (fileContentEnd == std::string::npos)
-		return false;
-
-    fileContent = requestBody.substr(fileContentStart, fileContentEnd - fileContentStart - 2); // Exclude the trailing "\r\n"
-
-    return true;
+void Request::parseQueryString() {
+    size_t questionMarkPos = _uri.find('?');
+    if (questionMarkPos != std::string::npos) {
+        _queryString = _uri.substr(questionMarkPos + 1);
+        _uri = _uri.substr(0, questionMarkPos);
+    } else {
+        _queryString = "";
+    }
 }
 
 /**************************************************************************/

@@ -9,6 +9,8 @@ void setEnvironmentVariables(const std::string& cgiPath, const Request& request)
     if (request.method() == Http::M_POST) {
         setenv("CONTENT_TYPE", request.header("Content-Type").c_str(), 1);
         setenv("CONTENT_LENGTH", request.header("Content-Length").c_str(), 1);
+    } else if (request.method() == Http::M_DELETE) {
+        setenv("QUERY_STRING", request.getQueryString().c_str(), 1);
     }
 }
 
@@ -54,9 +56,36 @@ void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& r
     waitpid(pid, &status, 0);
 
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-        response.setBody(output);
-        response.setHeader("Content-Type", "text/html");
+        std::string contentType;
+        std::string body;
+
+        parseCGIOutput(output, contentType, body);
+
+        response.setBody(body);
+        response.setHeader("Content-Type", contentType);
     } else {
         throw ExceptionMaker("CGI script exited with error status: " + Utils::intToString(WEXITSTATUS(status)));
+    }
+}
+
+void parseCGIOutput(const std::string& output, std::string& contentType, std::string& body) {
+    size_t headerEnd = output.find("\n");
+    if (headerEnd == std::string::npos) {
+        body = output;
+        contentType = "text/plain";
+        return;
+    }
+
+    std::string header = output.substr(0, headerEnd);
+    body = output.substr(headerEnd + 1);
+    body.erase(0, body.find_first_not_of("\r\n"));
+
+    size_t contentTypePos = header.find("Content-Type:");
+    if (contentTypePos != std::string::npos) {
+        contentType = header.substr(contentTypePos + 13);
+        contentType.erase(0, contentType.find_first_not_of(" \t"));
+        contentType.erase(contentType.find_last_not_of(" \t") + 1);
+    } else {
+        contentType = "text/plain";
     }
 }

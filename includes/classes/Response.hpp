@@ -7,7 +7,7 @@
 #include "CGIHandler.hpp"
 
 #include <vector>
-#include <algorithm> // std::find
+#include <algorithm>
 
 class Response {
 public:
@@ -44,5 +44,4 @@ private:
     std::string getHeadersStr();
     bool isRedirection();
     void handleRedirection();
-    void handleFileList();
 };
