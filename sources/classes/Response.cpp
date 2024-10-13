@@ -222,27 +222,25 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 void Response::handleCGI() {
     std::string uri = _request.uri();
     std::string rootDir = _matchedLocation->getRootDir();
-    
     size_t cgiPos = uri.find(".cgi");
-
     std::string cgiPath = rootDir + uri.substr(0, cgiPos + 4);
-    std::string pathInfo = uri.substr(cgiPos + 4);
 
-    std::cout << "CGI path: " << cgiPath << std::endl;
-    std::cout << "Path info: " << pathInfo << std::endl;
+	std::vector<std::string> envVars;
+	setEnvironmentVariables(cgiPath, _request, envVars);
+	std::cout << "handleCGI Environment variables:" << std::endl;
+	for (std::vector<std::string>::iterator it = envVars.begin(); it != envVars.end(); ++it)
+		std::cout << *it << std::endl;
 
-    setEnvironmentVariables(pathInfo, _request);
-
-    int input_pipe[2], output_pipe[2];
+    int inputPipe[2], outputPipe[2];
     try
     {
-        createPipes(input_pipe, output_pipe);
+        createPipes(inputPipe, outputPipe);
 
         pid_t pid = fork();
         if (pid == 0)
-            handleChildProcess(input_pipe, output_pipe, cgiPath);
+            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
         else if (pid > 0)
-            handleParentProcess(input_pipe, output_pipe, _request, *this, pid);
+            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
         else
             throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
     }

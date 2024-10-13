@@ -1,23 +1,23 @@
 #include "../../includes/classes/CGIHandler.hpp"
 
-void setEnvironmentVariables(const std::string& cgiPath, const Request& request) {
-    setenv("REQUEST_METHOD", Http::methodToString(request.method()).c_str(), 1);
-    setenv("PATH_INFO", cgiPath.c_str(), 1);
-    setenv("SCRIPT_FILENAME", cgiPath.c_str(), 1);
-    setenv("REDIRECT_STATUS", "200", 1);
+void setEnvironmentVariables(const std::string& cgiPath, const Request& request, std::vector<std::string>& envVars) {
+    std::string pathInfo = request.uri().substr(request.uri().find(".cgi") + 4);
+    
+    envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
+    envVars.push_back("PATH_INFO=" + pathInfo);
+    envVars.push_back("SCRIPT_FILENAME=" + cgiPath);
 
     if (request.method() == Http::M_POST) {
-        setenv("CONTENT_TYPE", request.header("Content-Type").c_str(), 1);
-        setenv("CONTENT_LENGTH", request.header("Content-Length").c_str(), 1);
+        envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
+        envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 }
-
 void createPipes(int input_pipe[2], int output_pipe[2]) {
     if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
         throw ExceptionMaker("Pipe creation failed: " + std::string(strerror(errno)));
 }
 
-void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string& cgiPath) {
+void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string& cgiPath, const std::vector<std::string>& envVars) {
     close(input_pipe[1]);
     close(output_pipe[0]);
 
@@ -28,8 +28,13 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string
     close(input_pipe[0]);
     close(output_pipe[1]);
 
-    execl("/usr/bin/python3", "python3", cgiPath.c_str(), NULL);
-    throw ExceptionMaker("execl failed: " + std::string(strerror(errno)));
+    std::vector<const char*> envp;
+    for (size_t i = 0; i < envVars.size(); ++i) {
+        envp.push_back(envVars[i].c_str());
+    }
+    envp.push_back(NULL);
+    execle("/usr/bin/python3", "python3", cgiPath.c_str(), NULL, &envp[0]);
+    throw ExceptionMaker("execle failed: " + std::string(strerror(errno)));
 }
 
 void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& request, Response& response, pid_t pid) {

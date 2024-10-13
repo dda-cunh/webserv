@@ -73,8 +73,13 @@ def delete_file():
         json_response(False, error=str(e))
         sys.exit(1)
 
+def print_env_variables():
+    for key, value in os.environ.items():
+        logging.debug(f"{key}={value}")
+
 def main():
     logging.debug("CGI Script Starting")
+    print_env_variables()
     request_method = os.environ.get("REQUEST_METHOD", "GET")
     if request_method == "POST":
         handle_file_upload()
