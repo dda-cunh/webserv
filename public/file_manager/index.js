@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fetchFiles = async () => {
         try {
-            const response = await fetch("/cgi/file_handler.cgi");
+            const response = await fetch("/file_manager/file_handler.cgi");
             const result = await response.json();
             if (result.success) {
                 fileList.innerHTML = result.message.map(file => `
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.deleteFile = async (fileName) => {
         try {
-            const response = await fetch(`/cgi/file_handler.cgi/${encodeURIComponent(fileName)}`, { method: "DELETE" });
+            const response = await fetch(`/file_manager/file_handler.cgi/${encodeURIComponent(fileName)}`, { method: "DELETE" });
             const result = await response.json();
             result.success ? fetchFiles() : console.error("Error deleting file:", result.error);
         } catch (error) {
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData();
         formData.append("file", file);
         try {
-            const response = await fetch("/cgi/file_handler.cgi", { method: "POST", body: formData });
+            const response = await fetch("/file_manager/file_handler.cgi", { method: "POST", body: formData });
             const result = await response.json();
             result.success ? fetchFiles() : console.error("Error uploading file:", result.error);
         } catch (error) {
