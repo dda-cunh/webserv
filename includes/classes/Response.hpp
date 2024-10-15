@@ -18,6 +18,7 @@ class Response {
 		void					setBody(const std::string &body);
 		void					setHeader(const std::string &key, const std::string &value);
 
+		ServerLocation *	    getMatchedLocation();
 	private:
 		Http::STATUS_CODE		_statusCode;
 		StrStrMap				_headers;

@@ -221,21 +221,14 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 
 void Response::handleCGI() {
     std::string uri = _request.uri();
-    std::string rootDir = _matchedLocation->getRootDir();
-    size_t cgiPos = uri.find(".cgi");
-    std::string cgiPath = rootDir + uri.substr(0, cgiPos + 4);
+    std::string cgiPath = _matchedLocation->getRootDir() + uri.substr(0, uri.find(".cgi") + 4);
 
-	std::vector<std::string> envVars;
-	setEnvironmentVariables(cgiPath, _request, envVars);
-	std::cout << "handleCGI Environment variables:" << std::endl;
-	for (std::vector<std::string>::iterator it = envVars.begin(); it != envVars.end(); ++it)
-		std::cout << *it << std::endl;
+    std::vector<std::string> envVars;
+    setEnvironmentVariables(cgiPath, _request, *this, envVars);
 
     int inputPipe[2], outputPipe[2];
-    try
-    {
+    try {
         createPipes(inputPipe, outputPipe);
-
         pid_t pid = fork();
         if (pid == 0)
             handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
@@ -243,9 +236,7 @@ void Response::handleCGI() {
             handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
         else
             throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
-    }
-    catch (ExceptionMaker &e)
-    {
+    } catch (ExceptionMaker &e) {
         e.log();
         setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
     }
@@ -297,14 +288,21 @@ std::string const &Response::getResponse() const
 	return _response;
 }
 
+
+ServerLocation *Response::getMatchedLocation()
+{
+	return _matchedLocation;
+}
+
 /**************************************************************************/
 
 /*******************************  SETTERS  *******************************/
 
 void Response::setCommonHeaders()
 {
+	if (_headers.find("Content-Length") == _headers.end())
+		setHeader("Content-Length", Utils::intToString(_body.length()));
 	setHeader("Server", "webserv/0.1");
-	setHeader("Content-Length", Utils::intToString(_body.length()));
 	setHeader("Date", Utils::getCurrentDate());
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, logging, json
+import os, sys, logging, json, urllib.parse
 
 logging.basicConfig(filename='file_handler.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -67,7 +67,7 @@ def list_files():
 
 def delete_file():
     try:
-        filename = os.path.basename(os.environ.get('PATH_INFO', ''))
+        filename = urllib.parse.unquote(os.path.basename(os.environ.get('PATH_INFO', '')))
         if not filename:
             raise ValueError("No file specified for deletion in the path")
         
@@ -81,6 +81,7 @@ def delete_file():
         logging.exception("Error during file deletion")
         json_response(False, error=str(e))
         sys.exit(1)
+
 
 def print_env_variables():
     for key, value in os.environ.items():
