@@ -1,44 +1,55 @@
 document.addEventListener("DOMContentLoaded", () => {
-	const fileList = document.getElementById("file-list");
+    const fileList = document.getElementById("file-list");
+    const uploadForm = document.getElementById("upload-form");
+    const fileInput = document.getElementById("file");
 
-	async function fetchFiles() {
-		try {
-			const response = await fetch("/files");
-			const files = await response.json();
+    const fetchFiles = async () => {
+        try {
+            const response = await fetch("/file_manager/file_handler.cgi");
+            const result = await response.json();
+            if (result.success) {
+                fileList.innerHTML = result.message.map(file => `
+                    <tr>
+                        <td>${file.name}</td>
+                        <td>${file.size}</td>
+                        <td><button onclick="deleteFile('${file.name}')">Delete</button></td>
+                    </tr>
+                `).join('');
+            } else {
+                console.error("Error fetching files:", result.error);
+            }
+        } catch (error) {
+            console.error("Error fetching files:", error);
+        }
+    };
 
-			fileList.innerHTML = "";
+    window.deleteFile = async (fileName) => {
+        try {
+            const response = await fetch(`/file_manager/file_handler.cgi/${encodeURIComponent(fileName)}`, { method: "DELETE" });
+            const result = await response.json();
+            result.success ? fetchFiles() : console.error("Error deleting file:", result.error);
+        } catch (error) {
+            console.error("Error deleting file:", error);
+        }
+    };
 
-			files.forEach(file => {
-				const listItem = document.createElement("li");
-				listItem.textContent = file;
+    const uploadFile = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+            const response = await fetch("/file_manager/file_handler.cgi", { method: "POST", body: formData });
+            const result = await response.json();
+            result.success ? fetchFiles() : console.error("Error uploading file:", result.error);
+        } catch (error) {
+            console.error("Error uploading file:", error);
+        }
+    };
 
-				const deleteButton = document.createElement("button");
-				deleteButton.textContent = "Delete";
-				deleteButton.onclick = () => deleteFile(file);
+    uploadForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const file = fileInput.files[0];
+        if (file) uploadFile(file);
+    });
 
-				listItem.appendChild(deleteButton);
-				fileList.appendChild(listItem);
-			});
-		} catch (error) {
-			console.error("Error fetching files:", error);
-		}
-	}
-
-	async function deleteFile(fileName) {
-		try {
-			const response = await fetch(`/delete?file=${encodeURIComponent(fileName)}`, {
-				method: "DELETE"
-			});
-
-			if (response.ok) {
-				fetchFiles();
-			} else {
-				console.error("Error deleting file:", await response.text());
-			}
-		} catch (error) {
-			console.error("Error deleting file:", error);
-		}
-	}
-
-	fetchFiles();
+    fetchFiles();
 });

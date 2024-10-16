@@ -18,20 +18,21 @@ NAMES_DIR	=	namespaces/
 CLASS_DIR	=	classes/
 
 SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
-					$(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
-												Request.cpp \
-												Response.cpp \
-												TCPSocket.cpp \
-												ServerManager.cpp \
-												ConfigParser.cpp \
-												SyntaxChecker.cpp \
-												ServerConfig.cpp \
-												ServerLocation.cpp) \
-					$(addprefix $(NAMES_DIR),	Utils.cpp \
-												Http.cpp \
-												Network.cpp \
-												Directory.cpp \
-												ErrorPages.cpp))
+                    $(addprefix $(CLASS_DIR),	ExceptionMaker.cpp \
+                                                Request.cpp \
+                                                Response.cpp \
+                                                TCPSocket.cpp \
+                                                ServerManager.cpp \
+                                                ConfigParser.cpp \
+                                                SyntaxChecker.cpp \
+                                                ServerConfig.cpp \
+                                                ServerLocation.cpp \
+                                                CGIHandler.cpp) \
+                    $(addprefix $(NAMES_DIR),	Utils.cpp \
+                                                Http.cpp \
+                                                Network.cpp \
+                                                Directory.cpp \
+                                                ErrorPages.cpp))
 
 OBJ_DIRS		=	$(OBJ_DIR)	$(addprefix $(OBJ_DIR), $(CLASS_DIR)) \
 								$(addprefix $(OBJ_DIR), $(NAMES_DIR))

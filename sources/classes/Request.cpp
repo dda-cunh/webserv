@@ -222,50 +222,6 @@ void	Request::parseHeaderLine(std::string const& headerLine)
 	this->putHeader(key, Utils::sTrim(val));
 }
 
-// Parses the file content from a POST request with a file upload
-// TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
-bool Request::parseFileContent(std::string &fileName, std::string &fileContent) const
-{
-    std::string boundary;
-    std::string contentTypeHeader = header("Content-Type");
-
-    size_t boundaryPos = contentTypeHeader.find("boundary=");
-    if (boundaryPos != std::string::npos)
-		boundary = "--" + contentTypeHeader.substr(boundaryPos + 9);
-	else
-		return false;
-
-    std::string requestBody(_body.begin(), _body.end());
-
-    size_t boundaryStart = requestBody.find(boundary);
-    if (boundaryStart == std::string::npos)
-		return false;
-
-    size_t fileNamePos = requestBody.find("filename=\"", boundaryStart);
-    if (fileNamePos == std::string::npos)
-		return false;
-
-    fileNamePos += 10;
-    size_t fileNameEnd = requestBody.find("\"", fileNamePos);
-    if (fileNameEnd == std::string::npos)
-		return false;
-
-    fileName = requestBody.substr(fileNamePos, fileNameEnd - fileNamePos);
-
-    size_t fileContentStart = requestBody.find(CRLF, fileNameEnd);
-    if (fileContentStart == std::string::npos)
-		return false;
-
-    fileContentStart += 4;
-    size_t fileContentEnd = requestBody.find(boundary, fileContentStart);
-    if (fileContentEnd == std::string::npos)
-		return false;
-
-    fileContent = requestBody.substr(fileContentStart, fileContentEnd - fileContentStart - 2); // Exclude the trailing "\r\n"
-
-    return true;
-}
-
 /**************************************************************************/
 
 /*****************************  STATIC MEMBERS  ***************************/

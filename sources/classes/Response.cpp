@@ -1,4 +1,6 @@
 #include "../../includes/classes/Response.hpp"
+#include <sstream> // for std::ostringstream
+#include <sys/wait.h>
 
 /**************************************************************************/
 
@@ -44,39 +46,6 @@ std::string Response::getHeadersStr()
         responseHeaders += it->first + ": " + it->second + CRLF;
     responseHeaders += CRLF;
     return responseHeaders;
-}
-
-void Response::handleFileList()
-{
-	std::string directory = "public/uploads"; // TODO: Get this from config
-
-	try
-	{
-		std::vector<std::string> files = Directory::listFiles(directory);
-
-		std::ostringstream json;
-		json << "[";
-		for (size_t i = 0; i < files.size(); ++i)
-		{
-			json << "\"" << files[i] << "\"";
-			if (i < files.size() - 1)
-			{
-				json << ",";
-			}
-		}
-		json << "]";
-
-		_statusCode = Http::SC_OK;
-		_body = json.str();
-		_headers["Content-Type"] = "application/json";
-	}
-	catch (ExceptionMaker &e)
-	{
-		e.log();
-		_statusCode = Http::SC_INTERNAL_SERVER_ERROR;
-		_body = "{\"error\":\"Failed to list files in directory.\"}";
-		_headers["Content-Type"] = "application/json";
-	}
 }
 
 std::string extractFileNameFromQuery(const std::string &uri)
@@ -138,6 +107,8 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
       _request(request),
       _serverBlocks(server_blocks)
 {
+	std::string body(request.body().begin(), request.body().end());
+
     try {
 		setMatchedLocation();
 	} catch (std::exception &e) {
@@ -174,109 +145,19 @@ void Response::dispatchMethod()
 {
     if (!_matchedLocation->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
+	else if (_request.uri().find(".cgi") != std::string::npos)
+		handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
-    else if (_request.method() == Http::M_POST)
-        handlePOSTMethod();
-    else if (_request.method() == Http::M_DELETE)
-        handleDELETEMethod();
 }
 
 /**
- * @brief Deletes a specified file, handling errors and permissions.
- */
-void Response::handleDELETEMethod()
-{
-	if (_request.uri().find("/delete") != 0)
-		return setStatusAndReadResource(Http::SC_NOT_FOUND);
-
-	std::string fileName = extractFileNameFromQuery(_request.uri());
-	if (fileName.empty())
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-
-	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
-	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
-
-	if (Directory::isDirectory(filePath))
-		return setStatusAndReadResource(Http::SC_FORBIDDEN);
-	if (Utils::resourceExists(filePath))
-	{
-		if (remove(filePath.c_str()) != 0)
-		{
-			Utils::log("Error deleting file", Utils::LOG_ERROR);
-			setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-		}
-		else
-		{
-			_statusCode = Http::SC_NO_CONTENT;
-		}
-	}
-	else
-	{
-		setStatusAndReadResource(Http::SC_NOT_FOUND);
-	}
-}
-
-// TODO: the file content parsing should be called by the request parsing logic, not the response as it's being done now
-void Response::handlePOSTMethod()
-{
-	if (_request.header("content-type").find("multipart/form-data") == std::string::npos)
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-
-	std::string fileName;
-	std::string fileContent;
-	if (!_request.parseFileContent(fileName, fileContent))
-	{
-		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	}
-
-	if (fileName.empty() || fileContent.empty())
-	{
-		Utils::log("Error parsing file content", Utils::LOG_ERROR);
-		return setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	}
-
-	std::string uploads_directory = "public/uploads"; // TODO: Get this from config
-	std::string filePath = Utils::concatenatePaths(uploads_directory, fileName);
-
-	try
-	{
-		std::ofstream outFile(filePath.c_str(), std::ios::binary);
-		if (!outFile)
-			throw ExceptionMaker("Error opening file for writing: " + filePath);
-
-		outFile.write(fileContent.data(), fileContent.size());
-		if (!outFile)
-			throw ExceptionMaker("Error writing to file: " + filePath);
-
-		_statusCode = Http::SC_CREATED;
-		setHeader("Location", filePath);
-		_body = "File uploaded successfully";
-	}
-	catch (ExceptionMaker &e)
-	{
-		e.log();
-		return setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-	}
-}
-
-/**
- * @brief Handles GET requests by serving files, directories, or JSON file lists.
- *
- * - For "/files" URI, it invokes `handleFileList` to return a JSON list of files.
- * - For other URIs, it serves the requested file or directory listing, based on the existence and type of the resource.
+ * @brief  Serves the requested file or directory listing.
  */
 void Response::handleGETMethod()
 {
 	std::string root = _matchedLocation->getRootDir();
 	bool autoindex = static_cast<LocationStatic*>(_matchedLocation)->getAutoIndex();
-
-	if (_request.uri() == "/files")
-	{
-		handleFileList();
-		return;
-	}
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
@@ -338,6 +219,29 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 	}
 }
 
+void Response::handleCGI() {
+    std::string uri = _request.uri();
+    std::string cgiPath = _matchedLocation->getRootDir() + uri.substr(0, uri.find(".cgi") + 4);
+
+    std::vector<std::string> envVars;
+    setEnvironmentVariables(cgiPath, _request, *this, envVars);
+
+    int inputPipe[2], outputPipe[2];
+    try {
+        createPipes(inputPipe, outputPipe);
+        pid_t pid = fork();
+        if (pid == 0)
+            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
+        else if (pid > 0)
+            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
+        else
+            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
+    } catch (ExceptionMaker &e) {
+        e.log();
+        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+    }
+}
+
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
 {
 	_statusCode = statusCode;
@@ -384,20 +288,32 @@ std::string const &Response::getResponse() const
 	return _response;
 }
 
+
+ServerLocation *Response::getMatchedLocation()
+{
+	return _matchedLocation;
+}
+
 /**************************************************************************/
 
 /*******************************  SETTERS  *******************************/
 
 void Response::setCommonHeaders()
 {
+	if (_headers.find("Content-Length") == _headers.end())
+		setHeader("Content-Length", Utils::intToString(_body.length()));
 	setHeader("Server", "webserv/0.1");
-	setHeader("Content-Length", Utils::intToString(_body.length()));
 	setHeader("Date", Utils::getCurrentDate());
 }
 
 void Response::setHeader(const std::string &key, const std::string &value)
 {
 	_headers[key] = value;
+}
+
+void Response::setBody(const std::string &body)
+{
+	_body = body;
 }
 
 /**
