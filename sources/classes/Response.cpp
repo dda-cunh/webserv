@@ -91,7 +91,7 @@ void Response::setMatchedLocation() {
 
     _matchedLocation = bestMatch;
 
-    std::cout << "Matched location: " << *static_cast<LocationStatic*>(_matchedLocation) << std::endl;
+    std::cout << "Matched location: " << _matchedLocation << std::endl;
 }
 
 
@@ -157,7 +157,7 @@ void Response::dispatchMethod()
 void Response::handleGETMethod()
 {
 	std::string root = _matchedLocation->getRootDir();
-	bool autoindex = static_cast<LocationStatic*>(_matchedLocation)->getAutoIndex();
+	bool autoindex = _matchedLocation->getAutoIndex();
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
