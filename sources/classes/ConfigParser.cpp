@@ -10,9 +10,7 @@ StrStrMap					ConfigParser::defaultRedirections;
 std::vector<std::string>	ConfigParser::defaultMethodsAllowed;
 std::string					ConfigParser::defaultUploadPath;
 
-
 bool						ConfigParser::defaultAutoIndex;
-//std::string					ConfigParser::defaultCgiPass;
 
 
 static void	erase_comments(std::string &line)
@@ -77,11 +75,13 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 	_validateConfigs(configs);
 
 //	THIS IS FOR DEBUGGING ONLY
+
 	for (size_t i = 0; i < configs.size(); i++)
 	{
 		std::cout << configs.at(i) << std::endl;
 		std::cout << "=============================" << std::endl;
 	}
+
 }
 
 

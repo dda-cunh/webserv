@@ -1,0 +1,24 @@
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/cgi/file_handler.cgi
+DEBUG:root:LC_CTYPE=C.UTF-8
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/cgi/file_handler.cgi
+DEBUG:root:LC_CTYPE=C.UTF-8
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/cgi/file_handler.cgi
+DEBUG:root:LC_CTYPE=C.UTF-8
+DEBUG:root:CGI Script Ending
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/file_handler.cgi
+DEBUG:root:LC_CTYPE=C.UTF-8
+DEBUG:root:CGI Script Ending
