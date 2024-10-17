@@ -1,18 +1,5 @@
 #include "../../includes/classes/ServerLocation.hpp"
 
-static void	print_vector(std::vector<std::string> strVector)
-{
-	size_t	vectorSize;
-
-	std::cout << "printing vector:" << std::endl;
-
-	vectorSize = strVector.size();
-	for (size_t i = 0; i < vectorSize; i++)
-		std::cout << strVector.at(i) << std::endl;
-
-	std::cout << "===================================" << std::endl;
-}
-
 
 ServerLocation::ServerLocation(void)
 {
@@ -31,8 +18,6 @@ ServerLocation::ServerLocation(void)
 
 ServerLocation::ServerLocation(const std::vector<std::string> &strLocationBlock)
 {
-	print_vector(strLocationBlock);
-
 	this->_location = this->_setLocation(strLocationBlock.at(0) );
 	this->_rootDir = this->_setRootDir(strLocationBlock);
 	this->_setIndexFiles(strLocationBlock, this->_indexFiles);

@@ -65,7 +65,7 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	this->_host = serverConfig.getHost();
 	this->_port = serverConfig.getPort();
 
-	vectorSize = serverConfig.getServerNamesSize();
+	vectorSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
 		this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
