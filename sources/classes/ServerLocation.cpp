@@ -28,6 +28,7 @@ ServerLocation::ServerLocation(const std::vector<std::string> &strLocationBlock)
 	this->_uploadPath = this->_setUploadStore(strLocationBlock);
 	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
 	this->_setCgiPaths(strLocationBlock);
+	this->_cgiRoot = this->_setCgiRoot(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -64,6 +65,12 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
 
   	this->_uploadPath = serverLocation.getUploadPath();
+  	this->_autoIndex = serverLocation.getAutoIndex();
+
+  	for (StrStrMap::const_iterator itt = serverLocation.getCgiPathsBegin(); itt != serverLocation.getCgiPathsEnd(); itt++)
+  		this->_cgiPaths[itt->first] = itt->second;
+
+  	this->_cgiRoot = serverLocation.getCgiRoot();
 
 	return (*this);
 }
@@ -132,6 +139,11 @@ bool	ServerLocation::getAutoIndex(void) const
 std::string	ServerLocation::getCgiPath(std::string ext) const
 {
 	return (this->_cgiPaths.at(ext) );
+}
+
+std::string	ServerLocation::getCgiRoot(void) const
+{
+	return (this->_cgiRoot);
 }
 
 
@@ -498,7 +510,29 @@ void	ServerLocation::_setCgiPaths(std::vector<std::string> strLocationBlock)
 			if (this->_cgiPaths.find(ext) == this->_cgiPaths.end() )
 				this->_cgiPaths[ext] = line.substr(line.find_last_of(" \t") );
 			else
-				throw (ExceptionMaker("Duplicate extension provided in \"cgi_path\" directive") );
+				throw (ExceptionMaker("Multiple paths for same extension in \"cgi_path\" directives") );
 		}
 	}
+
+	if (this->_cgiPaths.empty() )
+	{
+	  	for (StrStrMap::const_iterator itt = ConfigParser::defaultCgiPaths.begin(); itt != ConfigParser::defaultCgiPaths.end(); itt++)
+	  		this->_cgiPaths[itt->first] = itt->second;
+	}
+}
+
+std::string	ServerLocation::_setCgiRoot(std::vector<std::string> strLocationBlock)
+{
+	size_t		vectorSize;
+	std::string	line;
+
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("cgi_root") == 0)
+			return (SyntaxChecker::strParseLine(line) );
+	}
+
+	return (ConfigParser::defaultCgiRoot);
 }

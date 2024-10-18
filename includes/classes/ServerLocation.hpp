@@ -39,6 +39,7 @@ class	ServerLocation
 		std::string					getUploadPath(void) const;
 		bool						getAutoIndex(void) const;
 		std::string					getCgiPath(std::string ext) const;
+		std::string					getCgiRoot(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
@@ -63,7 +64,7 @@ class	ServerLocation
 		std::string					_uploadPath;		//		upload_store [PATH]
 	    bool						_autoIndex;			//		autoindex [on | off]
 		StrStrMap					_cgiPaths;			//		cgi_path [EXT] [PATH];
-//		std::string					_cgiRoot			//		cgi_root [PATH]
+		std::string					_cgiRoot;			//		cgi_root [PATH]
 
 	private:
 		std::string					_setLocation(std::string locationLine);
@@ -76,8 +77,5 @@ class	ServerLocation
 		std::string					_setUploadStore(std::vector<std::string> strLocationBlock);
 		bool						_setAutoIndex(std::vector<std::string> strLocationBlock);
 		void						_setCgiPaths(std::vector<std::string> strLocationBlock);
+		std::string					_setCgiRoot(std::vector<std::string> strLocationBlock);
 };
-//	MERGE SERVERLOCATION INTO A SINGLE CLASS
-//	ADD cgi_root DIRECTIVE
-
-

@@ -9,8 +9,9 @@ IntStrMap					ConfigParser::defaultErrorPages;
 StrStrMap					ConfigParser::defaultRedirections;
 std::vector<std::string>	ConfigParser::defaultMethodsAllowed;
 std::string					ConfigParser::defaultUploadPath;
-
 bool						ConfigParser::defaultAutoIndex;
+StrStrMap					ConfigParser::defaultCgiPaths;
+std::string					ConfigParser::defaultCgiRoot;
 
 
 static void	erase_comments(std::string &line)
@@ -66,6 +67,8 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		defaultRedirections.clear();
 		defaultMethodsAllowed.clear();
 		defaultAutoIndex = DEFAULT_AUTO_INDEX;
+		defaultCgiPaths.clear();
+		defaultCgiRoot.clear();
 	}
 
 	configFile.close();
@@ -220,6 +223,15 @@ void	ConfigParser::_overrideDefaults(void)
 			else
 				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
 		}
+		else if (line.find("cgi_path") == 0)
+		{
+			if (defaultCgiPaths.find(line.substr(0, line.find_first_of(" \t") ) ) == defaultCgiPaths.end() )
+				defaultCgiPaths[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
+			else
+				throw (ExceptionMaker("Multiple paths for same extension in \"cgi_path\" directives") );
+		}
+		else if (line.find("cgi_root") == 0)
+			defaultCgiRoot = SyntaxChecker::strParseLine(line);
 	}
 }
 
