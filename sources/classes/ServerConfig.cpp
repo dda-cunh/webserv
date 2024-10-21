@@ -7,7 +7,7 @@ ServerConfig::ServerConfig(void)
 	this->_port = 80;
 	this->_serverNames.push_back("webserv.ft");
 
-	this->_locationBlocks.push_back(new LocationStatic);
+	this->_locationBlocks.push_back(new ServerLocation);
 }
 
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
@@ -33,23 +33,13 @@ ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 				line = strServerBlock.at(++i);
 			}
 
-			switch (this->parseLocationType(strLocationBlock) )
-			{
-				case (Utils::L_STATIC):
-					this->_locationBlocks.push_back(new LocationStatic(strLocationBlock) );
-					break ;
-				case (Utils::L_CGI):
-					this->_locationBlocks.push_back(new LocationCGI(strLocationBlock) );
-					break ;
-				case (Utils::L_UNHANDLED):
-					throw (ExceptionMaker("Invalid Location type") );
-					break ;
-			}
+			this->_locationBlocks.push_back(new ServerLocation(strLocationBlock) );
+
 			strLocationBlock.clear();
 		}
 	}
 	if (this->_locationBlocks.empty() )
-		this->_locationBlocks.push_back(new LocationStatic);
+		this->_locationBlocks.push_back(new ServerLocation);
 }
 
 ServerConfig::ServerConfig(const ServerConfig &serverConfig)
@@ -67,57 +57,21 @@ ServerConfig::~ServerConfig(void)
 		delete this->_locationBlocks.at(i);
 }
 
+
 ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 {
-	ServerLocation	*location;
-	size_t	vectorSize;
+	size_t			vectorSize;
 
 	this->_host = serverConfig.getHost();
 	this->_port = serverConfig.getPort();
 
-	vectorSize = serverConfig.getServerNamesSize();
-	for (size_t i = 0; i < vectorSize; i++)
-		this->_serverNames.push_back(serverConfig.getServerName(i) );
-
 	vectorSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < vectorSize; i++)
 	{
-		location = serverConfig.getLocationFromIndex(i);
-
-		switch (this->getLocationType(location))
-		{
-			case (Utils::L_STATIC):
-				this->_locationBlocks.push_back(new LocationStatic(*(dynamic_cast<LocationStatic*>(location) ) ) );
-				break ;
-			case (Utils::L_CGI):
-				this->_locationBlocks.push_back(new LocationCGI(*(dynamic_cast<LocationCGI*>(location) ) ) );
-				break ;
-			case (Utils::L_UNHANDLED):
-				throw (ExceptionMaker("Invalid Location type") );
-				break ;
-		}
+		this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
 	}
 
 	return (*this);
-}
-
-
-Utils::LOCATION_BLOCK_TYPE	ServerConfig::parseLocationType(std::vector<std::string> strLocationBlock)
-{
-	size_t		vectorSize;
-	std::string	line;
-
-	vectorSize = strLocationBlock.size();
-	for (size_t i = 0; i < vectorSize; i++)
-	{
-		line = strLocationBlock.at(i);
-		if (line.find("autoindex") == 0)
-			return (Utils::L_STATIC);
-		else if (line.find("cgi_path") == 0)
-			return (Utils::L_CGI);
-	}
-
-	return (Utils::L_STATIC);
 }
 
 
@@ -166,17 +120,6 @@ size_t	ServerConfig::getServerNamesSize(void) const
 size_t	ServerConfig::getLocationBlocksSize(void) const
 {
 	return (this->_locationBlocks.size() );
-}
-
-
-Utils::LOCATION_BLOCK_TYPE	ServerConfig::getLocationType(ServerLocation *location) const
-{
-	if (dynamic_cast<LocationStatic *>(location) != NULL)
-		return (Utils::L_STATIC);
-	else if (dynamic_cast<LocationCGI *>(location) != NULL)
-		return (Utils::L_CGI);
-	else
-		return (Utils::L_UNHANDLED);
 }
 
 
@@ -261,11 +204,6 @@ void	ServerConfig::_setServerName(std::vector<std::string> strServerBlock, std::
 }
 
 
-
-
-
-
-
 std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 {
 	ServerLocation	*location;
@@ -284,20 +222,45 @@ std::ostream	&operator<<(std::ostream &out, const ServerConfig &serverConfig)
 	{
 		location = serverConfig.getLocationFromIndex(i);
 		out << "LocationBlock nr. " << i << ":" << std::endl;
-
-		switch (serverConfig.getLocationType(location))
-		{
-			case (Utils::L_STATIC):
-				out << *(dynamic_cast<LocationStatic *>(location) ) << std::endl;
-				break ;
-			case (Utils::L_CGI):
-				out << *(dynamic_cast<LocationCGI *>(location) ) << std::endl;
-				break ;
-			case (Utils::L_UNHANDLED):
-				throw (ExceptionMaker("Unhandled Location type") );
-				break ;
-		}		
+		out << *location << std::endl;
 		out << std::endl;
 	}
+	return (out);
+}
+
+std::ostream 	&operator<<(std::ostream &out, const ServerLocation &location)
+{
+	size_t	indexVectorSize;
+
+	out << "\tLocation: " << location.getLocation() << std::endl;
+	out << "\tRoot: " << location.getRootDir() << std::endl;
+  
+	out << "\tIndex files:" << std::endl;
+	indexVectorSize = location.getIndexVectorSize();
+	for (size_t i = 0; i < indexVectorSize; i++)
+		out << "\t\t" << location.getIndexFileName(i) << std::endl;
+
+	out << "\tMax body size: " << location.getMaxBodySize() << std::endl;
+
+	out << "\tError pages:" << std::endl;
+	for (IntStrMap::const_iterator itt = location.getErrPageIttBegin(); itt != location.getErrPageIttEnd(); itt++)
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
+
+	out << "\tRedirections:" << std::endl;
+	for (StrStrMap::const_iterator itt = location.getRedirectionIttBegin(); itt != location.getRedirectionIttEnd(); itt++)
+		out << "\t\t" << itt->first << " " << itt->second << std::endl;
+
+	out << "\tAllowed methods:" << std::endl;
+	for (size_t i = 0; i < location.getMethodsAllowedSize(); i++)
+		out << "\t\t" << location.getMethodByIndex(i) << std::endl;
+
+	out << "\tUpload path: " << location.getUploadPath() << std::endl;
+
+	out << "\tAutoindex: " << location.getAutoIndex() << std::endl;
+
+	out << "\tCGI paths:" << std::endl;
+	for (StrStrMap::const_iterator itt = location.getCgiPathsBegin(); itt != location.getCgiPathsEnd(); itt++)
+		out << "\t\t" << itt->first << " " << location.getCgiPath(itt->first) << std::endl;
+
 	return (out);
 }

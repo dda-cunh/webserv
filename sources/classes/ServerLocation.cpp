@@ -13,19 +13,22 @@ ServerLocation::ServerLocation(void)
 	
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_methodsAllowed.push_back(Http::M_POST);
+	this->_autoIndex = false;
 }
 
-ServerLocation::ServerLocation(std::vector<std::string> strLocationBlock)
+ServerLocation::ServerLocation(const std::vector<std::string> &strLocationBlock)
 {
 	this->_location = this->_setLocation(strLocationBlock.at(0) );
 	this->_rootDir = this->_setRootDir(strLocationBlock);
 	this->_setIndexFiles(strLocationBlock, this->_indexFiles);
 	this->_maxBodySize = this->_setMaxBodySize(strLocationBlock);
-
 	this->_setErrorPages(strLocationBlock, this->_errorPages);
 	this->_setRedirections(strLocationBlock, this->_redirections);
 	this->_setAllowedMethods(strLocationBlock, this->_methodsAllowed);
 	this->_uploadPath = this->_setUploadStore(strLocationBlock);
+	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
+	this->_setCgiPaths(strLocationBlock);
+	this->_cgiRoot = this->_setCgiRoot(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -61,10 +64,17 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
 	for (size_t i = 0; i < serverLocation.getMethodsAllowedSize(); i++)
 		this->_methodsAllowed.push_back(serverLocation.getMethodByIndex(i) );
 
-  this->_uploadPath = serverLocation.getUploadPath();
+  	this->_uploadPath = serverLocation.getUploadPath();
+  	this->_autoIndex = serverLocation.getAutoIndex();
+
+  	for (StrStrMap::const_iterator itt = serverLocation.getCgiPathsBegin(); itt != serverLocation.getCgiPathsEnd(); itt++)
+  		this->_cgiPaths[itt->first] = itt->second;
+
+  	this->_cgiRoot = serverLocation.getCgiRoot();
 
 	return (*this);
 }
+
 
 std::string	ServerLocation::getLocation(void) const
 {
@@ -87,38 +97,6 @@ std::string	ServerLocation::getIndexFileName(size_t i) const
 uint32_t	ServerLocation::getMaxBodySize(void) const
 {
 	return (this->_maxBodySize);
-}
-
-IntStrMap::const_iterator	ServerLocation::getErrPageIttBegin(void) const
-{
-	return (this->_errorPages.begin());
-}
-
-IntStrMap::const_iterator	ServerLocation::getErrPageIttEnd(void) const
-{
-	return (this->_errorPages.end());
-}
-
-StrStrMap::const_iterator	ServerLocation::getRedirectionIttBegin(void) const
-{
-	return (this->_redirections.begin());
-}
-
-StrStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
-{
-	return (this->_redirections.end());
-}
-
-Http::METHOD	ServerLocation::getMethodByIndex(size_t i) const
-{
-	if (i >= this->_methodsAllowed.size() )
-		throw (ExceptionMaker("Allowed methods index is out of bounds") );
-	return (this->_methodsAllowed.at(i));
-}
-
-size_t	ServerLocation::getMethodsAllowedSize(void) const
-{
-	return (this->_methodsAllowed.size());
 }
 
 std::string	ServerLocation::getErrPagePath(int status) const
@@ -153,9 +131,67 @@ std::string	ServerLocation::getUploadPath(void) const
 	return (this->_uploadPath);
 }
 
+bool	ServerLocation::getAutoIndex(void) const
+{
+	return (this->_autoIndex);
+}
+
+std::string	ServerLocation::getCgiPath(std::string ext) const
+{
+	return (this->_cgiPaths.at(ext) );
+}
+
+std::string	ServerLocation::getCgiRoot(void) const
+{
+	return (this->_cgiRoot);
+}
+
+
+IntStrMap::const_iterator	ServerLocation::getErrPageIttBegin(void) const
+{
+	return (this->_errorPages.begin());
+}
+
+IntStrMap::const_iterator	ServerLocation::getErrPageIttEnd(void) const
+{
+	return (this->_errorPages.end());
+}
+
+StrStrMap::const_iterator	ServerLocation::getRedirectionIttBegin(void) const
+{
+	return (this->_redirections.begin());
+}
+
+StrStrMap::const_iterator	ServerLocation::getRedirectionIttEnd(void) const
+{
+	return (this->_redirections.end());
+}
+
+Http::METHOD	ServerLocation::getMethodByIndex(size_t i) const
+{
+	if (i >= this->_methodsAllowed.size() )
+		throw (ExceptionMaker("Allowed methods index is out of bounds") );
+	return (this->_methodsAllowed.at(i));
+}
+
+size_t	ServerLocation::getMethodsAllowedSize(void) const
+{
+	return (this->_methodsAllowed.size());
+}
+
 size_t	ServerLocation::getIndexVectorSize(void) const
 {
 	return (this->_indexFiles.size() );
+}
+
+StrStrMap::const_iterator	ServerLocation::getCgiPathsBegin(void) const
+{
+	return (this->_cgiPaths.begin() );
+}
+
+StrStrMap::const_iterator	ServerLocation::getCgiPathsEnd(void) const
+{
+	return (this->_cgiPaths.end() );
 }
 
 
@@ -432,49 +468,7 @@ std::string	ServerLocation::_setUploadStore(std::vector<std::string> strLocation
 	return (ConfigParser::defaultUploadPath);
 }
 
-
-
-//	DERIVED CLASSES
-
-//		STATIC SITE
-LocationStatic::LocationStatic(void)
-{
-	this->_autoIndex = false;
-}
-
-
-LocationStatic::LocationStatic(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
-{
-	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
-}
-
-
-LocationStatic::LocationStatic(const LocationStatic &locationStatic): ServerLocation(locationStatic)
-{
-	if (this != &locationStatic)
-		*this = locationStatic;
-
-}
-
-LocationStatic::~LocationStatic(void)
-{
-	return ;
-}
-
-LocationStatic	&LocationStatic::operator=(const LocationStatic &locationStatic)
-{
-	this->_autoIndex = locationStatic.getAutoIndex();
-
-	return (*this);
-}
-
-bool	LocationStatic::getAutoIndex(void) const
-{
-	return (this->_autoIndex);
-}
-
-
-bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
+bool	ServerLocation::_setAutoIndex(std::vector<std::string> strLocationBlock)
 {
 	size_t		vectorSize;
 	std::string	line;
@@ -499,55 +493,7 @@ bool	LocationStatic::_setAutoIndex(std::vector<std::string> strLocationBlock)
 	return (ConfigParser::defaultAutoIndex);	
 }
 
-
-LocationCGI::LocationCGI(void)
-{
-}
-
-LocationCGI::LocationCGI(std::vector<std::string> strLocationBlock): ServerLocation(strLocationBlock)
-{
-	this->_setCgiPaths(strLocationBlock);	
-}
-
-LocationCGI::LocationCGI(const LocationCGI &locationCGI): ServerLocation(locationCGI)
-{
-	if (this != &locationCGI)
-		*this = locationCGI;
-}
-
-LocationCGI	&LocationCGI::operator=(const LocationCGI &locationCGI)
-{
-	for (StrStrMap::const_iterator itt = locationCGI.getCgiPathsBegin(); itt != locationCGI.getCgiPathsEnd(); itt++)
-		this->_cgiPaths[itt->first] = itt->second;
-
-	return (*this);
-}
-
-LocationCGI::~LocationCGI(void)
-{
-	return ;
-}
-
-
-std::string	LocationCGI::getCgiPath(std::string ext) const
-{
-	return (this->_cgiPaths.at(ext) );
-}
-
-
-StrStrMap::const_iterator	LocationCGI::getCgiPathsBegin(void) const
-{
-	return (this->_cgiPaths.begin() );
-}
-
-StrStrMap::const_iterator	LocationCGI::getCgiPathsEnd(void) const
-{
-	return (this->_cgiPaths.end() );
-}
-
-
-
-void	LocationCGI::_setCgiPaths(std::vector<std::string> strLocationBlock)
+void	ServerLocation::_setCgiPaths(std::vector<std::string> strLocationBlock)
 {
 	size_t		vectorSize;
 	std::string	line;
@@ -564,72 +510,29 @@ void	LocationCGI::_setCgiPaths(std::vector<std::string> strLocationBlock)
 			if (this->_cgiPaths.find(ext) == this->_cgiPaths.end() )
 				this->_cgiPaths[ext] = line.substr(line.find_last_of(" \t") );
 			else
-				throw (ExceptionMaker("Duplicate extension provided in \"cgi_path\" directive") );
+				throw (ExceptionMaker("Multiple paths for same extension in \"cgi_path\" directives") );
 		}
+	}
+
+	if (this->_cgiPaths.empty() )
+	{
+	  	for (StrStrMap::const_iterator itt = ConfigParser::defaultCgiPaths.begin(); itt != ConfigParser::defaultCgiPaths.end(); itt++)
+	  		this->_cgiPaths[itt->first] = itt->second;
 	}
 }
 
-std::ostream 	&operator<<(std::ostream &out, const LocationStatic &locationStatic)
+std::string	ServerLocation::_setCgiRoot(std::vector<std::string> strLocationBlock)
 {
-	size_t	indexVectorSize;
+	size_t		vectorSize;
+	std::string	line;
 
-	out << "\tLocation: " << locationStatic.getLocation() << std::endl;
-	out << "\tRoot: " << locationStatic.getRootDir() << std::endl;
-  
-	out << "\tIndex files:" << std::endl;
-	indexVectorSize = locationStatic.getIndexVectorSize();
-	for (size_t i = 0; i < indexVectorSize; i++)
-		out << "\t\t" << locationStatic.getIndexFileName(i) << std::endl;
+	vectorSize = strLocationBlock.size();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		line = strLocationBlock.at(i);
+		if (line.find("cgi_root") == 0)
+			return (SyntaxChecker::strParseLine(line) );
+	}
 
-	out << "\tMax body size: " << locationStatic.getMaxBodySize() << std::endl;
-
-	out << "\tError pages:" << std::endl;
-	for (IntStrMap::const_iterator itt = locationStatic.getErrPageIttBegin(); itt != locationStatic.getErrPageIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "\tRedirections:" << std::endl;
-	for (StrStrMap::const_iterator itt = locationStatic.getRedirectionIttBegin(); itt != locationStatic.getRedirectionIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "\tAllowed methods:" << std::endl;
-	for (size_t i = 0; i < locationStatic.getMethodsAllowedSize(); i++)
-		out << "\t\t" << locationStatic.getMethodByIndex(i) << std::endl;
-
-	out << "\tUpload path: " << locationStatic.getUploadPath() << std::endl;
-
-	out << "\tAutoindex: " << locationStatic.getAutoIndex() << std::endl;
-
-	return (out);
-}
-
-std::ostream 	&operator<<(std::ostream &out, const LocationCGI &locationCGI)
-{
-	out << "\tLocation: " << locationCGI.getLocation() << std::endl;
-	out << "\tRoot: " << locationCGI.getRootDir() << std::endl;
-
-	out << "\tIndex files:" << std::endl;
-	for (size_t i = 0; i < locationCGI.getIndexVectorSize(); i++)
-		out << "\t\t" << locationCGI.getIndexFileName(i) << std::endl;
-
-	out << "\tMax body size: " << locationCGI.getMaxBodySize() << std::endl;
-
-	out << "\tError pages:" << std::endl;
-	for (IntStrMap::const_iterator itt = locationCGI.getErrPageIttBegin(); itt != locationCGI.getErrPageIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "\tRedirections:" << std::endl;
-	for (StrStrMap::const_iterator itt = locationCGI.getRedirectionIttBegin(); itt != locationCGI.getRedirectionIttEnd(); itt++)
-		out << "\t\t" << itt->first << " " << itt->second << std::endl;
-
-	out << "Allowed methods:" << std::endl;
-	for (size_t i = 0; i < locationCGI.getMethodsAllowedSize(); i++)
-		out << "\t\t" << locationCGI.getMethodByIndex(i) << std::endl;
-
-	out << "\tUpload path: " << locationCGI.getUploadPath() << std::endl;
-
-	out << "\tCGI:" << std::endl;
-	for (StrStrMap::const_iterator itt = locationCGI.getCgiPathsBegin(); itt != locationCGI.getCgiPathsEnd(); itt++)
-		out << "\t\t" << itt->first << " " << locationCGI.getCgiPath(itt->first) << std::endl;
-
-	return (out);
+	return (ConfigParser::defaultCgiRoot);
 }

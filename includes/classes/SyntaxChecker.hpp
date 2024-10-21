@@ -16,6 +16,7 @@
 #define DIRECTIVE_UPLOAD_STORE 10
 #define DIRECTIVE_AUTOINDEX 11
 #define DIRECTIVE_CGI_PATH 12
+#define DIRECTIVE_CGI_ROOT 13
 
 
 class	SyntaxChecker
@@ -46,6 +47,7 @@ class	SyntaxChecker
 		static void	_syntaxCheckUploadStore(const std::vector<std::string> block, const size_t i);
 		static void	_syntaxCheckAutoIndex(const std::vector<std::string> block, const size_t i);
 		static void	_syntaxCheckCgiPath(std::string line);
+		static void	_syntaxCheckCgiRoot(const std::vector<std::string> block, const size_t i);
 
 		static std::vector<std::string>	_strLocationBlock;
 		static const std::string		_directivesList[];

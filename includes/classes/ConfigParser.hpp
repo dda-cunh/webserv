@@ -23,8 +23,10 @@ class	ConfigParser
 		static StrStrMap				defaultRedirections;
 		static std::vector<std::string>	defaultMethodsAllowed;
 		static std::string				defaultUploadPath;
-
 		static bool						defaultAutoIndex;
+		static StrStrMap				defaultCgiPaths;
+		static std::string				defaultCgiRoot;
+
 
 
 

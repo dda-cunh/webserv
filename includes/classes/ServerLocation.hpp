@@ -23,7 +23,7 @@ class	ServerLocation
 {
 	public:
 		ServerLocation(void);
-		ServerLocation(std::vector<std::string> strLocationBlock);
+		ServerLocation(const std::vector<std::string> &strLocationBlock);
 		ServerLocation(const ServerLocation &serverLocation);
 		virtual ~ServerLocation(void);
 
@@ -37,6 +37,9 @@ class	ServerLocation
 		std::string					getRedirection(std::string url) const;
 		bool						methodIsAllowed(Http::METHOD method) const;
 		std::string					getUploadPath(void) const;
+		bool						getAutoIndex(void) const;
+		std::string					getCgiPath(std::string ext) const;
+		std::string					getCgiRoot(void) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
@@ -45,6 +48,8 @@ class	ServerLocation
 		Http::METHOD				getMethodByIndex(size_t i) const;
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
+		StrStrMap::const_iterator	getCgiPathsBegin(void) const;
+		StrStrMap::const_iterator	getCgiPathsEnd(void) const;
 
 	protected:											//	KEYWORDS
 
@@ -57,7 +62,9 @@ class	ServerLocation
 		StrStrMap					_redirections;		//		rewrite [URI | SERVERNAME] [URI | SERVERNAME]
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods [GET] [POST] [DELETE]
 		std::string					_uploadPath;		//		upload_store [PATH]
-
+	    bool						_autoIndex;			//		autoindex [on | off]
+		StrStrMap					_cgiPaths;			//		cgi_path [EXT] [PATH];
+		std::string					_cgiRoot;			//		cgi_root [PATH]
 
 	private:
 		std::string					_setLocation(std::string locationLine);
@@ -68,51 +75,7 @@ class	ServerLocation
 		void						_setRedirections(std::vector<std::string> strLocationBlock, StrStrMap &redirections);
 		void						_setAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
 		std::string					_setUploadStore(std::vector<std::string> strLocationBlock);
-};
-
-
-class	LocationStatic: public ServerLocation
-{
-	public:
-		LocationStatic(void);
-		LocationStatic(std::vector<std::string> strLocationBlock);
-		LocationStatic(const LocationStatic &locationStatic);
-		virtual ~LocationStatic(void);
-
-		LocationStatic	&operator = (const LocationStatic &locationStatic);
-
-		bool	getAutoIndex(void) const;
-
-
-	private:
-    bool	_setAutoIndex(std::vector<std::string> strLocationBlock);
-    
-    bool	_autoIndex;			//		autoindex [on | off]
-};
-
-
-
-class LocationCGI: public ServerLocation
-{
-	public:
-		LocationCGI(void);
-		LocationCGI(std::vector<std::string> strLocationBlock);
-		LocationCGI(const LocationCGI &locationCGI);
-		~LocationCGI(void);
-
-		LocationCGI	&operator = (const LocationCGI & locationCGI);
-
-		std::string					getCgiPath(std::string ext) const;
-
-		StrStrMap::const_iterator	getCgiPathsBegin(void) const;
-		StrStrMap::const_iterator	getCgiPathsEnd(void) const;
-
-	private:
+		bool						_setAutoIndex(std::vector<std::string> strLocationBlock);
 		void						_setCgiPaths(std::vector<std::string> strLocationBlock);
-
-		StrStrMap	_cgiPaths;	//	cgi_path [EXT] [PATH];
+		std::string					_setCgiRoot(std::vector<std::string> strLocationBlock);
 };
-
-
-std::ostream & operator << (std::ostream &out, const LocationStatic &locationStatic);
-std::ostream & operator << (std::ostream &out, const LocationCGI &locationCGI);

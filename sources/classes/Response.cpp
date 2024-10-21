@@ -71,13 +71,14 @@ void Response::setMatchedLocation() {
     ServerLocation *bestMatch = NULL;
     std::string longestMatch;
 
+
+
     for (size_t i = 0; i < _serverBlocks.size(); ++i) {
         const ServerConfig &config = _serverBlocks[i];
-
+        std::cout << "BLOCK SIZE: " << config.getLocationBlocksSize() << std::endl;
         for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
             ServerLocation *location = config.getLocationFromIndex(j);
             std::string locationPath = location->getLocation();
-
             if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
                 longestMatch = locationPath;
                 bestMatch = location;
@@ -91,7 +92,7 @@ void Response::setMatchedLocation() {
 
     _matchedLocation = bestMatch;
 
-    std::cout << "Matched location: " << *static_cast<LocationStatic*>(_matchedLocation) << std::endl;
+    std::cout << "Matched location: " << _matchedLocation << std::endl;
 }
 
 
@@ -157,7 +158,7 @@ void Response::dispatchMethod()
 void Response::handleGETMethod()
 {
 	std::string root = _matchedLocation->getRootDir();
-	bool autoindex = static_cast<LocationStatic*>(_matchedLocation)->getAutoIndex();
+	bool autoindex = _matchedLocation->getAutoIndex();
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
