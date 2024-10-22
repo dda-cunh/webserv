@@ -1,29 +1,31 @@
 #include "../../includes/classes/CGIHandler.hpp"
 
-void setEnvironmentVariables(const std::string& cgiPath, const Request& request, Response& response, std::vector<std::string>& envVars) {
-    std::string pathInfo = request.uri().substr(request.uri().find(".cgi") + 4);
-    
+void setEnvironmentVariables(const std::string& cgiPath, Response& response, std::vector<std::string>& envVars) {
+    const Request& request = response.getRequest();
     envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
-    envVars.push_back("PATH_INFO=" + pathInfo);
+    envVars.push_back("PATH_INFO=" + response.getCGIMatch().getPathInfo());
     envVars.push_back("SCRIPT_FILENAME=" + cgiPath);
-    envVars.push_back("UPLOAD_DIR=" + response.getMatchedLocation()->getUploadPath());
+    envVars.push_back("UPLOAD_DIR=" + response.getLocationMatch()->getUploadPath());
 
     if (request.method() == Http::M_POST) {
         envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
         envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 }
+
 void createPipes(int input_pipe[2], int output_pipe[2]) {
     if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
         throw ExceptionMaker("Pipe creation failed: " + std::string(strerror(errno)));
 }
 
-void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string& cgiPath, const std::vector<std::string>& envVars) {
+void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& response, const std::vector<std::string>& envVars) {
     close(input_pipe[1]);
     close(output_pipe[0]);
 
-    std::string execDir = cgiPath.substr(0, cgiPath.find_last_of('/') + 1);
-    std::string execFile = cgiPath.substr(cgiPath.find_last_of('/') + 1);
+    std::string execDir =Utils::concatenatePaths(response.getLocationMatch()->getRootDir(), response.getCGIMatch().getBasePath());
+    std::string execFile = response.getCGIMatch().getScriptName();
+    std::cout << "execDir: " << execDir << std::endl;
+    std::cout << "execFile: " << execFile << std::endl;
 
     dup2(input_pipe[0], STDIN_FILENO);
     dup2(output_pipe[1], STDOUT_FILENO);

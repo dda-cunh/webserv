@@ -1,0 +1,19 @@
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+DEBUG:root:UPLOAD_DIR=uploads
+DEBUG:root:LC_CTYPE=C.UTF-8
+ERROR:root:Error listing files
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 53, in list_files
+    files = [{"name": f, "size": os.path.getsize(os.path.join(UPLOAD_DIR, f)), "modified": os.path.getmtime(os.path.join(UPLOAD_DIR, f))} for f in os.listdir(UPLOAD_DIR)]
+                                                                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'public/uploads/'
+DEBUG:root:CGI Script Starting
+DEBUG:root:REQUEST_METHOD=GET
+DEBUG:root:PATH_INFO=
+DEBUG:root:SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+DEBUG:root:UPLOAD_DIR=uploads
+DEBUG:root:LC_CTYPE=C.UTF-8
+DEBUG:root:CGI Script Ending

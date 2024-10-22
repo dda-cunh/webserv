@@ -33,7 +33,7 @@ class	ExceptionMaker;
 	PLACE CLIENT_FD ON EPOLL FOR WRITE
 	SEND RESPONSE
 */
-class	CGI;
+class	CGIMatch;
 class	ServerManager;
 class	ServerConfig;
 class	ServerLocation;

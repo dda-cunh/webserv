@@ -89,8 +89,8 @@ void Response::setMatchedLocation() {
         throw std::runtime_error("No valid location block found for the requested URI.");
     }
 
-    _matchedLocation = bestMatch;
-    std::cout << "Matched location:\n" << *_matchedLocation << std::endl;
+    _locationMatch = bestMatch;
+    std::cout << "Matched location:\n" << *_locationMatch << std::endl;
 }
 
 
@@ -143,9 +143,9 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
 
 void Response::dispatchMethod()
 {
-    if (!_matchedLocation->methodIsAllowed(_request.method()))
+    if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-    else if (setMatchedCGI(), !_cgi.getBinary().empty())
+    else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
         handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
@@ -155,26 +155,36 @@ void Response::handleMethodNotAllowed()
 {
     _statusCode = Http::SC_METHOD_NOT_ALLOWED;
     std::string allowedMethodsStr;
-    for (size_t i = 0; i < _matchedLocation->getMethodsAllowedSize(); ++i)
-        allowedMethodsStr += Http::methodToString(_matchedLocation->getMethodByIndex(i)) + (i < _matchedLocation->getMethodsAllowedSize() - 1 ? ", " : "");
+    for (size_t i = 0; i < _locationMatch->getMethodsAllowedSize(); ++i)
+        allowedMethodsStr += Http::methodToString(_locationMatch->getMethodByIndex(i)) + (i < _locationMatch->getMethodsAllowedSize() - 1 ? ", " : "");
     setHeader("Allow", allowedMethodsStr);
-    readResource(_matchedLocation->getErrPagePath(_statusCode));
+    readResource(_locationMatch->getErrPagePath(_statusCode));
 }
 
 void Response::handleCGI() {
     std::string uri = _request.uri();
-    std::string cgiPath = _matchedLocation->getRootDir() + _cgi.getCompletePath();
-    std::cout << "cgiPath: " << cgiPath << std::endl;
+    std::string cgiPath = Utils::concatenatePaths(_locationMatch->getRootDir(), Utils::concatenatePaths(_cgiMatch.getBasePath(), _cgiMatch.getScriptName()));    
+    std::cout << "CGI path: " << cgiPath << std::endl;
+    
+    if (access(cgiPath.c_str(), X_OK) != 0) {
+        setStatusAndReadResource(Http::SC_BAD_REQUEST);
+        return;
+    }
 
     std::vector<std::string> envVars;
-    setEnvironmentVariables(cgiPath, _request, *this, envVars);
+    setEnvironmentVariables(cgiPath, *this, envVars);
+
+    for (size_t i = 0; i < envVars.size(); ++i) {
+        std::cout << envVars[i] << std::endl;
+    }
 
     int inputPipe[2], outputPipe[2];
+
     try {
         createPipes(inputPipe, outputPipe);
         pid_t pid = fork();
         if (pid == 0)
-            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
+            handleChildProcess(inputPipe, outputPipe, *this, envVars);
         else if (pid > 0)
             handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
         else
@@ -190,8 +200,8 @@ void Response::handleCGI() {
  */
 void Response::handleGETMethod()
 {
-	std::string root = _matchedLocation->getRootDir();
-	bool autoindex = _matchedLocation->getAutoIndex();
+	std::string root = _locationMatch->getRootDir();
+	bool autoindex = _locationMatch->getAutoIndex();
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
@@ -199,7 +209,7 @@ void Response::handleGETMethod()
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
-		uri = _statusCode == Http::SC_OK ? result.path : _matchedLocation->getErrPagePath(_statusCode);
+		uri = _statusCode == Http::SC_OK ? result.path : _locationMatch->getErrPagePath(_statusCode);
 		readResource(uri);
 	}
 	else if (Utils::resourceExists(uri))
@@ -249,18 +259,18 @@ void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::strin
 	if (!uri.empty())
 		readResource(uri);
 	else
-		readResource(_matchedLocation->getErrPagePath(_statusCode), true);
+		readResource(_locationMatch->getErrPagePath(_statusCode), true);
 }
 
 bool Response::isRedirection() {
     std::string requestPath = _request.uri();
-    std::string locationPath = _matchedLocation->getLocation();
+    std::string locationPath = _locationMatch->getLocation();
 
     if (requestPath.find(locationPath) == 0) {
         std::string relativePath = requestPath.substr(locationPath.size());
 
-        StrStrMap::const_iterator it = _matchedLocation->getRedirectionIttBegin();
-        StrStrMap::const_iterator end = _matchedLocation->getRedirectionIttEnd();
+        StrStrMap::const_iterator it = _locationMatch->getRedirectionIttBegin();
+        StrStrMap::const_iterator end = _locationMatch->getRedirectionIttEnd();
 
         for (; it != end; ++it) {
             if (relativePath == it->first) {
@@ -290,9 +300,19 @@ std::string const &Response::getResponse() const
 }
 
 
-ServerLocation *Response::getMatchedLocation()
+ServerLocation *Response::getLocationMatch()
 {
-	return _matchedLocation;
+	return _locationMatch;
+}
+
+Request const &Response::getRequest() const
+{
+    return _request;
+}
+
+CGIMatch const &Response::getCGIMatch() const
+{
+    return _cgiMatch;
 }
 
 /**************************************************************************/
@@ -325,24 +345,30 @@ void Response::setResponse()
     _response = getHeadersStr() + _body;
 }
 
-void Response::setMatchedCGI() {
+void Response::setCGIMatch() {
     std::string uri = _request.uri();
-    size_t pos = uri.find_last_of('.');
-    if (pos == std::string::npos)
-        return;
-
-    std::string ext = uri.substr(pos);
-
-    for (StrStrMap::const_iterator it = _matchedLocation->getCgiPathsBegin(); 
-         it != _matchedLocation->getCgiPathsEnd(); ++it) 
-    {
-        if (it->first == ext) 
-        {
-            const std::string binary = (*it).second;
-            _cgi = CGI(uri, binary);
-            std::cout << "CGI object:\n" << _cgi << std::endl;
-
-            break;
+    std::cout << "URI: " << uri << std::endl;
+    
+    size_t slashAfterScript = uri.find('/', 1);
+    while (slashAfterScript != std::string::npos) {
+        size_t nextSlash = uri.find('/', slashAfterScript + 1);
+        std::string segment = uri.substr(slashAfterScript + 1, nextSlash - slashAfterScript - 1);
+        
+        size_t dotPos = segment.find_last_of('.');
+        if (dotPos != std::string::npos) {
+            std::string ext = segment.substr(dotPos);
+            for (StrStrMap::const_iterator it = _locationMatch->getCgiPathsBegin();
+                 it != _locationMatch->getCgiPathsEnd(); ++it) {
+                if (it->first == ext) {
+                    const std::string binary = it->second;
+                    _cgiMatch = CGIMatch(uri, binary);
+                    std::cout << "CGIMatch object:\n" << _cgiMatch << std::endl;
+                    return;
+                }
+            }
         }
+        slashAfterScript = nextSlash;
     }
+    
+    std::cout << "No CGI match found for URI: " << uri << std::endl;
 }

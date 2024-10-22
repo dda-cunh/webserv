@@ -5,7 +5,7 @@
 #include "ServerConfig.hpp"
 #include "ServerLocation.hpp"
 #include "CGIHandler.hpp"
-#include "CGI.hpp"
+#include "CGIMatch.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -19,7 +19,10 @@ class Response {
 		void					setBody(const std::string &body);
 		void					setHeader(const std::string &key, const std::string &value);
 
-		ServerLocation *	    getMatchedLocation();
+		ServerLocation *	    getLocationMatch();
+		Request const &			getRequest() const;
+		CGIMatch const &		getCGIMatch() const;
+
 	private:
 		Http::STATUS_CODE		_statusCode;
 		StrStrMap				_headers;
@@ -27,9 +30,9 @@ class Response {
 		std::string				_response;
 		Request					_request;
 		ServerBlocks const &	_serverBlocks;
-		ServerLocation *		_matchedLocation;
+		ServerLocation *		_locationMatch;
 		std::string				_redirectionPath;
-		CGI 					_cgi;
+		CGIMatch 				_cgiMatch;
 		
 		void					dispatchMethod();
 		void 					handleGETMethod();
@@ -48,5 +51,5 @@ class Response {
 		bool					isRedirection();
 		void					handleRedirection();
 
-		void					setMatchedCGI();
+		void					setCGIMatch();
 	};
