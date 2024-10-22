@@ -75,7 +75,6 @@ void Response::setMatchedLocation() {
 
     for (size_t i = 0; i < _serverBlocks.size(); ++i) {
         const ServerConfig &config = _serverBlocks[i];
-        std::cout << "BLOCK SIZE: " << config.getLocationBlocksSize() << std::endl;
         for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
             ServerLocation *location = config.getLocationFromIndex(j);
             std::string locationPath = location->getLocation();
@@ -91,8 +90,7 @@ void Response::setMatchedLocation() {
     }
 
     _matchedLocation = bestMatch;
-
-    std::cout << "Matched location: " << _matchedLocation << std::endl;
+    std::cout << "Matched location:\n" << *_matchedLocation << std::endl;
 }
 
 
@@ -142,14 +140,49 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
  *
  * Calls the relevant method handler.
  */
+
 void Response::dispatchMethod()
 {
     if (!_matchedLocation->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-	else if (_request.uri().find(".cgi") != std::string::npos)
-		handleCGI();
+    else if (setMatchedCGI(), !_cgi.getBinary().empty())
+        handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
+}
+
+void Response::handleMethodNotAllowed()
+{
+    _statusCode = Http::SC_METHOD_NOT_ALLOWED;
+    std::string allowedMethodsStr;
+    for (size_t i = 0; i < _matchedLocation->getMethodsAllowedSize(); ++i)
+        allowedMethodsStr += Http::methodToString(_matchedLocation->getMethodByIndex(i)) + (i < _matchedLocation->getMethodsAllowedSize() - 1 ? ", " : "");
+    setHeader("Allow", allowedMethodsStr);
+    readResource(_matchedLocation->getErrPagePath(_statusCode));
+}
+
+void Response::handleCGI() {
+    std::string uri = _request.uri();
+    std::string cgiPath = _matchedLocation->getRootDir() + _cgi.getCompletePath();
+    std::cout << "cgiPath: " << cgiPath << std::endl;
+
+    std::vector<std::string> envVars;
+    setEnvironmentVariables(cgiPath, _request, *this, envVars);
+
+    int inputPipe[2], outputPipe[2];
+    try {
+        createPipes(inputPipe, outputPipe);
+        pid_t pid = fork();
+        if (pid == 0)
+            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
+        else if (pid > 0)
+            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
+        else
+            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
+    } catch (ExceptionMaker &e) {
+        e.log();
+        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+    }
 }
 
 /**
@@ -177,16 +210,6 @@ void Response::handleGETMethod()
 	{
 		setStatusAndReadResource(Http::SC_NOT_FOUND);
 	}
-}
-
-void Response::handleMethodNotAllowed()
-{
-    _statusCode = Http::SC_METHOD_NOT_ALLOWED;
-    std::string allowedMethodsStr;
-    for (size_t i = 0; i < _matchedLocation->getMethodsAllowedSize(); ++i)
-        allowedMethodsStr += Http::methodToString(_matchedLocation->getMethodByIndex(i)) + (i < _matchedLocation->getMethodsAllowedSize() - 1 ? ", " : "");
-    setHeader("Allow", allowedMethodsStr);
-    readResource(_matchedLocation->getErrPagePath(_statusCode));
 }
 
 void Response::readResource(const std::string &uri, bool isErrorResponse)
@@ -218,29 +241,6 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 			setHeader("Content-Type", "text/html");
 		}
 	}
-}
-
-void Response::handleCGI() {
-    std::string uri = _request.uri();
-    std::string cgiPath = _matchedLocation->getRootDir() + uri.substr(0, uri.find(".cgi") + 4);
-
-    std::vector<std::string> envVars;
-    setEnvironmentVariables(cgiPath, _request, *this, envVars);
-
-    int inputPipe[2], outputPipe[2];
-    try {
-        createPipes(inputPipe, outputPipe);
-        pid_t pid = fork();
-        if (pid == 0)
-            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
-        else if (pid > 0)
-            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
-        else
-            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
-    } catch (ExceptionMaker &e) {
-        e.log();
-        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-    }
 }
 
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
@@ -323,4 +323,26 @@ void Response::setBody(const std::string &body)
 void Response::setResponse()
 {
     _response = getHeadersStr() + _body;
+}
+
+void Response::setMatchedCGI() {
+    std::string uri = _request.uri();
+    size_t pos = uri.find_last_of('.');
+    if (pos == std::string::npos)
+        return;
+
+    std::string ext = uri.substr(pos);
+
+    for (StrStrMap::const_iterator it = _matchedLocation->getCgiPathsBegin(); 
+         it != _matchedLocation->getCgiPathsEnd(); ++it) 
+    {
+        if (it->first == ext) 
+        {
+            const std::string binary = (*it).second;
+            _cgi = CGI(uri, binary);
+            std::cout << "CGI object:\n" << _cgi << std::endl;
+
+            break;
+        }
+    }
 }

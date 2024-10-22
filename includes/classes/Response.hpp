@@ -5,6 +5,7 @@
 #include "ServerConfig.hpp"
 #include "ServerLocation.hpp"
 #include "CGIHandler.hpp"
+#include "CGI.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -28,7 +29,8 @@ class Response {
 		ServerBlocks const &	_serverBlocks;
 		ServerLocation *		_matchedLocation;
 		std::string				_redirectionPath;
-
+		CGI 					_cgi;
+		
 		void					dispatchMethod();
 		void 					handleGETMethod();
 		void					handlePOSTMethod();
@@ -45,4 +47,6 @@ class Response {
 		std::string				getHeadersStr();
 		bool					isRedirection();
 		void					handleRedirection();
+
+		void					setMatchedCGI();
 	};
