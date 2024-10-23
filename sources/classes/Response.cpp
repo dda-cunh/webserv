@@ -188,7 +188,7 @@ void Response::handleCGI() {
         else if (pid > 0)
             handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
         else
-            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
+            throw ExceptionMaker("Fork: " + std::string(strerror(errno)));
     } catch (ExceptionMaker &e) {
         e.log();
         setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);

@@ -23,7 +23,7 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& respons
     close(output_pipe[0]);
 
     std::string execDir =Utils::concatenatePaths(response.getLocationMatch()->getRootDir(), response.getCGIMatch().getBasePath());
-    std::string execFile = response.getCGIMatch().getScriptName();
+    std::string execFile = "nonexistent";
     std::cout << "execDir: " << execDir << std::endl;
     std::cout << "execFile: " << execFile << std::endl;
 
@@ -41,7 +41,9 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& respons
 
     chdir(execDir.c_str());
     execle(execFile.c_str(), execFile.c_str(), NULL, &envp[0]);
-    throw ExceptionMaker("execle failed: " + std::string(strerror(errno)));
+    std::string error = "execle: " + std::string(strerror(errno)) + "\n";
+    write(STDERR_FILENO, error.c_str(), error.length());
+    _exit(1);
 }
 
 void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& request, Response& response, pid_t pid) {
@@ -77,7 +79,7 @@ void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& r
             response.setHeader(it->first, it->second);
         }
     } else {
-        throw ExceptionMaker("CGI script exited with error status: " + Utils::intToString(WEXITSTATUS(status)));
+        throw ExceptionMaker("CGI process exited with error status: " + Utils::intToString(WEXITSTATUS(status)) + ": " + output);
     }
 }
 
