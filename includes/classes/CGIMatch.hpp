@@ -16,6 +16,7 @@ public:
     std::string getCompletePath() const;
 	std::string getBinary() const;
 
+    std::string findExtension(const std::string& uri);
     friend std::ostream& operator<<(std::ostream& os, const CGIMatch& cgiMatch);
 
 private:

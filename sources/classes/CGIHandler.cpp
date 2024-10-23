@@ -22,10 +22,8 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& respons
     close(input_pipe[1]);
     close(output_pipe[0]);
 
-    std::string execDir =Utils::concatenatePaths(response.getLocationMatch()->getRootDir(), response.getCGIMatch().getBasePath());
-    std::string execFile = "nonexistent";
-    std::cout << "execDir: " << execDir << std::endl;
-    std::cout << "execFile: " << execFile << std::endl;
+    std::string execDir = Utils::concatenatePaths(response.getLocationMatch()->getRootDir().c_str(), response.getCGIMatch().getBasePath().c_str(), NULL);
+    std::string execFile = response.getCGIMatch().getScriptName();
 
     dup2(input_pipe[0], STDIN_FILENO);
     dup2(output_pipe[1], STDOUT_FILENO);
@@ -67,16 +65,21 @@ void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& r
     int status;
     waitpid(pid, &status, 0);
 
-    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+    if (WIFEXITED(status)) {
         std::string body;
         std::map<std::string, std::string> headers;
-
+    
         parseCGIOutput(output, headers, body);
-
+    
         response.setBody(body);
+        std::cout << "CGI response headers:\n";
         for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
-            std::cout << it->first << ": " << it->second << std::endl;
-            response.setHeader(it->first, it->second);
+            std::cout << "\t" << it->first << ": " << it->second << std::endl;
+            if (it->first == "Status") {
+                response.setStatusCode(static_cast<Http::STATUS_CODE>(Utils::stringToInt(it->second)));
+            } else {
+                response.setHeader(it->first, it->second);
+            }
         }
     } else {
         throw ExceptionMaker("CGI process exited with error status: " + Utils::intToString(WEXITSTATUS(status)) + ": " + output);

@@ -3,6 +3,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <fstream>
+#include <cstdarg>
 
 namespace	Utils
 {
@@ -28,8 +29,9 @@ namespace	Utils
 	std::string				sTrim(std::string const&);
 	void					log(std::string const&, LogLevel const&);
 	std::string				intToString(int const& value);
+	int						stringToInt(const std::string& str);
 	std::string				getCurrentDate();
 	bool					isDirectory(std::string const& uri);
 	bool 					resourceExists(std::string const &uri);
-	std::string 			concatenatePaths(const std::string &basePath, const std::string &appendPath);
-}	
+	std::string 			concatenatePaths(const std::string &basePath, ...);
+}

@@ -35,16 +35,6 @@ void CGIMatch::parse(const std::string& uri) {
     _queryParameters.clear();
 }
 
-void CGIMatch::extractQueryParameters(const std::string& uri) {
-
-    size_t questionMarkPos = uri.find('?');
-    if (questionMarkPos != std::string::npos) {
-        _queryParameters = uri.substr(questionMarkPos + 1);
-    } else {
-        _queryParameters.clear();
-    }
-}
-
 std::string CGIMatch::getScriptName() const {
     return _scriptName;
 }
@@ -73,13 +63,30 @@ std::string CGIMatch::getBinary() const {
 	return _binary;
 }
 
+/**
+ * @brief Finds the extension of the script in the URI. Matches the first segment that contains a dot.
+ */
+std::string CGIMatch::findExtension(const std::string& uri) {
+    size_t startPos = uri.find('/', 1);
+    while (startPos != std::string::npos) {
+        size_t endPos = uri.find('/', startPos + 1);
+        std::string segment = uri.substr(startPos + 1, endPos - startPos - 1);
+        size_t extPos = segment.find('.');
+        if (extPos != std::string::npos) {
+            return segment.substr(extPos);
+        }
+        startPos = endPos;
+    }
+    return NULL;
+}
+
 std::ostream& operator<<(std::ostream& out, const CGIMatch& cgi) {
-	out	<< std::string("_basePath: ") << cgi.getBasePath() << std::endl
-    	<< std::string("_scriptName: ") << cgi.getScriptName() << std::endl
-    	<< std::string("_scriptExtension: ") << cgi.getScriptExtension() << std::endl
-    	<< std::string("_queryParameters: ") << cgi.getQueryParameters() << std::endl
-        << std::string("_pathInfo: ") << cgi.getPathInfo() << std::endl                        
-    	<< std::string("_completePath: ") << cgi.getCompletePath() << std::endl
-		<< std::string("_binary: ") << cgi.getBinary() << std::endl;
+	out	<< std::string("\t_basePath: ") << cgi.getBasePath() << std::endl
+    	<< std::string("\t_scriptName: ") << cgi.getScriptName() << std::endl
+    	<< std::string("\t_scriptExtension: ") << cgi.getScriptExtension() << std::endl
+    	<< std::string("\t_queryParameters: ") << cgi.getQueryParameters() << std::endl
+        << std::string("\t_pathInfo: ") << cgi.getPathInfo() << std::endl                        
+    	<< std::string("\t_completePath: ") << cgi.getCompletePath() << std::endl
+		<< std::string("\t_binary: ") << cgi.getBinary() << std::endl;
     return out;
 }

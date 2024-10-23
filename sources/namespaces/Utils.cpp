@@ -79,11 +79,19 @@ namespace Utils
 		}
 	}
 
-	std::string 	intToString(int const& value)
+	std::string intToString(int const& value)
 	{
 		std::stringstream ss;
 		ss << value;
 		return ss.str();
+	}
+	
+	int stringToInt(const std::string& str)
+	{
+		std::stringstream ss(str);
+		int value;
+		ss >> value;
+		return value;
 	}
 
 	std::string getCurrentDate()
@@ -102,17 +110,32 @@ namespace Utils
 		return (stat(uri.c_str(), &buffer) == 0);
 	}
 
-	std::string concatenatePaths(const std::string &basePath, const std::string &appendPath)
+	std::string concatenatePaths(const std::string &basePath, ...)
 	{
-		std::string adjustedBasePath = basePath;
-		std::string adjustedAppendPath = appendPath;
+		va_list args;
+		va_start(args, basePath);
+	
+		std::string result = basePath;
+		if (!result.empty() && result[result.length() - 1] != PATH_SEPARATOR)
+			result += PATH_SEPARATOR;
+	
+		const char* nextPath;
+		while ((nextPath = va_arg(args, const char*)) != NULL)
+		{
+	
+			std::string adjustedPath = nextPath;
+			if (!adjustedPath.empty() && adjustedPath[0] == PATH_SEPARATOR)
+				adjustedPath = adjustedPath.substr(1);
+	
+			result += adjustedPath;
+			if (!result.empty() && result[result.length() - 1] != PATH_SEPARATOR)
+				result += PATH_SEPARATOR;
+	
+		}
+	    if (!result.empty() && result[result.length() - 1] == PATH_SEPARATOR)
+			result = result.substr(0, result.length() - 1);
 
-		if (!adjustedBasePath.empty() && adjustedBasePath[adjustedBasePath.length() - 1] != PATH_SEPARATOR)
-			adjustedBasePath += PATH_SEPARATOR;
-
-		if (!adjustedAppendPath.empty() && adjustedAppendPath[0] == PATH_SEPARATOR)
-			adjustedAppendPath = adjustedAppendPath.substr(1);
-
-		return adjustedBasePath + adjustedAppendPath;
+		va_end(args);
+		return result;
 	}
 }
