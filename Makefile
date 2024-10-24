@@ -27,7 +27,8 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
                                                 SyntaxChecker.cpp \
                                                 ServerConfig.cpp \
                                                 ServerLocation.cpp \
-                                                CGIHandler.cpp) \
+                                                CGIHandler.cpp \
+                                                CGIMatch.cpp) \
                     $(addprefix $(NAMES_DIR),	Utils.cpp \
                                                 Http.cpp \
                                                 Network.cpp \

@@ -1,29 +1,29 @@
 #include "../../includes/classes/CGIHandler.hpp"
 
-void setEnvironmentVariables(const std::string& cgiPath, const Request& request, Response& response, std::vector<std::string>& envVars) {
-    std::string pathInfo = request.uri().substr(request.uri().find(".cgi") + 4);
-    
+void setEnvironmentVariables(const std::string& cgiPath, Response& response, std::vector<std::string>& envVars) {
+    const Request& request = response.getRequest();
     envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
-    envVars.push_back("PATH_INFO=" + pathInfo);
+    envVars.push_back("PATH_INFO=" + response.getCGIMatch().getPathInfo());
     envVars.push_back("SCRIPT_FILENAME=" + cgiPath);
-    envVars.push_back("UPLOAD_DIR=" + response.getMatchedLocation()->getUploadPath());
+    envVars.push_back("UPLOAD_DIR=" + response.getLocationMatch()->getUploadPath());
 
     if (request.method() == Http::M_POST) {
         envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
         envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 }
+
 void createPipes(int input_pipe[2], int output_pipe[2]) {
     if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
         throw ExceptionMaker("Pipe creation failed: " + std::string(strerror(errno)));
 }
 
-void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string& cgiPath, const std::vector<std::string>& envVars) {
+void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& response, const std::vector<std::string>& envVars) {
     close(input_pipe[1]);
     close(output_pipe[0]);
 
-    std::string execDir = cgiPath.substr(0, cgiPath.find_last_of('/') + 1);
-    std::string execFile = cgiPath.substr(cgiPath.find_last_of('/') + 1);
+    std::string execDir = Utils::concatenatePaths(response.getLocationMatch()->getRootDir().c_str(), response.getCGIMatch().getBasePath().c_str(), NULL);
+    std::string execFile = response.getCGIMatch().getScriptName();
 
     dup2(input_pipe[0], STDIN_FILENO);
     dup2(output_pipe[1], STDOUT_FILENO);
@@ -39,7 +39,9 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], const std::string
 
     chdir(execDir.c_str());
     execle(execFile.c_str(), execFile.c_str(), NULL, &envp[0]);
-    throw ExceptionMaker("execle failed: " + std::string(strerror(errno)));
+    std::string error = "execle: " + std::string(strerror(errno)) + "\n";
+    write(STDERR_FILENO, error.c_str(), error.length());
+    _exit(1);
 }
 
 void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& request, Response& response, pid_t pid) {
@@ -63,19 +65,24 @@ void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& r
     int status;
     waitpid(pid, &status, 0);
 
-    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+    if (WIFEXITED(status)) {
         std::string body;
         std::map<std::string, std::string> headers;
-
+    
         parseCGIOutput(output, headers, body);
-
+    
         response.setBody(body);
+        Utils::log("CGI response headers:", Utils::LOG_INFO);
         for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
-            std::cout << it->first << ": " << it->second << std::endl;
-            response.setHeader(it->first, it->second);
+            std::cout << "\t" << it->first << ": " << it->second << std::endl;
+            if (it->first == "Status") {
+                response.setStatusCode(static_cast<Http::STATUS_CODE>(Utils::stringToInt(it->second)));
+            } else {
+                response.setHeader(it->first, it->second);
+            }
         }
     } else {
-        throw ExceptionMaker("CGI script exited with error status: " + Utils::intToString(WEXITSTATUS(status)));
+        throw ExceptionMaker("CGI process exited with error status: " + Utils::intToString(WEXITSTATUS(status)) + ": " + output);
     }
 }
 

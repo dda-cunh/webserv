@@ -4,14 +4,6 @@
 
 /**************************************************************************/
 
-/****************************  CANNONICAL FORM  ****************************/
-
-Response::~Response()
-{
-}
-
-/**************************************************************************/
-
 /**************************  HELPERS  / DEBUG  ****************************/
 
 std::string getResourceContentType(std::string uri)
@@ -48,22 +40,6 @@ std::string Response::getHeadersStr()
     return responseHeaders;
 }
 
-std::string extractFileNameFromQuery(const std::string &uri)
-{
-	std::string fileName;
-	size_t queryStartPos = uri.find('?');
-	if (queryStartPos != std::string::npos)
-	{
-		std::string queryString = uri.substr(queryStartPos + 1);
-		size_t fileParamPos = queryString.find("file=");
-		if (fileParamPos != std::string::npos)
-		{
-			fileName = queryString.substr(fileParamPos + 5);
-		}
-	}
-	return fileName;
-}
-
 /**
  * @brief Sets the best matching location block for the requested URI.
  */
@@ -75,7 +51,6 @@ void Response::setMatchedLocation() {
 
     for (size_t i = 0; i < _serverBlocks.size(); ++i) {
         const ServerConfig &config = _serverBlocks[i];
-        std::cout << "BLOCK SIZE: " << config.getLocationBlocksSize() << std::endl;
         for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
             ServerLocation *location = config.getLocationFromIndex(j);
             std::string locationPath = location->getLocation();
@@ -90,15 +65,19 @@ void Response::setMatchedLocation() {
         throw std::runtime_error("No valid location block found for the requested URI.");
     }
 
-    _matchedLocation = bestMatch;
-
-    std::cout << "Matched location: " << _matchedLocation << std::endl;
+    _locationMatch = bestMatch;
+    Utils::log("Matched location:", Utils::LOG_INFO);
+    std::cout << *_locationMatch << std::endl;
 }
 
 
 /**************************************************************************/
 
-/*****************************  CONSTRUCTORS  *****************************/
+/**********************  CONSTRUCTORS / DESTRUCTORS ***********************/
+
+Response::~Response()
+{
+}
 
 Response::Response(Request const &request, ServerBlocks const &server_blocks)
     : _statusCode(Http::SC_OK),
@@ -126,11 +105,12 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
     } else {
         dispatchMethod();
     }
-
+    Utils::log("Post dispatch headers: ", Utils::LOG_INFO);
+    std::cout << "\t" << getHeadersStr() << std::endl;
     setCommonHeaders();
     setResponse();
-    Utils::log("Response:", Utils::LOG_INFO);
-    Utils::log(getHeadersStr(), Utils::LOG_INFO);
+    Utils::log("Final headers:", Utils::LOG_INFO);
+    std::cout << "\t" << getHeadersStr() << std::endl;
 }
 
 /**************************************************************************/
@@ -144,12 +124,56 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
  */
 void Response::dispatchMethod()
 {
-    if (!_matchedLocation->methodIsAllowed(_request.method()))
+    if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-	else if (_request.uri().find(".cgi") != std::string::npos)
-		handleCGI();
+    else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
+        handleCGI();
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
+}
+
+void Response::handleMethodNotAllowed()
+{
+    _statusCode = Http::SC_METHOD_NOT_ALLOWED;
+    std::string allowedMethodsStr;
+    for (size_t i = 0; i < _locationMatch->getMethodsAllowedSize(); ++i)
+        allowedMethodsStr += Http::methodToString(_locationMatch->getMethodByIndex(i)) + (i < _locationMatch->getMethodsAllowedSize() - 1 ? ", " : "");
+    setHeader("Allow", allowedMethodsStr);
+    readResource(_locationMatch->getErrPagePath(_statusCode));
+}
+
+void Response::handleCGI() {
+    std::string uri = _request.uri();
+    std::string cgiPath = Utils::concatenatePaths(_locationMatch->getRootDir().c_str(), _cgiMatch.getBasePath().c_str(), _cgiMatch.getScriptName().c_str(), NULL);
+    
+    if (access(cgiPath.c_str(), X_OK) != 0) {
+        setStatusAndReadResource(Http::SC_NOT_FOUND);
+        return;
+    }
+
+    std::vector<std::string> envVars;
+    setEnvironmentVariables(cgiPath, *this, envVars);
+
+    Utils::log("CGI process env variables::", Utils::LOG_INFO);
+    for (size_t i = 0; i < envVars.size(); ++i) {
+        std::cout << "\t" << envVars[i] << std::endl;
+    }
+
+    int inputPipe[2], outputPipe[2];
+
+    try {
+        createPipes(inputPipe, outputPipe);
+        pid_t pid = fork();
+        if (pid == 0)
+            handleChildProcess(inputPipe, outputPipe, *this, envVars);
+        else if (pid > 0)
+            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
+        else
+            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
+    } catch (ExceptionMaker &e) {
+        e.log();
+        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
+    }
 }
 
 /**
@@ -157,16 +181,16 @@ void Response::dispatchMethod()
  */
 void Response::handleGETMethod()
 {
-	std::string root = _matchedLocation->getRootDir();
-	bool autoindex = _matchedLocation->getAutoIndex();
+	std::string root = _locationMatch->getRootDir();
+	bool autoindex = _locationMatch->getAutoIndex();
 
-	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
-
+    std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
+    
 	if (Directory::isDirectory(uri))
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
-		uri = _statusCode == Http::SC_OK ? result.path : _matchedLocation->getErrPagePath(_statusCode);
+		uri = _statusCode == Http::SC_OK ? result.path : _locationMatch->getErrPagePath(_statusCode);
 		readResource(uri);
 	}
 	else if (Utils::resourceExists(uri))
@@ -177,16 +201,6 @@ void Response::handleGETMethod()
 	{
 		setStatusAndReadResource(Http::SC_NOT_FOUND);
 	}
-}
-
-void Response::handleMethodNotAllowed()
-{
-    _statusCode = Http::SC_METHOD_NOT_ALLOWED;
-    std::string allowedMethodsStr;
-    for (size_t i = 0; i < _matchedLocation->getMethodsAllowedSize(); ++i)
-        allowedMethodsStr += Http::methodToString(_matchedLocation->getMethodByIndex(i)) + (i < _matchedLocation->getMethodsAllowedSize() - 1 ? ", " : "");
-    setHeader("Allow", allowedMethodsStr);
-    readResource(_matchedLocation->getErrPagePath(_statusCode));
 }
 
 void Response::readResource(const std::string &uri, bool isErrorResponse)
@@ -220,47 +234,24 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 	}
 }
 
-void Response::handleCGI() {
-    std::string uri = _request.uri();
-    std::string cgiPath = _matchedLocation->getRootDir() + uri.substr(0, uri.find(".cgi") + 4);
-
-    std::vector<std::string> envVars;
-    setEnvironmentVariables(cgiPath, _request, *this, envVars);
-
-    int inputPipe[2], outputPipe[2];
-    try {
-        createPipes(inputPipe, outputPipe);
-        pid_t pid = fork();
-        if (pid == 0)
-            handleChildProcess(inputPipe, outputPipe, cgiPath, envVars);
-        else if (pid > 0)
-            handleParentProcess(inputPipe, outputPipe, _request, *this, pid);
-        else
-            throw ExceptionMaker("Fork failed: " + std::string(strerror(errno)));
-    } catch (ExceptionMaker &e) {
-        e.log();
-        setStatusAndReadResource(Http::SC_INTERNAL_SERVER_ERROR);
-    }
-}
-
 void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri)
 {
 	_statusCode = statusCode;
 	if (!uri.empty())
 		readResource(uri);
 	else
-		readResource(_matchedLocation->getErrPagePath(_statusCode), true);
+		readResource(_locationMatch->getErrPagePath(_statusCode), true);
 }
 
 bool Response::isRedirection() {
     std::string requestPath = _request.uri();
-    std::string locationPath = _matchedLocation->getLocation();
+    std::string locationPath = _locationMatch->getLocation();
 
     if (requestPath.find(locationPath) == 0) {
         std::string relativePath = requestPath.substr(locationPath.size());
 
-        StrStrMap::const_iterator it = _matchedLocation->getRedirectionIttBegin();
-        StrStrMap::const_iterator end = _matchedLocation->getRedirectionIttEnd();
+        StrStrMap::const_iterator it = _locationMatch->getRedirectionIttBegin();
+        StrStrMap::const_iterator end = _locationMatch->getRedirectionIttEnd();
 
         for (; it != end; ++it) {
             if (relativePath == it->first) {
@@ -290,9 +281,19 @@ std::string const &Response::getResponse() const
 }
 
 
-ServerLocation *Response::getMatchedLocation()
+ServerLocation *Response::getLocationMatch()
 {
-	return _matchedLocation;
+	return _locationMatch;
+}
+
+Request const &Response::getRequest() const
+{
+    return _request;
+}
+
+CGIMatch const &Response::getCGIMatch() const
+{
+    return _cgiMatch;
 }
 
 /**************************************************************************/
@@ -317,10 +318,32 @@ void Response::setBody(const std::string &body)
 	_body = body;
 }
 
+void Response::setStatusCode(Http::STATUS_CODE statusCode)
+{
+    _statusCode = statusCode;
+}
+
 /**
  * @brief Sets the complete HTTP response including headers and body.
  */
 void Response::setResponse()
 {
     _response = getHeadersStr() + _body;
+}
+
+void Response::setCGIMatch() {
+    std::string uri = _request.uri();
+    std::string extension = CGIMatch().findExtension(uri);
+    if (!extension.empty()) {
+        for (StrStrMap::const_iterator it = _locationMatch->getCgiPathsBegin();
+             it != _locationMatch->getCgiPathsEnd(); ++it) {
+            if (it->first == extension) {
+                _cgiMatch = CGIMatch(uri, it->second);
+                Utils::log("CCGIMatch:", Utils::LOG_INFO);
+                std::cout << _cgiMatch << std::endl;
+                return;
+            }
+        }
+    }
+    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
 }

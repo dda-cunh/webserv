@@ -7,8 +7,9 @@ UPLOAD_DIR = os.environ.get('UPLOAD_DIR')
 if not UPLOAD_DIR:
     raise EnvironmentError("UPLOAD_DIR environment variable is not set")
 
-def json_response(success, message=None, error=None):
+def json_response(status, success, message=None, error=None):
     response_data = json.dumps({"success": success, "message": message, "error": error})
+    print(f"Status: {status}")
     print("Content-Type: application/json")
     print(f"Content-Length: {len(response_data)}\n")
     print(response_data)
@@ -21,6 +22,8 @@ def handle_file_upload():
         
         input_data = sys.stdin.buffer.read(content_length)
         content_type = os.environ.get('CONTENT_TYPE', '')
+        if 'multipart/form-data' not in content_type:
+            raise ValueError("Content-Type is not multipart/form-data")
         if 'boundary=' not in content_type:
             raise ValueError("No boundary found in Content-Type")
         
@@ -40,13 +43,13 @@ def handle_file_upload():
                     filename = os.path.basename(header.split(b'filename=')[-1].strip(b'"').decode('utf-8'))
                     with open(os.path.join(UPLOAD_DIR, filename), 'wb') as f:
                         f.write(file_data.rstrip(b'\r\n--'))
-                    json_response(True, "File '{}' uploaded successfully.".format(filename))
+                    json_response(200, True, "File '{}' uploaded successfully.".format(filename))
                     return
         
         raise ValueError("No valid file found in the upload data")
     except Exception as e:
         logging.exception("Error during file upload")
-        json_response(False, error=str(e))
+        json_response(400, False, error=str(e))
         sys.exit(1)
 
 def list_files():
@@ -59,10 +62,10 @@ def list_files():
                 "modified": os.path.getmtime(os.path.join(UPLOAD_DIR, f))
             }
             files.append(file_info)
-        json_response(True, message=files)
+        json_response(200, True, message=files)
     except Exception as e:
         logging.exception("Error listing files")
-        json_response(False, error=str(e))
+        json_response(500, False, error=str(e))
         sys.exit(1)
 
 def delete_file():
@@ -74,12 +77,12 @@ def delete_file():
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
-            json_response(True, f"File '{filename}' deleted successfully.")
+            json_response(200, True, f"File '{filename}' deleted successfully.")
         else:
-            json_response(False, f"File '{filename}' not found.")
+            json_response(404, False, f"File '{filename}' not found.")
     except Exception as e:
         logging.exception("Error during file deletion")
-        json_response(False, error=str(e))
+        json_response(400, False, error=str(e))
         sys.exit(1)
 
 
@@ -99,7 +102,7 @@ def main():
         delete_file()
     else:
         print("Status: 405 Method Not Allowed\nContent-Type: text/html\n\nMethod not allowed.")
-        sys.exit(2)
+        sys.exit(1)
     logging.debug("CGI Script Ending")
     logging.debug("=======================================================")
 

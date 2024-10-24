@@ -33,6 +33,7 @@ class	ExceptionMaker;
 	PLACE CLIENT_FD ON EPOLL FOR WRITE
 	SEND RESPONSE
 */
+class	CGIMatch;
 class	ServerManager;
 class	ServerConfig;
 class	ServerLocation;
@@ -45,6 +46,7 @@ class	Socket;
 typedef std::map<std::string, std::string>		StrStrMap;
 typedef std::map<int, std::string>				IntStrMap;
 typedef std::vector<unsigned char>				ByteArr;
+typedef std::pair<std::string, std::string>		StrPair;
 
 #define CLIENT_CHUNK_SIZE						4096
 
