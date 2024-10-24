@@ -67,9 +67,11 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 
 	vectorSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < vectorSize; i++)
-	{
+		this->_serverNames.push_back(serverConfig.getServerName(i) );
+
+	vectorSize = serverConfig.getLocationBlocksSize();
+	for (size_t i = 0; i < vectorSize; i++)
 		this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
-	}
 
 	return (*this);
 }
