@@ -67,32 +67,24 @@ std::string extractFileNameFromQuery(const std::string &uri)
 /**
  * @brief Sets the best matching location block for the requested URI.
  */
-void Response::setMatchedLocation() {
-    ServerLocation *bestMatch = NULL;
-    std::string longestMatch;
+void	Response::setMatchedLocation() {
+    ServerLocation	*bestMatch = NULL;
+    std::string		longestMatch;
 
-
-
-    for (size_t i = 0; i < _serverBlocks.size(); ++i) {
-        const ServerConfig &config = _serverBlocks[i];
-        std::cout << "BLOCK SIZE: " << config.getLocationBlocksSize() << std::endl;
-        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
-            ServerLocation *location = config.getLocationFromIndex(j);
-            std::string locationPath = location->getLocation();
-            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
-                longestMatch = locationPath;
-                bestMatch = location;
-            }
+    for (size_t j = 0; j < _serverConfig.getLocationBlocksSize(); ++j) {
+        ServerLocation *location = _serverConfig.getLocationFromIndex(j);
+        std::string locationPath = location->getLocation();
+        if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
+            longestMatch = locationPath;
+            bestMatch = location;
         }
     }
 
     if (bestMatch == NULL) {
-        throw std::runtime_error("No valid location block found for the requested URI.");
+    	bestMatch = _serverConfig.getLocationFromIndex(0);
     }
 
     _matchedLocation = bestMatch;
-
-    std::cout << "Matched location: " << _matchedLocation << std::endl;
 }
 
 
@@ -100,13 +92,13 @@ void Response::setMatchedLocation() {
 
 /*****************************  CONSTRUCTORS  *****************************/
 
-Response::Response(Request const &request, ServerBlocks const &server_blocks)
+Response::Response(Request const &request, ServerConfig const &server_config)
     : _statusCode(Http::SC_OK),
       _headers(),
       _body(),
       _response(),
       _request(request),
-      _serverBlocks(server_blocks)
+      _serverConfig(server_config)
 {
 	std::string body(request.body().begin(), request.body().end());
 
@@ -124,6 +116,7 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
     } else if (isRedirection()) {
 		handleRedirection();
     } else {
+    	parseUri();
         dispatchMethod();
     }
 
@@ -142,23 +135,124 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
  *
  * Calls the relevant method handler.
  */
+
+static bool	is_cgi(ServerLocation *location)
+{
+	if (location->getCgiPathsBegin() == location->getCgiPathsEnd() )
+		return (false);
+
+	return (false);
+}
+
 void Response::dispatchMethod()
 {
+	//	CHECK FOR FILE EXTENSION IN PARSED URI & RUN CGI IF TRUE; ELSE HANDLE REQUESTED METHOD
     if (!_matchedLocation->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-	else if (_request.uri().find(".cgi") != std::string::npos)
+	else if (is_cgi(this->_matchedLocation) )
 		handleCGI();
+	else
+		handleStatic();
+
+/*
     else if (_request.method() == Http::M_GET)
         handleGETMethod();
+*/
+}
+
+void	Response::parseUri()
+{
+	std::string	uriRoot;
+	std::string	uriLocation;
+
+
+	uriRoot		= this->_matchedLocation->getRootDir();
+	uriLocation	= this->_request.uri();
+
+	//	IF root ENDS WITH '/' AND location STARTS WITH '/', DELETE '/' AT START OF location 
+	//	ELSE IF NEITHER root ENDS WITH '/' NOR locations STARTS WITH '/', ADD '/' TO END OF root
+	if (uriRoot.at(uriRoot.size() - 1) == '/' && uriLocation.at(0) == '/')
+		uriLocation.erase(0, 1);
+	else if (uriRoot.at(uriRoot.size() - 1) != '/' && uriLocation.at(0) != '/')
+		uriRoot.append("/");
+
+	uriRoot.append(uriLocation);
+
+	if (uriRoot.find('?') == uriRoot.npos 
+		&& uriRoot.substr(uriRoot.find_last_of('/') ).find('.') == uriRoot.npos)
+	{
+		if (uriRoot.at(uriRoot.size() - 1) != '/')
+			uriRoot.append("/");
+		uriRoot = parseIndex(uriRoot);
+	}
+
+
+
+	this->_request.setUri(uriRoot);
+}
+
+std::string	Response::parseIndex(const std::string &uri)
+{
+	std::string	rootDir;
+	std::string	indexDir;
+	size_t		vectorSize;
+
+
+	rootDir = uri;
+	if (rootDir.at(rootDir.size() - 1) == '/')
+		rootDir.erase(rootDir.size() - 1, 1);
+	rootDir.append(uri);
+
+	vectorSize = this->_matchedLocation->getIndexVectorSize();
+	for (size_t i = 0; i < vectorSize; i++)
+	{
+		indexDir = rootDir;
+		indexDir.append(this->_matchedLocation->getIndexFileName(i) );
+		if (access(indexDir.c_str(), F_OK) == 0)
+		{
+			return (indexDir);
+		}
+	}
+
+	return (rootDir);
 }
 
 /**
  * @brief  Serves the requested file or directory listing.
  */
+
+
+void	Response::handleStatic()
+{
+	std::string	uri;
+
+	
+	uri = this->_request.uri();
+	if (uri.at(uri.size() - 1) != '/')	//	URI IS A FILE
+	{
+		//	SET RESPONSE
+		readResource(uri);
+	}
+	else if (!Directory::isDirectory(uri) )	//	IF DIRECTORY DOES NOT EXIST
+	{
+		//	RETURN 404
+		setStatusAndReadResource(Http::SC_NOT_FOUND);
+	}
+	else if (this->_matchedLocation->getAutoIndex() == false)	//	autoindex OFF
+	{
+		//	RETURN 403
+		setStatusAndReadResource(Http::SC_FORBIDDEN);
+	}
+	else
+	{
+		//	SHOW DIRECTORY
+	}
+}
+
 void Response::handleGETMethod()
 {
-	std::string root = _matchedLocation->getRootDir();
-	bool autoindex = _matchedLocation->getAutoIndex();
+	std::string	root		= _matchedLocation->getRootDir();
+	bool		autoindex	= _matchedLocation->getAutoIndex();
 
 	std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root, _request.uri());
 
@@ -221,6 +315,7 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
 }
 
 void Response::handleCGI() {
+//	
     std::string uri = _request.uri();
     std::string cgiPath = _matchedLocation->getRootDir() + uri.substr(0, uri.find(".cgi") + 4);
 

@@ -71,6 +71,11 @@ std::string	Request::seekCRLF(ByteArr const& request,
 	return (s);
 }
 
+void	Request::setUri(const std::string &uri)
+{
+	this->_uri = uri;
+}
+
 void	Request::readClient()
 {
 	ByteArr::size_type	request_i;

@@ -65,11 +65,13 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	this->_host = serverConfig.getHost();
 	this->_port = serverConfig.getPort();
 
+	vectorSize = serverConfig.getServerNamesSize();
+	for (size_t i = 0; i < vectorSize; i++)
+		this->_serverNames.push_back(serverConfig.getServerName(i) );
+
 	vectorSize = serverConfig.getLocationBlocksSize();
 	for (size_t i = 0; i < vectorSize; i++)
-	{
 		this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
-	}
 
 	return (*this);
 }
@@ -261,6 +263,8 @@ std::ostream 	&operator<<(std::ostream &out, const ServerLocation &location)
 	out << "\tCGI paths:" << std::endl;
 	for (StrStrMap::const_iterator itt = location.getCgiPathsBegin(); itt != location.getCgiPathsEnd(); itt++)
 		out << "\t\t" << itt->first << " " << location.getCgiPath(itt->first) << std::endl;
+
+	out << "\tCGI root: " << location.getCgiRoot() << std::endl;
 
 	return (out);
 }

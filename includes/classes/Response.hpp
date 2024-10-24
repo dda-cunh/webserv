@@ -11,7 +11,7 @@
 
 class Response {
 	public:
-		Response(Request const &, ServerBlocks const &);
+		Response(Request const &, ServerConfig const &);
 		~Response();
 		std::string				const &getResponse() const;
 		
@@ -25,15 +25,18 @@ class Response {
 		std::string				_body;
 		std::string				_response;
 		Request					_request;
-		ServerBlocks const &	_serverBlocks;
+		ServerConfig const &	_serverConfig;
 		ServerLocation *		_matchedLocation;
 		std::string				_redirectionPath;
 
 		void					dispatchMethod();
+		void					parseUri();
+		std::string				parseIndex(const std::string &uri);
 		void 					handleGETMethod();
 		void					handlePOSTMethod();
 		void					handleDELETEMethod();
 		void					handleMethodNotAllowed();
+		void					handleStatic();
 		void					handleCGI();
 
 		void					setMatchedLocation();

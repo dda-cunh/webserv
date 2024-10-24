@@ -33,6 +33,8 @@ class Request
 		std::string					seekCRLF(ByteArr const&,
 										ByteArr::size_type &);
 
+		void						setUri(const std::string &uri);
+
 		static std::string const	_no_such_header;
 
 	private:

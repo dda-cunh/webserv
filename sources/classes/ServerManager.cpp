@@ -165,8 +165,9 @@ void ServerManager::up()	throw()
 					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						Response response(it->second, this->_server_blocks);
-						std::string responseStr = response.getResponse();
+						Response	response(it->second, this->_server_blocks[i]);
+						std::string	responseStr = response.getResponse();
+
 						send(_ep_events[i].data.fd, responseStr.c_str(),
 								responseStr.length(), MSG_DONTWAIT);
 						if (it->second.header("connection") != "keep-alive")
