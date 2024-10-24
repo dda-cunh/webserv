@@ -66,7 +66,8 @@ void Response::setMatchedLocation() {
     }
 
     _locationMatch = bestMatch;
-    std::cout << "Matched location:\n" << *_locationMatch << std::endl;
+    Utils::log("Matched location:", Utils::LOG_INFO);
+    std::cout << *_locationMatch << std::endl;
 }
 
 
@@ -104,11 +105,12 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
     } else {
         dispatchMethod();
     }
-    std::cout << "Headers:\n" << getHeadersStr() << std::endl;
+    Utils::log("Post dispatch headers: ", Utils::LOG_INFO);
+    std::cout << "\t" << getHeadersStr() << std::endl;
     setCommonHeaders();
     setResponse();
-    Utils::log("Response:", Utils::LOG_INFO);
-    Utils::log(getHeadersStr(), Utils::LOG_INFO);
+    Utils::log("Final headers:", Utils::LOG_INFO);
+    std::cout << "\t" << getHeadersStr() << std::endl;
 }
 
 /**************************************************************************/
@@ -120,7 +122,6 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
  *
  * Calls the relevant method handler.
  */
-
 void Response::dispatchMethod()
 {
     if (!_locationMatch->methodIsAllowed(_request.method()))
@@ -153,7 +154,7 @@ void Response::handleCGI() {
     std::vector<std::string> envVars;
     setEnvironmentVariables(cgiPath, *this, envVars);
 
-    std::cout << "CGI process env variables:\n";
+    Utils::log("CGI process env variables::", Utils::LOG_INFO);
     for (size_t i = 0; i < envVars.size(); ++i) {
         std::cout << "\t" << envVars[i] << std::endl;
     }
@@ -338,10 +339,11 @@ void Response::setCGIMatch() {
              it != _locationMatch->getCgiPathsEnd(); ++it) {
             if (it->first == extension) {
                 _cgiMatch = CGIMatch(uri, it->second);
-                std::cout << "CGIMatch:\n" << _cgiMatch << std::endl;
+                Utils::log("CCGIMatch:", Utils::LOG_INFO);
+                std::cout << _cgiMatch << std::endl;
                 return;
             }
         }
     }
-    std::cout << "No CGI match found for URI: " << uri << std::endl;
+    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
 }

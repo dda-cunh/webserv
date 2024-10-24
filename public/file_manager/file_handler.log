@@ -1,0 +1,403 @@
+2024-10-22 21:28:09,202 - DEBUG - CGI Script Starting
+2024-10-22 21:28:09,202 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 21:28:09,202 - DEBUG - PATH_INFO=
+2024-10-22 21:28:09,202 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:28:09,202 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:28:09,202 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:28:09,202 - DEBUG - CGI Script Ending
+2024-10-22 21:28:09,202 - DEBUG - =======================================================
+2024-10-22 21:28:22,905 - DEBUG - CGI Script Starting
+2024-10-22 21:28:22,905 - DEBUG - REQUEST_METHOD=DELETE
+2024-10-22 21:28:22,905 - DEBUG - PATH_INFO=/20230807_141453.jpg
+2024-10-22 21:28:22,905 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:28:22,905 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:28:22,905 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:28:22,906 - DEBUG - CGI Script Ending
+2024-10-22 21:28:22,906 - DEBUG - =======================================================
+2024-10-22 21:28:22,949 - DEBUG - CGI Script Starting
+2024-10-22 21:28:22,949 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 21:28:22,949 - DEBUG - PATH_INFO=
+2024-10-22 21:28:22,949 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:28:22,949 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:28:22,949 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:28:22,949 - DEBUG - CGI Script Ending
+2024-10-22 21:28:22,949 - DEBUG - =======================================================
+2024-10-22 21:28:56,943 - DEBUG - CGI Script Starting
+2024-10-22 21:28:56,943 - DEBUG - REQUEST_METHOD=POST
+2024-10-22 21:28:56,944 - DEBUG - PATH_INFO=
+2024-10-22 21:28:56,944 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:28:56,944 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:28:56,944 - DEBUG - CONTENT_TYPE=multipart/form-data; boundary=---------------------------147884298740783704351942181044
+2024-10-22 21:28:56,944 - DEBUG - CONTENT_LENGTH=62472
+2024-10-22 21:28:56,944 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:28:56,944 - DEBUG - CGI Script Ending
+2024-10-22 21:28:56,944 - DEBUG - =======================================================
+2024-10-22 21:28:56,991 - DEBUG - CGI Script Starting
+2024-10-22 21:28:56,991 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 21:28:56,992 - DEBUG - PATH_INFO=
+2024-10-22 21:28:56,992 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:28:56,992 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:28:56,992 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:28:56,992 - DEBUG - CGI Script Ending
+2024-10-22 21:28:56,992 - DEBUG - =======================================================
+2024-10-22 21:44:36,319 - DEBUG - CGI Script Starting
+2024-10-22 21:44:36,319 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 21:44:36,319 - DEBUG - PATH_INFO=
+2024-10-22 21:44:36,319 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 21:44:36,319 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 21:44:36,319 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 21:44:36,319 - DEBUG - CGI Script Ending
+2024-10-22 21:44:36,319 - DEBUG - =======================================================
+2024-10-22 22:32:45,166 - DEBUG - CGI Script Starting
+2024-10-22 22:32:45,166 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 22:32:45,166 - DEBUG - PATH_INFO=
+2024-10-22 22:32:45,166 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 22:32:45,166 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 22:32:45,166 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 22:32:45,166 - DEBUG - CGI Script Ending
+2024-10-22 22:32:45,166 - DEBUG - =======================================================
+2024-10-22 22:41:43,083 - DEBUG - CGI Script Starting
+2024-10-22 22:41:43,083 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 22:41:43,083 - DEBUG - PATH_INFO=
+2024-10-22 22:41:43,083 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 22:41:43,083 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 22:41:43,083 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 22:41:43,083 - DEBUG - CGI Script Ending
+2024-10-22 22:41:43,083 - DEBUG - =======================================================
+2024-10-22 23:00:20,987 - DEBUG - CGI Script Starting
+2024-10-22 23:00:20,987 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 23:00:20,987 - DEBUG - PATH_INFO=
+2024-10-22 23:00:20,988 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 23:00:20,988 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 23:00:20,988 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 23:00:20,988 - DEBUG - CGI Script Ending
+2024-10-22 23:00:20,988 - DEBUG - =======================================================
+2024-10-22 23:00:23,003 - DEBUG - CGI Script Starting
+2024-10-22 23:00:23,003 - DEBUG - REQUEST_METHOD=DELETE
+2024-10-22 23:00:23,003 - DEBUG - PATH_INFO=/ftroiter.jpg
+2024-10-22 23:00:23,003 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 23:00:23,003 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 23:00:23,003 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 23:00:23,003 - DEBUG - CGI Script Ending
+2024-10-22 23:00:23,003 - DEBUG - =======================================================
+2024-10-22 23:00:23,049 - DEBUG - CGI Script Starting
+2024-10-22 23:00:23,049 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 23:00:23,049 - DEBUG - PATH_INFO=
+2024-10-22 23:00:23,049 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 23:00:23,049 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 23:00:23,049 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 23:00:23,049 - DEBUG - CGI Script Ending
+2024-10-22 23:00:23,049 - DEBUG - =======================================================
+2024-10-22 23:03:40,458 - DEBUG - CGI Script Starting
+2024-10-22 23:03:40,458 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 23:03:40,458 - DEBUG - PATH_INFO=
+2024-10-22 23:03:40,458 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 23:03:40,459 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 23:03:40,459 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 23:03:40,459 - DEBUG - CGI Script Ending
+2024-10-22 23:03:40,459 - DEBUG - =======================================================
+2024-10-22 23:14:32,133 - DEBUG - CGI Script Starting
+2024-10-22 23:14:32,133 - DEBUG - REQUEST_METHOD=GET
+2024-10-22 23:14:32,133 - DEBUG - PATH_INFO=
+2024-10-22 23:14:32,133 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-22 23:14:32,133 - DEBUG - UPLOAD_DIR=uploads
+2024-10-22 23:14:32,133 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-22 23:14:32,133 - DEBUG - CGI Script Ending
+2024-10-22 23:14:32,133 - DEBUG - =======================================================
+2024-10-23 19:29:08,869 - DEBUG - CGI Script Starting
+2024-10-23 19:29:08,869 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 19:29:08,869 - DEBUG - PATH_INFO=
+2024-10-23 19:29:08,869 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 19:29:08,869 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 19:29:08,869 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 19:29:08,869 - DEBUG - CGI Script Ending
+2024-10-23 19:29:08,869 - DEBUG - =======================================================
+2024-10-23 19:29:31,679 - DEBUG - CGI Script Starting
+2024-10-23 19:29:31,679 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 19:29:31,679 - DEBUG - PATH_INFO=
+2024-10-23 19:29:31,680 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 19:29:31,680 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 19:29:31,680 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 19:29:31,680 - DEBUG - CGI Script Ending
+2024-10-23 19:29:31,680 - DEBUG - =======================================================
+2024-10-23 19:30:22,745 - DEBUG - CGI Script Starting
+2024-10-23 19:30:22,745 - DEBUG - REQUEST_METHOD=POST
+2024-10-23 19:30:22,745 - DEBUG - PATH_INFO=
+2024-10-23 19:30:22,745 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 19:30:22,745 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 19:30:22,745 - DEBUG - CONTENT_TYPE=multipart/form-data; boundary=---------------------------292231145136946893683665170137
+2024-10-23 19:30:22,745 - DEBUG - CONTENT_LENGTH=64534
+2024-10-23 19:30:22,745 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 19:30:22,746 - DEBUG - CGI Script Ending
+2024-10-23 19:30:22,746 - DEBUG - =======================================================
+2024-10-23 19:30:22,796 - DEBUG - CGI Script Starting
+2024-10-23 19:30:22,796 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 19:30:22,796 - DEBUG - PATH_INFO=
+2024-10-23 19:30:22,796 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 19:30:22,796 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 19:30:22,796 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 19:30:22,796 - DEBUG - CGI Script Ending
+2024-10-23 19:30:22,796 - DEBUG - =======================================================
+2024-10-23 20:01:52,827 - DEBUG - CGI Script Starting
+2024-10-23 20:01:52,827 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 20:01:52,827 - DEBUG - PATH_INFO=
+2024-10-23 20:01:52,827 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 20:01:52,828 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 20:01:52,828 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 20:01:52,828 - DEBUG - CGI Script Ending
+2024-10-23 20:01:52,828 - DEBUG - =======================================================
+2024-10-23 20:20:56,533 - DEBUG - CGI Script Starting
+2024-10-23 20:20:56,534 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 20:20:56,534 - DEBUG - PATH_INFO=
+2024-10-23 20:20:56,534 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 20:20:56,534 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 20:20:56,534 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 20:20:56,534 - DEBUG - CGI Script Ending
+2024-10-23 20:20:56,534 - DEBUG - =======================================================
+2024-10-23 20:22:49,326 - DEBUG - CGI Script Starting
+2024-10-23 20:22:49,326 - DEBUG - REQUEST_METHOD=DELETE
+2024-10-23 20:22:49,326 - DEBUG - PATH_INFO=/en.subject.txt
+2024-10-23 20:22:49,326 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 20:22:49,326 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 20:22:49,326 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 20:22:49,326 - DEBUG - CGI Script Ending
+2024-10-23 20:22:49,326 - DEBUG - =======================================================
+2024-10-23 22:52:15,609 - DEBUG - CGI Script Starting
+2024-10-23 22:52:15,609 - DEBUG - REQUEST_METHOD=POST
+2024-10-23 22:52:15,609 - DEBUG - PATH_INFO=
+2024-10-23 22:52:15,609 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 22:52:15,609 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 22:52:15,609 - DEBUG - CONTENT_TYPE=multipart/form-data; boundary=---------------------------181940093011933946854212324842
+2024-10-23 22:52:15,609 - DEBUG - CONTENT_LENGTH=64534
+2024-10-23 22:52:15,609 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 22:52:15,609 - DEBUG - CGI Script Ending
+2024-10-23 22:52:15,610 - DEBUG - =======================================================
+2024-10-23 22:52:15,650 - DEBUG - CGI Script Starting
+2024-10-23 22:52:15,650 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 22:52:15,650 - DEBUG - PATH_INFO=
+2024-10-23 22:52:15,650 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 22:52:15,650 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 22:52:15,650 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 22:52:15,650 - DEBUG - CGI Script Ending
+2024-10-23 22:52:15,650 - DEBUG - =======================================================
+2024-10-23 23:44:31,076 - DEBUG - CGI Script Starting
+2024-10-23 23:44:31,076 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 23:44:31,076 - DEBUG - PATH_INFO=
+2024-10-23 23:44:31,076 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 23:44:31,076 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 23:44:31,076 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 23:44:31,076 - DEBUG - CGI Script Ending
+2024-10-23 23:44:31,076 - DEBUG - =======================================================
+2024-10-23 23:46:18,754 - DEBUG - CGI Script Starting
+2024-10-23 23:46:18,754 - DEBUG - REQUEST_METHOD=POST
+2024-10-23 23:46:18,754 - DEBUG - PATH_INFO=
+2024-10-23 23:46:18,754 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 23:46:18,754 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 23:46:18,754 - DEBUG - CONTENT_TYPE=multipart/form-data; boundary=---------------------------239202283523249745153582832486
+2024-10-23 23:46:18,754 - DEBUG - CONTENT_LENGTH=64534
+2024-10-23 23:46:18,755 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 23:46:18,755 - DEBUG - CGI Script Ending
+2024-10-23 23:46:18,755 - DEBUG - =======================================================
+2024-10-23 23:46:18,795 - DEBUG - CGI Script Starting
+2024-10-23 23:46:18,795 - DEBUG - REQUEST_METHOD=GET
+2024-10-23 23:46:18,795 - DEBUG - PATH_INFO=
+2024-10-23 23:46:18,795 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 23:46:18,795 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 23:46:18,795 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 23:46:18,795 - DEBUG - CGI Script Ending
+2024-10-23 23:46:18,795 - DEBUG - =======================================================
+2024-10-23 23:58:21,132 - DEBUG - CGI Script Starting
+2024-10-23 23:58:21,132 - DEBUG - REQUEST_METHOD=POST
+2024-10-23 23:58:21,132 - DEBUG - PATH_INFO=
+2024-10-23 23:58:21,132 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-23 23:58:21,132 - DEBUG - UPLOAD_DIR=uploads
+2024-10-23 23:58:21,132 - DEBUG - CONTENT_TYPE=application/json
+2024-10-23 23:58:21,132 - DEBUG - CONTENT_LENGTH=16
+2024-10-23 23:58:21,132 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-23 23:58:21,132 - ERROR - Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 26, in handle_file_upload
+    raise ValueError("No boundary found in Content-Type")
+ValueError: No boundary found in Content-Type
+2024-10-24 00:00:12,823 - DEBUG - CGI Script Starting
+2024-10-24 00:00:12,823 - DEBUG - REQUEST_METHOD=POST
+2024-10-24 00:00:12,823 - DEBUG - PATH_INFO=
+2024-10-24 00:00:12,823 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:00:12,823 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:00:12,823 - DEBUG - CONTENT_TYPE=multipart/form-data
+2024-10-24 00:00:12,823 - DEBUG - CONTENT_LENGTH=1804
+2024-10-24 00:00:12,823 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:00:12,823 - ERROR - Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 26, in handle_file_upload
+    raise ValueError("No boundary found in Content-Type")
+ValueError: No boundary found in Content-Type
+2024-10-24 00:01:25,817 - DEBUG - CGI Script Starting
+2024-10-24 00:01:25,817 - DEBUG - REQUEST_METHOD=POST
+2024-10-24 00:01:25,817 - DEBUG - PATH_INFO=
+2024-10-24 00:01:25,817 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:01:25,817 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:01:25,817 - DEBUG - CONTENT_TYPE=application/json
+2024-10-24 00:01:25,817 - DEBUG - CONTENT_LENGTH=16
+2024-10-24 00:01:25,817 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:01:25,817 - ERROR - Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 26, in handle_file_upload
+    raise ValueError("Content-Type is not multipart/form-data")
+ValueError: Content-Type is not multipart/form-data
+2024-10-24 00:14:23,313 - DEBUG - CGI Script Starting
+2024-10-24 00:14:23,313 - DEBUG - REQUEST_METHOD=POST
+2024-10-24 00:14:23,313 - DEBUG - PATH_INFO=
+2024-10-24 00:14:23,313 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:14:23,313 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:14:23,313 - DEBUG - CONTENT_TYPE=application/json
+2024-10-24 00:14:23,313 - DEBUG - CONTENT_LENGTH=16
+2024-10-24 00:14:23,313 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:14:23,314 - ERROR - Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 26, in handle_file_upload
+    raise ValueError("Content-Type is not multipart/form-data")
+ValueError: Content-Type is not multipart/form-data
+2024-10-24 00:16:51,917 - DEBUG - CGI Script Starting
+2024-10-24 00:16:51,917 - DEBUG - REQUEST_METHOD=POST
+2024-10-24 00:16:51,917 - DEBUG - PATH_INFO=
+2024-10-24 00:16:51,917 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:16:51,917 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:16:51,918 - DEBUG - CONTENT_TYPE=application/json
+2024-10-24 00:16:51,918 - DEBUG - CONTENT_LENGTH=16
+2024-10-24 00:16:51,918 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:16:51,918 - ERROR - Error during file upload
+Traceback (most recent call last):
+  File "/home/facu/Code/42/webserv/public/file_manager/file_handler.cgi", line 26, in handle_file_upload
+    raise ValueError("Content-Type is not multipart/form-data")
+ValueError: Content-Type is not multipart/form-data
+2024-10-24 00:42:15,746 - DEBUG - CGI Script Starting
+2024-10-24 00:42:15,747 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 00:42:15,747 - DEBUG - PATH_INFO=
+2024-10-24 00:42:15,747 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:42:15,747 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:42:15,747 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:42:15,747 - DEBUG - CGI Script Ending
+2024-10-24 00:42:15,747 - DEBUG - =======================================================
+2024-10-24 00:42:33,671 - DEBUG - CGI Script Starting
+2024-10-24 00:42:33,671 - DEBUG - REQUEST_METHOD=DELETE
+2024-10-24 00:42:33,671 - DEBUG - PATH_INFO=/20230712_180811.jpg
+2024-10-24 00:42:33,671 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:42:33,671 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:42:33,671 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:42:33,672 - DEBUG - CGI Script Ending
+2024-10-24 00:42:33,672 - DEBUG - =======================================================
+2024-10-24 00:42:33,708 - DEBUG - CGI Script Starting
+2024-10-24 00:42:33,708 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 00:42:33,708 - DEBUG - PATH_INFO=
+2024-10-24 00:42:33,708 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:42:33,708 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:42:33,708 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:42:33,708 - DEBUG - CGI Script Ending
+2024-10-24 00:42:33,708 - DEBUG - =======================================================
+2024-10-24 00:42:40,599 - DEBUG - CGI Script Starting
+2024-10-24 00:42:40,599 - DEBUG - REQUEST_METHOD=POST
+2024-10-24 00:42:40,599 - DEBUG - PATH_INFO=
+2024-10-24 00:42:40,599 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:42:40,599 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:42:40,599 - DEBUG - CONTENT_TYPE=multipart/form-data; boundary=---------------------------392787395016920152353601898010
+2024-10-24 00:42:40,599 - DEBUG - CONTENT_LENGTH=64534
+2024-10-24 00:42:40,599 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:42:40,599 - DEBUG - CGI Script Ending
+2024-10-24 00:42:40,599 - DEBUG - =======================================================
+2024-10-24 00:42:40,645 - DEBUG - CGI Script Starting
+2024-10-24 00:42:40,645 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 00:42:40,645 - DEBUG - PATH_INFO=
+2024-10-24 00:42:40,645 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:42:40,645 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:42:40,645 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:42:40,645 - DEBUG - CGI Script Ending
+2024-10-24 00:42:40,645 - DEBUG - =======================================================
+2024-10-24 00:51:22,959 - DEBUG - CGI Script Starting
+2024-10-24 00:51:22,960 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 00:51:22,960 - DEBUG - PATH_INFO=
+2024-10-24 00:51:22,960 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 00:51:22,960 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 00:51:22,960 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 00:51:22,960 - DEBUG - CGI Script Ending
+2024-10-24 00:51:22,960 - DEBUG - =======================================================
+2024-10-24 08:23:11,043 - DEBUG - CGI Script Starting
+2024-10-24 08:23:11,043 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:23:11,043 - DEBUG - PATH_INFO=
+2024-10-24 08:23:11,043 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:23:11,043 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:23:11,043 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:23:11,043 - DEBUG - CGI Script Ending
+2024-10-24 08:23:11,043 - DEBUG - =======================================================
+2024-10-24 08:26:27,737 - DEBUG - CGI Script Starting
+2024-10-24 08:26:27,737 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:26:27,737 - DEBUG - PATH_INFO=
+2024-10-24 08:26:27,737 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:26:27,737 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:26:27,737 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:26:27,737 - DEBUG - CGI Script Ending
+2024-10-24 08:26:27,738 - DEBUG - =======================================================
+2024-10-24 08:27:02,153 - DEBUG - CGI Script Starting
+2024-10-24 08:27:02,153 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:27:02,153 - DEBUG - PATH_INFO=
+2024-10-24 08:27:02,153 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:27:02,153 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:27:02,153 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:27:02,154 - DEBUG - CGI Script Ending
+2024-10-24 08:27:02,154 - DEBUG - =======================================================
+2024-10-24 08:32:03,229 - DEBUG - CGI Script Starting
+2024-10-24 08:32:03,230 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:32:03,230 - DEBUG - PATH_INFO=
+2024-10-24 08:32:03,230 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:32:03,230 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:32:03,230 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:32:03,230 - DEBUG - CGI Script Ending
+2024-10-24 08:32:03,230 - DEBUG - =======================================================
+2024-10-24 08:34:22,462 - DEBUG - CGI Script Starting
+2024-10-24 08:34:22,463 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:34:22,463 - DEBUG - PATH_INFO=
+2024-10-24 08:34:22,463 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:34:22,463 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:34:22,463 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:34:22,463 - DEBUG - CGI Script Ending
+2024-10-24 08:34:22,463 - DEBUG - =======================================================
+2024-10-24 08:34:57,791 - DEBUG - CGI Script Starting
+2024-10-24 08:34:57,791 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:34:57,791 - DEBUG - PATH_INFO=
+2024-10-24 08:34:57,791 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:34:57,791 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:34:57,791 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:34:57,791 - DEBUG - CGI Script Ending
+2024-10-24 08:34:57,791 - DEBUG - =======================================================
+2024-10-24 08:35:49,855 - DEBUG - CGI Script Starting
+2024-10-24 08:35:49,855 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:35:49,855 - DEBUG - PATH_INFO=
+2024-10-24 08:35:49,855 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:35:49,855 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:35:49,855 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:35:49,855 - DEBUG - CGI Script Ending
+2024-10-24 08:35:49,856 - DEBUG - =======================================================
+2024-10-24 08:36:18,116 - DEBUG - CGI Script Starting
+2024-10-24 08:36:18,116 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:36:18,116 - DEBUG - PATH_INFO=
+2024-10-24 08:36:18,116 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:36:18,116 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:36:18,116 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:36:18,116 - DEBUG - CGI Script Ending
+2024-10-24 08:36:18,116 - DEBUG - =======================================================
+2024-10-24 08:37:11,006 - DEBUG - CGI Script Starting
+2024-10-24 08:37:11,006 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:37:11,006 - DEBUG - PATH_INFO=
+2024-10-24 08:37:11,006 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:37:11,006 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:37:11,006 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:37:11,006 - DEBUG - CGI Script Ending
+2024-10-24 08:37:11,007 - DEBUG - =======================================================
+2024-10-24 08:39:03,759 - DEBUG - CGI Script Starting
+2024-10-24 08:39:03,759 - DEBUG - REQUEST_METHOD=GET
+2024-10-24 08:39:03,759 - DEBUG - PATH_INFO=
+2024-10-24 08:39:03,759 - DEBUG - SCRIPT_FILENAME=./public/file_manager/file_handler.cgi
+2024-10-24 08:39:03,759 - DEBUG - UPLOAD_DIR=uploads
+2024-10-24 08:39:03,759 - DEBUG - LC_CTYPE=C.UTF-8
+2024-10-24 08:39:03,759 - DEBUG - CGI Script Ending
+2024-10-24 08:39:03,759 - DEBUG - =======================================================

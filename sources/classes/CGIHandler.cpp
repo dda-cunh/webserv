@@ -72,7 +72,7 @@ void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& r
         parseCGIOutput(output, headers, body);
     
         response.setBody(body);
-        std::cout << "CGI response headers:\n";
+        Utils::log("CGI response headers:", Utils::LOG_INFO);
         for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
             std::cout << "\t" << it->first << ": " << it->second << std::endl;
             if (it->first == "Status") {
