@@ -63,9 +63,6 @@ std::string CGIMatch::getBinary() const {
 	return _binary;
 }
 
-/**
- * @brief Finds the extension of the script in the URI. Matches the first segment that contains a dot.
- */
 std::string CGIMatch::findExtension(const std::string& uri) {
     size_t startPos = uri.find('/', 1);
     while (startPos != std::string::npos) {
@@ -77,7 +74,7 @@ std::string CGIMatch::findExtension(const std::string& uri) {
         }
         startPos = endPos;
     }
-    return NULL;
+    return "";
 }
 
 std::ostream& operator<<(std::ostream& out, const CGIMatch& cgi) {
