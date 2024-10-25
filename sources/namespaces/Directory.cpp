@@ -4,6 +4,8 @@ namespace Directory
 {
 	Result handleDirectory(const std::string path, const bool autoindex)
 	{
+		//	FIRST CHECK IF INDEX FILES EXIST, THEN CHECK IF autoindex IS ON
+
 		std::string root = "public/";
 		if (autoindex && !path.empty() && path[path.length() - 1] == '/' && path != root)
 			return listDirectory(path);

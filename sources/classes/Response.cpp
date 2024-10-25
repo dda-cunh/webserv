@@ -48,24 +48,21 @@ void Response::setMatchedLocation() {
     std::string longestMatch;
 
 
-
-    for (size_t i = 0; i < _serverBlocks.size(); ++i) {
-        const ServerConfig &config = _serverBlocks[i];
-        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j) {
-            ServerLocation *location = config.getLocationFromIndex(j);
-            std::string locationPath = location->getLocation();
-            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
-                longestMatch = locationPath;
-                bestMatch = location;
-            }
+//	FIX HERE
+    for (size_t j = 0; j < this->_serverConfig.getLocationBlocksSize(); ++j) {
+        ServerLocation *location = this->_serverConfig.getLocationFromIndex(j);
+        std::string locationPath = location->getLocation();
+        if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size()) {
+            longestMatch = locationPath;
+            bestMatch = location;
         }
     }
 
     if (bestMatch == NULL) {
-        throw std::runtime_error("No valid location block found for the requested URI.");
+        bestMatch = this->_serverConfig.getLocationFromIndex(0);
     }
 
-    _locationMatch = bestMatch;
+    this->_locationMatch = bestMatch;
     Utils::log("Matched location:", Utils::LOG_INFO);
     std::cout << *_locationMatch << std::endl;
 }
@@ -79,13 +76,13 @@ Response::~Response()
 {
 }
 
-Response::Response(Request const &request, ServerBlocks const &server_blocks)
+Response::Response(Request const &request, ServerConfig const &server_config)
     : _statusCode(Http::SC_OK),
       _headers(),
       _body(),
       _response(),
       _request(request),
-      _serverBlocks(server_blocks)
+      _serverConfig(server_config)
 {
 	std::string body(request.body().begin(), request.body().end());
 
@@ -129,7 +126,7 @@ void Response::dispatchMethod()
     else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
         handleCGI();
     else if (_request.method() == Http::M_GET)
-        handleGETMethod();
+        handleStatic();	//	START HERE
 }
 
 void Response::handleMethodNotAllowed()
@@ -179,14 +176,39 @@ void Response::handleCGI() {
 /**
  * @brief  Serves the requested file or directory listing.
  */
-void Response::handleGETMethod()
+
+//	MAYBE REUSE SOME OF THIS CODE...
+void Response::handleStatic()
 {
-	std::string root = _locationMatch->getRootDir();
-	bool autoindex = _locationMatch->getAutoIndex();
+	std::string	root 		= _locationMatch->getRootDir();
+	bool		autoindex	= _locationMatch->getAutoIndex();
 
     std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
-    
-	if (Directory::isDirectory(uri))
+    std::cout << "!!! URI: " << uri << " !!!" << std::endl;
+
+//	IF URI IS A FILE & FILE EXISTS, READ FILE
+//	ELSE IF URI IS A FILE & FILE DOES NOT EXIST, RETURN 404
+    if (uri.substr(uri.find_last_of("/") ).find(".") != uri.npos \
+    	&& access(uri.c_str(),F_OK) == 0)
+    {
+//		std::cout << "#!!! IT FUCKING WORKS!!!! !!!#" << std::endl;
+    	readResource(uri);
+    	return ;
+    }
+/*    else if (Directory::isDirectory(uri) )
+    {
+//	IF URI IS A PATH:
+//		CHECK IF index_files EXIST IN GIVEN PATH AND READ
+//		IF FILE DOES NOT EXIST
+//			CHECK IF DIRECTORY EXISTS
+//				RETURN 404 IF NOT
+//				IF IT EXISTS 
+//    				AND autoindex IS OFF:
+//						RETURN 403
+//					ELSE autoindex is ON
+//						SHOW INDEX    	
+    }
+*/	if (Directory::isDirectory(uri))
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
