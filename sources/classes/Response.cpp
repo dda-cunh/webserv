@@ -184,31 +184,46 @@ void Response::handleStatic()
 	bool		autoindex	= _locationMatch->getAutoIndex();
 
     std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
-    std::cout << "!!! URI: " << uri << " !!!" << std::endl;
 
-//	IF URI IS A FILE & FILE EXISTS, READ FILE
-//	ELSE IF URI IS A FILE & FILE DOES NOT EXIST, RETURN 404
     if (uri.substr(uri.find_last_of("/") ).find(".") != uri.npos \
     	&& access(uri.c_str(),F_OK) == 0)
     {
-//		std::cout << "#!!! IT FUCKING WORKS!!!! !!!#" << std::endl;
     	readResource(uri);
     	return ;
     }
-/*    else if (Directory::isDirectory(uri) )
+    else if (!Directory::isDirectory(uri) )
     {
-//	IF URI IS A PATH:
-//		CHECK IF index_files EXIST IN GIVEN PATH AND READ
-//		IF FILE DOES NOT EXIST
-//			CHECK IF DIRECTORY EXISTS
-//				RETURN 404 IF NOT
-//				IF IT EXISTS 
-//    				AND autoindex IS OFF:
-//						RETURN 403
-//					ELSE autoindex is ON
-//						SHOW INDEX    	
+    	setStatusAndReadResource(Http::SC_NOT_FOUND);
+    	return ;	
     }
-*/	if (Directory::isDirectory(uri))
+    else
+    {
+    	if (uri.at(uri.size() - 1) != '/')
+    		uri.append("/");
+    	for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
+    	{
+    		uri.append(this->_locationMatch->getIndexFileName(i) );
+    		if (access(uri.c_str(),F_OK) == 0)
+    		{
+    			readResource(uri);
+    			return ;
+    		}
+    		uri.erase(uri.find_last_of("/") + 1);
+    	}
+
+    	if (autoindex == false)
+    	{
+    		setStatusAndReadResource(Http::SC_FORBIDDEN);
+    		return ;
+    	}
+    	else
+    	{
+		//		show index
+		}
+    }
+/*
+
+	if (Directory::isDirectory(uri))
 	{
 		Directory::Result result = Directory::handleDirectory(uri, autoindex);
 		_statusCode = result.statusCode;
@@ -223,6 +238,7 @@ void Response::handleStatic()
 	{
 		setStatusAndReadResource(Http::SC_NOT_FOUND);
 	}
+*/
 }
 
 void Response::readResource(const std::string &uri, bool isErrorResponse)
