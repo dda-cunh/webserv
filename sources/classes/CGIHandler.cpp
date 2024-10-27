@@ -68,40 +68,41 @@ void CGIHandler::handleParentProcess(pid_t pid) {
     close(_inputPipe[0]);
     close(_outputPipe[1]);
 
-    if (request.method() == Http::M_POST) {
-        write(_inputPipe[1], request.body().data(), request.body().size());
-    }
+    if (request.method() == Http::M_POST)
+        if (write(_inputPipe[1], request.body().data(), request.body().size()))
+            throw ExceptionMaker("Write to CGI input pipe failed: " + std::string(strerror(errno)));
 
     std::string output = readCGIOutput(_outputPipe[0], pid);
-
     handleCGIOutput(output, pid);
 }
 
-std::string CGIHandler::readCGIOutput(int outputPipeReadEnd, pid_t pid) {
-    const int timeoutMillis = 3000;
+std::string CGIHandler::readCGIOutput(int output_pipe, pid_t pid) {
     struct pollfd fds;
-    fds.fd = outputPipeReadEnd;
+    fds.fd = output_pipe;
     fds.events = POLLIN;
+    fds.revents = 0;
 
     std::string output;
-    char buffer[4096];
+    char buffer[BUFFER_SIZE];
 
     while (true) {
-        int pollResult = poll(&fds, 1, timeoutMillis);
+        int pollResult = poll(&fds, 1, CGI_TIMEOUT_MS);
 
         if (pollResult == 0) {
             kill(pid, SIGKILL);
             throw ExceptionMaker("CGI process timeout reached");
-        } else if (pollResult < 0) {
-            throw ExceptionMaker("Error polling CGI process output pipe");
-        } else if (fds.revents & POLLIN) {
-            ssize_t bytesRead = read(outputPipeReadEnd, buffer, sizeof(buffer));
-            if (bytesRead <= 0) break;
-            output.append(buffer, bytesRead);
-        } else {
-            break;
         }
+        if (pollResult < 0) {
+            if (errno == EINTR) continue;
+            throw ExceptionMaker("Poll failed: " + std::string(strerror(errno)));
+        }
+        if (!(fds.revents & POLLIN)) break;
+
+        ssize_t bytesRead = read(output_pipe, buffer, BUFFER_SIZE);
+        if (bytesRead <= 0) break;
+        output.append(buffer, bytesRead);
     }
+
     return output;
 }
 
@@ -110,6 +111,9 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
     waitpid(pid, &status, 0);
 
     if (WIFEXITED(status)) {
+        if (WEXITSTATUS(status) != 0)
+            Utils::log("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
+        
         std::string body;
         std::map<std::string, std::string> headers;
 
@@ -117,11 +121,10 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
 
         _response.setBody(body);
         for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-            if (it->first == "Status") {
+            if (it->first == "Status")
                 _response.setStatusCode(static_cast<Http::STATUS_CODE>(Utils::stringToInt(it->second)));
-            } else {
+            else
                 _response.setHeader(it->first, it->second);
-            }
         }
     } else {
         throw ExceptionMaker("CGI process exited with error status" + Utils::intToString(WEXITSTATUS(status)));
