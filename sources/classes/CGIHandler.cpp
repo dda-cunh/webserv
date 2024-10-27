@@ -39,7 +39,9 @@ void CGIHandler::handleChildProcess() {
     close(_inputPipe[1]);
     close(_outputPipe[0]);
 
-    std::string execDir = Utils::concatenatePaths(_response.getLocationMatch()->getRootDir().c_str(), _response.getCGIMatch().getBasePath().c_str(), NULL);
+    std::string execDir = Utils::concatenatePaths(_response.getLocationMatch()->getRootDir().c_str(),
+                                                    _response.getCGIMatch().getBasePath().c_str(),
+                                                    NULL);
     std::string execFile = _response.getCGIMatch().getScriptName();
 
     dup2(_inputPipe[0], STDIN_FILENO);
@@ -69,18 +71,16 @@ void CGIHandler::handleParentProcess(pid_t pid) {
     if (request.method() == Http::M_POST) {
         write(_inputPipe[1], request.body().data(), request.body().size());
     }
-    close(_inputPipe[1]);
 
     std::string output = readCGIOutput(_outputPipe[0], pid);
-    close(_outputPipe[0]);
 
     handleCGIOutput(output, pid);
 }
 
-std::string CGIHandler::readCGIOutput(int _outputPipeReadEnd, pid_t pid) {
-    const int timeoutMillis = 5000;
+std::string CGIHandler::readCGIOutput(int outputPipeReadEnd, pid_t pid) {
+    const int timeoutMillis = 3000;
     struct pollfd fds;
-    fds.fd = _outputPipeReadEnd;
+    fds.fd = outputPipeReadEnd;
     fds.events = POLLIN;
 
     std::string output;
@@ -95,7 +95,7 @@ std::string CGIHandler::readCGIOutput(int _outputPipeReadEnd, pid_t pid) {
         } else if (pollResult < 0) {
             throw ExceptionMaker("Error polling CGI process output pipe");
         } else if (fds.revents & POLLIN) {
-            ssize_t bytesRead = read(_outputPipeReadEnd, buffer, sizeof(buffer));
+            ssize_t bytesRead = read(outputPipeReadEnd, buffer, sizeof(buffer));
             if (bytesRead <= 0) break;
             output.append(buffer, bytesRead);
         } else {
@@ -124,7 +124,7 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
             }
         }
     } else {
-        throw ExceptionMaker("CGI process exited with error status");
+        throw ExceptionMaker("CGI process exited with error status" + Utils::intToString(WEXITSTATUS(status)));
     }
 }
 

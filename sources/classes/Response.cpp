@@ -1,6 +1,4 @@
 #include "../../includes/classes/Response.hpp"
-#include <sstream> // for std::ostringstream
-#include <sys/wait.h>
 
 /**************************************************************************/
 
@@ -143,6 +141,9 @@ void Response::handleMethodNotAllowed()
     readResource(_locationMatch->getErrPagePath(_statusCode));
 }
 
+/**
+ * @brief Handles the CGI process. Sets up the environment, forks and manages child and parent processes.
+ */
 void Response::handleCGI()
 {
     std::string uri = _request.uri();
@@ -153,10 +154,9 @@ void Response::handleCGI()
     if (access(cgiPath.c_str(), X_OK) != 0)
         return setStatusAndReadResource(Http::SC_FORBIDDEN);
 
-    CGIHandler cgiHandler(*this, cgiPath);
-
     try
     {
+        CGIHandler cgiHandler(*this, cgiPath);
         pid_t pid = fork();
         if (pid == 0)
             cgiHandler.handleChildProcess();

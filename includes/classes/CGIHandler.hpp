@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <cerrno>
 #include <poll.h>
-#include <signal.h>
 #include "../webserv.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
@@ -24,6 +23,7 @@ class CGIHandler
 		std::string readCGIOutput(int output_pipe, pid_t pid);
 		void handleCGIOutput(const std::string &output, pid_t pid);
 		void parseCGIOutput(const std::string &output, std::map<std::string, std::string> &headers, std::string &body);
+		void closePipes();
 
 		Response &					_response;
 		const std::string & 		_cgiPath;

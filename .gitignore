@@ -5,7 +5,6 @@ webserv
 TODO.md
 directory_listing.html
 notes.cpp
-questions.txt
-/public/file_manager/file_handler.log
 /public/file_manager/uploads/*
 !/public/file_manager/uploads/.keep
+*.log
