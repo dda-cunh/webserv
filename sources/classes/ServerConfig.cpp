@@ -60,20 +60,20 @@ ServerConfig::~ServerConfig(void)
 
 ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 {
-    size_t			vectorSize;
+	size_t			vectorSize;
 
-    this->_host = serverConfig.getHost();
-    this->_port = serverConfig.getPort();
+	this->_host = serverConfig.getHost();
+	this->_port = serverConfig.getPort();
 
-    vectorSize = serverConfig.getServerNamesSize();
-    for (size_t i = 0; i < vectorSize; i++)
-        this->_serverNames.push_back(serverConfig.getServerName(i) );
+	vectorSize = serverConfig.getServerNamesSize();
+	for (size_t i = 0; i < vectorSize; i++)
+		this->_serverNames.push_back(serverConfig.getServerName(i) );
 
-    vectorSize = serverConfig.getLocationBlocksSize();
-    for (size_t i = 0; i < vectorSize; i++)
-        this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
+	vectorSize = serverConfig.getLocationBlocksSize();
+	for (size_t i = 0; i < vectorSize; i++)
+		this->_locationBlocks.push_back(new ServerLocation(*serverConfig.getLocationFromIndex(i) ) );
 
-    return (*this);
+	return (*this);
 }
 
 uint32_t	ServerConfig::getHost(void) const
