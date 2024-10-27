@@ -25,7 +25,7 @@ void CGIHandler::setEnvironmentVariables() {
         _envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 
-    Utils::log("CGI process env variables::", Utils::LOG_INFO);
+    Utils::log("CGI process env variables:", Utils::LOG_INFO);
     for (size_t i = 0; i < _envVars.size(); ++i)
         std::cout << "\t" << _envVars[i] << std::endl;
 }
@@ -69,7 +69,7 @@ void CGIHandler::handleParentProcess(pid_t pid) {
     close(_outputPipe[1]);
 
     if (request.method() == Http::M_POST)
-        if (write(_inputPipe[1], request.body().data(), request.body().size()))
+        if (write(_inputPipe[1], request.body().data(), request.body().size()) == -1)
             throw ExceptionMaker("Write to CGI input pipe failed: " + std::string(strerror(errno)));
 
     std::string output = readCGIOutput(_outputPipe[0], pid);

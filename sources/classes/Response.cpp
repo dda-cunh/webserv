@@ -62,7 +62,7 @@ void Response::setMatchedLocation()
     }
 
     if (bestMatch == NULL)
-        throw std::runtime_error("No valid location block found for the requested URI.");
+        throw ExceptionMaker("No valid location block found for the requested URI.");
 
     _locationMatch = bestMatch;
     Utils::log("Matched location:", Utils::LOG_INFO);
@@ -91,9 +91,9 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
     {
         setMatchedLocation();
     }
-    catch (std::exception &e)
+    catch (ExceptionMaker &e)
     {
-        Utils::log(e.what(), Utils::LOG_ERROR);
+        e.log();
         setStatusAndReadResource(Http::SC_NOT_FOUND);
     }
 
@@ -117,9 +117,7 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
 /********************************  MEMBERS  *******************************/
 
 /**
- * @brief Dispatches the request method.
- *
- * Calls the relevant method handler.
+ * @brief Dispatches the request method. Calls the relevant method handler.
  */
 void Response::dispatchMethod()
 {
