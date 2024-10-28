@@ -259,9 +259,9 @@ std::ostream 	&operator<<(std::ostream &out, const ServerLocation &location)
 
 	out << "\tAutoindex: " << location.getAutoIndex() << std::endl;
 
-	out << "\tCGI paths:" << std::endl;
-	for (StrStrMap::const_iterator itt = location.getCgiPathsBegin(); itt != location.getCgiPathsEnd(); itt++)
-		out << "\t\t" << itt->first << " " << location.getCgiPath(itt->first) << std::endl;
+	out << "\tCGI extensions:" << std::endl;
+	for (StrArr::const_iterator itt = location.getCgiExtensionsBegin(); itt != location.getCgiExtensionsEnd(); itt++)
+		out << "\t\t" << *itt << std::endl;
 
 	return (out);
 }

@@ -4,7 +4,7 @@ std::vector<std::string>	SyntaxChecker::_strLocationBlock;
 const std::string			SyntaxChecker::_directivesList[] = {"server", "listen", "server_name", "location",\
 																"root", "index", "client_max_body_size", "error_page",\
 																"rewrite", "allow_methods", "upload_store", \
-																"autoindex", "cgi_path", "cgi_root" \
+																"autoindex", "cgi_extension" \
 																""};
 
 
@@ -87,11 +87,8 @@ void	SyntaxChecker::syntaxCheckServerBlock(const std::vector<std::string> strSer
 			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(strServerBlock, i);
 				break ;
-			case (DIRECTIVE_CGI_PATH):
-				_syntaxCheckCgiPath(line);
-				break ;
-			case (DIRECTIVE_CGI_ROOT):
-				_syntaxCheckCgiRoot(strServerBlock, i);
+			case (DIRECTIVE_CGI_EXTENSION):
+				_syntaxCheckCgiExtension(line);
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -273,11 +270,8 @@ void	SyntaxChecker::_syntaxCheckLocationBlock(const std::vector<std::string> str
 			case (DIRECTIVE_AUTOINDEX):
 				_syntaxCheckAutoIndex(_strLocationBlock, j);
 				break ;
-			case (DIRECTIVE_CGI_PATH):
-				_syntaxCheckCgiPath(_strLocationBlock.at(j) );
-				break ;
-			case (DIRECTIVE_CGI_ROOT):
-				_syntaxCheckCgiRoot(_strLocationBlock, j);
+			case (DIRECTIVE_CGI_EXTENSION):
+				_syntaxCheckCgiExtension(_strLocationBlock.at(j) );
 				break ;
 			default:
 				throw (ExceptionMaker("Invalid directive in configuration file") );
@@ -486,45 +480,19 @@ void	SyntaxChecker::_syntaxCheckAutoIndex(const std::vector<std::string> block, 
 		throw (ExceptionMaker("Invalid number of arguments in \"autoindex\" directive") );
 }
 
-void	SyntaxChecker::_syntaxCheckCgiPath(std::string line)
+void	SyntaxChecker::_syntaxCheckCgiExtension(std::string line)
 {
-	std::string	strArgs;
+    std::string	strArgs;
 
-	if (line.find(';') == line.npos)
-		throw (ExceptionMaker("Expected ';' token at the end of \"cgi_path\" directive") );
-	else if (line.find(';') != line.size() - 1)
-		throw (ExceptionMaker("Unexpected ';' token found in  \"cgi_path\" directive") );
+    if (line.find(';') == line.npos)
+        throw (ExceptionMaker("Expected ';' token at the end of \"cgi_extension\" directive") );
+    else if (line.find(';') != line.size() - 1)
+        throw (ExceptionMaker("Unexpected ';' token found in  \"cgi_extension\" directive") );
 
-	strArgs = strParseLine(line);
-	if (Utils::sWordCount(strArgs) != 2)
-		throw (ExceptionMaker("Invalid number of arguments in \"cgi_path\" directive") );
+    strArgs = strParseLine(line);
+    if (Utils::sWordCount(strArgs) != 1)
+        throw (ExceptionMaker("Invalid number of arguments in \"cgi_extension\" directive") );
 
-	if (strArgs.substr(0, strArgs.find_first_of(" \t") ).find_last_of(".") != 0)
-		throw (ExceptionMaker("Invalid extension provided in \"cgi_path\" directive") );
-}
-
-void	SyntaxChecker::_syntaxCheckCgiRoot(const std::vector<std::string> block, const size_t i)
-{
-	size_t	vectorSize;
-
-	vectorSize = block.size();
-	for (size_t j = i + 1; j < vectorSize; j++)
-	{
-		if (block.at(j).find("location") == 0)
-		{
-			while (j < vectorSize && block.at(j) != "}")
-				j++;
-		}
-
-		if (block.at(j).find("cgi_root") == 0)
-			throw (ExceptionMaker("\"cgi_root\" directive is duplicate") );
-	}
-
-	if (block.at(i).find(';') == block.at(i).npos)
-		throw (ExceptionMaker("Expected ';' token at the end of \"cgi_root\" directive") );
-	else if (block.at(i).find(';') != block.at(i).size() - 1)
-		throw (ExceptionMaker("Unexpected ';' token found in  \"cgi_root\" directive") );
-
-	if (Utils::sWordCount(strParseLine(block.at(i) ) ) != 1 )
-		throw (ExceptionMaker("Invalid number of arguments in \"cgi_root\" directive") );
+    if (strArgs.find_last_of(".") != 0)
+        throw (ExceptionMaker("Invalid extension provided in \"cgi_extension\" directive") );
 }
