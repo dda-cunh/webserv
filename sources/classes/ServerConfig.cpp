@@ -76,7 +76,6 @@ ServerConfig &ServerConfig::operator=(const ServerConfig &serverConfig)
 	return (*this);
 }
 
-
 uint32_t	ServerConfig::getHost(void) const
 {
 	return (this->_host);

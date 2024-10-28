@@ -3,12 +3,38 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cerrno>
+#include <poll.h>
 #include "../webserv.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 
-void setEnvironmentVariables(const std::string& cgiPath, Response& response, std::vector<std::string>& envVars);
-void createPipes(int inputPipe[2], int outputPipe[2]);
-void handleChildProcess(int inputPipe[2], int outputPipe[2], Response& response, const std::vector<std::string>& envVars);
-void handleParentProcess(int inputPipe[2], int outputPipe[2], const Request& request, Response& response, pid_t pid);
-void parseCGIOutput(const std::string& output, std::map<std::string, std::string>& headers, std::string& body);
+class CGIHandler
+{
+	public:
+		CGIHandler(Response &response, const std::string &cgiPath);
+		~CGIHandler();
+
+		void setEnvironmentVariables();
+		void createPipes();
+		void handleChildProcess();
+		void handleParentProcess(pid_t pid);
+
+	private:
+		CGIHandler(const CGIHandler&);
+		CGIHandler& operator=(const CGIHandler&);
+
+	    enum {
+			BUFFER_SIZE = 4096,
+			CGI_TIMEOUT_MS = 3000
+    	};
+		
+		std::string readCGIOutput(int output_pipe, pid_t pid);
+		void handleCGIOutput(const std::string &output, pid_t pid);
+		void parseCGIOutput(const std::string &output, std::map<std::string, std::string> &headers, std::string &body);
+
+		Response &					_response;
+		const std::string & 		_cgiPath;
+		int 						_inputPipe[2];
+		int 						_outputPipe[2];
+		std::vector<std::string>	_envVars;
+};
