@@ -33,5 +33,5 @@ namespace	Utils
 	std::string				getCurrentDate();
 	bool					isDirectory(std::string const& uri);
 	bool 					resourceExists(std::string const &uri);
-	std::string 			concatenatePaths(const std::string &basePath, ...);
+	std::string 			concatenatePaths(const std::string basePath, ...);
 }

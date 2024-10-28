@@ -168,7 +168,7 @@ void ServerManager::up()	throw()
 						Response response(it->second, this->_server_blocks);
 						std::string responseStr = response.getResponse();
 						send(_ep_events[i].data.fd, responseStr.c_str(),
-								responseStr.length(), MSG_DONTWAIT);
+								responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
 						if (it->second.header("connection") != "keep-alive")
 						{
 							doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
