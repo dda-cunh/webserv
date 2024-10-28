@@ -10,7 +10,7 @@ StrStrMap					ConfigParser::defaultRedirections;
 std::vector<std::string>	ConfigParser::defaultMethodsAllowed;
 std::string					ConfigParser::defaultUploadPath;
 bool						ConfigParser::defaultAutoIndex;
-StrStrMap					ConfigParser::defaultCgiPaths;
+StrArr						ConfigParser::defaultCgiExtensions;
 
 static void	erase_comments(std::string &line)
 {
@@ -65,7 +65,7 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		defaultRedirections.clear();
 		defaultMethodsAllowed.clear();
 		defaultAutoIndex = DEFAULT_AUTO_INDEX;
-		defaultCgiPaths.clear();
+		defaultCgiExtensions.clear();
 	}
 
 	configFile.close();
@@ -220,12 +220,13 @@ void	ConfigParser::_overrideDefaults(void)
 			else
 				throw (ExceptionMaker("Invalid argument in \"autoindex\" directive in server context") );
 		}
-		else if (line.find("cgi_path") == 0)
+		else if (line.find("cgi_extension") == 0)
 		{
-			if (defaultCgiPaths.find(line.substr(0, line.find_first_of(" \t") ) ) == defaultCgiPaths.end() )
-				defaultCgiPaths[line.substr(0, line.find_first_of(" \t") )] = line.substr(line.find_last_of(" \t") );
+			std::string ext = line.substr(line.find_first_not_of(" \t"), line.find_last_of(" \t") - line.find_first_not_of(" \t"));
+			if (std::find(defaultCgiExtensions.begin(), defaultCgiExtensions.end(), ext) == defaultCgiExtensions.end())
+				defaultCgiExtensions.push_back(ext);
 			else
-				throw (ExceptionMaker("Multiple paths for same extension in \"cgi_path\" directives") );
+				throw (ExceptionMaker("Multiple entries for same extension in \"cgi_extension\" directives"));
 		}
 	}
 }

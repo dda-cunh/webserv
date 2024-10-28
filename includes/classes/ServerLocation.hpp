@@ -38,7 +38,6 @@ class	ServerLocation
 		bool						methodIsAllowed(Http::METHOD method) const;
 		std::string					getUploadPath(void) const;
 		bool						getAutoIndex(void) const;
-		std::string					getCgiPath(std::string ext) const;
 
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
@@ -47,12 +46,10 @@ class	ServerLocation
 		Http::METHOD				getMethodByIndex(size_t i) const;
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
-		StrStrMap::const_iterator	getCgiPathsBegin(void) const;
-		StrStrMap::const_iterator	getCgiPathsEnd(void) const;
+		StrArr::const_iterator		getCgiExtensionsBegin(void) const;
+		StrArr::const_iterator		getCgiExtensionsEnd(void) const;
 
 	protected:											//	KEYWORDS
-
-
 		std::string					_location;			//		location [PATH] {
 		std::string					_rootDir;			//		root [PATH]
 		std::vector<std::string>	_indexFiles;		//		index FILE0 [FILE 1..N]
@@ -62,7 +59,7 @@ class	ServerLocation
 		std::vector<Http::METHOD>	_methodsAllowed;	//		allow_methods [GET] [POST] [DELETE]
 		std::string					_uploadPath;		//		upload_store [PATH]
 	    bool						_autoIndex;			//		autoindex [on | off]
-		StrStrMap					_cgiPaths;			//		cgi_path [EXT] [PATH];
+		StrArr						_cgiExtensions;		//		cgi_extension [EXT]
 
 	private:
 		std::string					_setLocation(std::string locationLine);
@@ -74,5 +71,5 @@ class	ServerLocation
 		void						_setAllowedMethods(std::vector<std::string> strLocationBlock, std::vector<Http::METHOD> &methodsAllowed);
 		std::string					_setUploadStore(std::vector<std::string> strLocationBlock);
 		bool						_setAutoIndex(std::vector<std::string> strLocationBlock);
-		void						_setCgiPaths(std::vector<std::string> strLocationBlock);
+		void						_setCgiExtensions(std::vector<std::string> strLocationBlock);
 };

@@ -27,7 +27,7 @@ ServerLocation::ServerLocation(const std::vector<std::string> &strLocationBlock)
 	this->_setAllowedMethods(strLocationBlock, this->_methodsAllowed);
 	this->_uploadPath = this->_setUploadStore(strLocationBlock);
 	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
-	this->_setCgiPaths(strLocationBlock);
+	this->_setCgiExtensions(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -66,13 +66,11 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
   	this->_uploadPath = serverLocation.getUploadPath();
   	this->_autoIndex = serverLocation.getAutoIndex();
 
-  	for (StrStrMap::const_iterator itt = serverLocation.getCgiPathsBegin(); itt != serverLocation.getCgiPathsEnd(); itt++)
-  		this->_cgiPaths[itt->first] = itt->second;
-
+	for (StrArr::const_iterator itt = serverLocation.getCgiExtensionsBegin(); itt != serverLocation.getCgiExtensionsEnd(); itt++)
+		this->_cgiExtensions.push_back(*itt);
 
 	return (*this);
 }
-
 
 std::string	ServerLocation::getLocation(void) const
 {
@@ -134,11 +132,6 @@ bool	ServerLocation::getAutoIndex(void) const
 	return (this->_autoIndex);
 }
 
-std::string	ServerLocation::getCgiPath(std::string ext) const
-{
-	return (this->_cgiPaths.at(ext) );
-}
-
 IntStrMap::const_iterator	ServerLocation::getErrPageIttBegin(void) const
 {
 	return (this->_errorPages.begin());
@@ -176,16 +169,15 @@ size_t	ServerLocation::getIndexVectorSize(void) const
 	return (this->_indexFiles.size() );
 }
 
-StrStrMap::const_iterator	ServerLocation::getCgiPathsBegin(void) const
+StrArr::const_iterator	ServerLocation::getCgiExtensionsBegin(void) const
 {
-	return (this->_cgiPaths.begin() );
+    return (this->_cgiExtensions.begin());
 }
 
-StrStrMap::const_iterator	ServerLocation::getCgiPathsEnd(void) const
+StrArr::const_iterator	ServerLocation::getCgiExtensionsEnd(void) const
 {
-	return (this->_cgiPaths.end() );
+    return (this->_cgiExtensions.end());
 }
-
 
 std::string	ServerLocation::_setLocation(std::string locationLine)
 {
@@ -485,30 +477,30 @@ bool	ServerLocation::_setAutoIndex(std::vector<std::string> strLocationBlock)
 	return (ConfigParser::defaultAutoIndex);	
 }
 
-void	ServerLocation::_setCgiPaths(std::vector<std::string> strLocationBlock)
+void	ServerLocation::_setCgiExtensions(std::vector<std::string> strLocationBlock)
 {
-	size_t		vectorSize;
-	std::string	line;
-	std::string	ext;
+    size_t		vectorSize;
+    std::string	line;
+    std::string	ext;
 
-	vectorSize = strLocationBlock.size();
-	for (size_t i = 0; i < vectorSize; i++)
-	{
-		line = strLocationBlock.at(i);
-		if (line.find("cgi_path") == 0)
-		{
-			line = SyntaxChecker::strParseLine(line);
-			ext = line.substr(0, line.find_first_of(" \t") );
-			if (this->_cgiPaths.find(ext) == this->_cgiPaths.end() )
-				this->_cgiPaths[ext] = line.substr(line.find_last_of(" \t") );
-			else
-				throw (ExceptionMaker("Multiple paths for same extension in \"cgi_path\" directives") );
-		}
-	}
+    vectorSize = strLocationBlock.size();
+    for (size_t i = 0; i < vectorSize; i++)
+    {
+        line = strLocationBlock.at(i);
+        if (line.find("cgi_extension") == 0)
+        {
+            line = SyntaxChecker::strParseLine(line);
+            ext = line.substr(0, line.find_first_of(" \t"));
+            if (std::find(this->_cgiExtensions.begin(), this->_cgiExtensions.end(), ext) == this->_cgiExtensions.end())
+                this->_cgiExtensions.push_back(ext);
+            else
+                throw (ExceptionMaker("Multiple paths for same extension in \"cgi_extension\" directives"));
+        }
+    }
 
-	if (this->_cgiPaths.empty() )
+	if (this->_cgiExtensions.empty())
 	{
-	  	for (StrStrMap::const_iterator itt = ConfigParser::defaultCgiPaths.begin(); itt != ConfigParser::defaultCgiPaths.end(); itt++)
-	  		this->_cgiPaths[itt->first] = itt->second;
+		for (StrArr::const_iterator itt = ConfigParser::defaultCgiExtensions.begin(); itt != ConfigParser::defaultCgiExtensions.end(); itt++)
+			this->_cgiExtensions.push_back(*itt);
 	}
 }

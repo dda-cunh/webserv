@@ -24,7 +24,7 @@ class	ConfigParser
 		static std::vector<std::string>	defaultMethodsAllowed;
 		static std::string				defaultUploadPath;
 		static bool						defaultAutoIndex;
-		static StrStrMap				defaultCgiPaths;
+		static StrArr					defaultCgiExtensions;
 
 
 
