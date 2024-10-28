@@ -28,7 +28,6 @@ ServerLocation::ServerLocation(const std::vector<std::string> &strLocationBlock)
 	this->_uploadPath = this->_setUploadStore(strLocationBlock);
 	this->_autoIndex = 	this->_setAutoIndex(strLocationBlock);
 	this->_setCgiPaths(strLocationBlock);
-	this->_cgiRoot = this->_setCgiRoot(strLocationBlock);
 }
 
 ServerLocation::ServerLocation(const ServerLocation &serverLocation)
@@ -70,7 +69,6 @@ ServerLocation	&ServerLocation::operator=(const ServerLocation &serverLocation)
   	for (StrStrMap::const_iterator itt = serverLocation.getCgiPathsBegin(); itt != serverLocation.getCgiPathsEnd(); itt++)
   		this->_cgiPaths[itt->first] = itt->second;
 
-  	this->_cgiRoot = serverLocation.getCgiRoot();
 
 	return (*this);
 }
@@ -140,12 +138,6 @@ std::string	ServerLocation::getCgiPath(std::string ext) const
 {
 	return (this->_cgiPaths.at(ext) );
 }
-
-std::string	ServerLocation::getCgiRoot(void) const
-{
-	return (this->_cgiRoot);
-}
-
 
 IntStrMap::const_iterator	ServerLocation::getErrPageIttBegin(void) const
 {
@@ -519,20 +511,4 @@ void	ServerLocation::_setCgiPaths(std::vector<std::string> strLocationBlock)
 	  	for (StrStrMap::const_iterator itt = ConfigParser::defaultCgiPaths.begin(); itt != ConfigParser::defaultCgiPaths.end(); itt++)
 	  		this->_cgiPaths[itt->first] = itt->second;
 	}
-}
-
-std::string	ServerLocation::_setCgiRoot(std::vector<std::string> strLocationBlock)
-{
-	size_t		vectorSize;
-	std::string	line;
-
-	vectorSize = strLocationBlock.size();
-	for (size_t i = 0; i < vectorSize; i++)
-	{
-		line = strLocationBlock.at(i);
-		if (line.find("cgi_root") == 0)
-			return (SyntaxChecker::strParseLine(line) );
-	}
-
-	return (ConfigParser::defaultCgiRoot);
 }

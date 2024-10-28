@@ -25,7 +25,6 @@ class	ConfigParser
 		static std::string				defaultUploadPath;
 		static bool						defaultAutoIndex;
 		static StrStrMap				defaultCgiPaths;
-		static std::string				defaultCgiRoot;
 
 
 
