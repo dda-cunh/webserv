@@ -110,7 +110,7 @@ namespace Utils
 		return (stat(uri.c_str(), &buffer) == 0);
 	}
 
-	std::string concatenatePaths(const std::string &basePath, ...)
+	std::string concatenatePaths(const std::string basePath, ...)
 	{
 		va_list args;
 		va_start(args, basePath);
