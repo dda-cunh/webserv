@@ -334,13 +334,6 @@ void Response::setResponse()
 void Response::setCGIMatch() {
     std::string uri = _request.uri();
     std::string extension = CGIMatch().findExtension(uri);
-<<<<<<< HEAD
-    if (!extension.empty()) {
-        for (StrStrMap::const_iterator it = _locationMatch->getCgiPathsBegin();
-             it != _locationMatch->getCgiPathsEnd(); ++it) {
-            if (it->first == extension) {
-                _cgiMatch = CGIMatch(uri, it->second);
-=======
     if (!extension.empty())
     {
         for (StrArr::const_iterator it = _locationMatch->getCgiExtensionsBegin();
@@ -349,7 +342,6 @@ void Response::setCGIMatch() {
             if (*it == extension)
             {
                 _cgiMatch = CGIMatch(uri, *it);
->>>>>>> 5e8e177 (removed cgi_path, added cgi_extension config)
                 Utils::log("CCGIMatch:", Utils::LOG_INFO);
                 std::cout << _cgiMatch << std::endl;
                 return;
