@@ -1,40 +1,59 @@
 #include "../../includes/classes/CGIHandler.hpp"
 
-void setEnvironmentVariables(const std::string& cgiPath, Response& response, std::vector<std::string>& envVars) {
-    const Request& request = response.getRequest();
-    envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
-    envVars.push_back("PATH_INFO=" + response.getCGIMatch().getPathInfo());
-    envVars.push_back("SCRIPT_FILENAME=" + cgiPath);
-    envVars.push_back("UPLOAD_DIR=" + response.getLocationMatch()->getUploadPath());
-
-    if (request.method() == Http::M_POST) {
-        envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
-        envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
-    }
+CGIHandler::CGIHandler(Response& response, const std::string& cgiPath)
+    : _response(response), _cgiPath(cgiPath) {
+    setEnvironmentVariables();
+    createPipes();
 }
 
-void createPipes(int input_pipe[2], int output_pipe[2]) {
-    if (pipe(input_pipe) == -1 || pipe(output_pipe) == -1)
+CGIHandler::~CGIHandler() {
+    close(_inputPipe[0]);
+    close(_inputPipe[1]);
+    close(_outputPipe[0]);
+    close(_outputPipe[1]);
+}
+
+void CGIHandler::setEnvironmentVariables() {
+    const Request& request = _response.getRequest();
+    _envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
+    _envVars.push_back("PATH_INFO=" + _response.getCGIMatch().getPathInfo());
+    _envVars.push_back("SCRIPT_FILENAME=" + _cgiPath);
+    _envVars.push_back("UPLOAD_DIR=" + _response.getLocationMatch()->getUploadPath());
+
+    if (request.method() == Http::M_POST) {
+        _envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
+        _envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
+    }
+
+    Utils::log("CGI process env variables:", Utils::LOG_INFO);
+    for (size_t i = 0; i < _envVars.size(); ++i)
+        std::cout << "\t" << _envVars[i] << std::endl;
+}
+
+void CGIHandler::createPipes() {
+    if (pipe(_inputPipe) == -1 || pipe(_outputPipe) == -1)
         throw ExceptionMaker("Pipe creation failed: " + std::string(strerror(errno)));
 }
 
-void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& response, const std::vector<std::string>& envVars) {
-    close(input_pipe[1]);
-    close(output_pipe[0]);
+void CGIHandler::handleChildProcess() {
+    close(_inputPipe[1]);
+    close(_outputPipe[0]);
 
-    std::string execDir = Utils::concatenatePaths(response.getLocationMatch()->getRootDir().c_str(), response.getCGIMatch().getBasePath().c_str(), NULL);
-    std::string execFile = response.getCGIMatch().getScriptName();
+    std::string execDir = Utils::concatenatePaths(_response.getLocationMatch()->getRootDir().c_str(),
+                                                    _response.getCGIMatch().getBasePath().c_str(),
+                                                    NULL);
+    std::string execFile = _response.getCGIMatch().getScriptName();
 
-    dup2(input_pipe[0], STDIN_FILENO);
-    dup2(output_pipe[1], STDOUT_FILENO);
-    dup2(output_pipe[1], STDERR_FILENO);
+    dup2(_inputPipe[0], STDIN_FILENO);
+    dup2(_outputPipe[1], STDOUT_FILENO);
+    dup2(_outputPipe[1], STDERR_FILENO);
 
-    close(input_pipe[0]);
-    close(output_pipe[1]);
+    close(_inputPipe[0]);
+    close(_outputPipe[1]);
 
     std::vector<const char*> envp;
-    for (size_t i = 0; i < envVars.size(); ++i)
-        envp.push_back(envVars[i].c_str());
+    for (size_t i = 0; i < _envVars.size(); ++i)
+        envp.push_back(_envVars[i].c_str());
     envp.push_back(NULL);
 
     chdir(execDir.c_str());
@@ -44,49 +63,75 @@ void handleChildProcess(int input_pipe[2], int output_pipe[2], Response& respons
     _exit(1);
 }
 
-void handleParentProcess(int input_pipe[2], int output_pipe[2], const Request& request, Response& response, pid_t pid) {
-    close(input_pipe[0]);
-    close(output_pipe[1]);
+void CGIHandler::handleParentProcess(pid_t pid) {
+    const Request& request = _response.getRequest();
+    close(_inputPipe[0]);
+    close(_outputPipe[1]);
 
-    if (request.method() == Http::M_POST) {
-        write(input_pipe[1], request.body().data(), request.body().size());
-    }
-    close(input_pipe[1]);
+    if (request.method() == Http::M_POST)
+        if (write(_inputPipe[1], request.body().data(), request.body().size()) == -1)
+            throw ExceptionMaker("Write to CGI input pipe failed: " + std::string(strerror(errno)));
 
-    char buffer[4096];
-    ssize_t bytesRead;
+    std::string output = readCGIOutput(_outputPipe[0], pid);
+    handleCGIOutput(output, pid);
+}
+
+std::string CGIHandler::readCGIOutput(int output_pipe, pid_t pid) {
+    struct pollfd fds;
+    fds.fd = output_pipe;
+    fds.events = POLLIN;
+    fds.revents = 0;
+
     std::string output;
+    char buffer[BUFFER_SIZE];
 
-    while ((bytesRead = read(output_pipe[0], buffer, sizeof(buffer))) > 0) {
+    while (true) {
+        int pollResult = poll(&fds, 1, CGI_TIMEOUT_MS);
+
+        if (pollResult == 0) {
+            kill(pid, SIGKILL);
+            throw ExceptionMaker("CGI process timeout reached");
+        }
+        if (pollResult < 0) {
+            if (errno == EINTR) continue;
+            throw ExceptionMaker("Poll failed: " + std::string(strerror(errno)));
+        }
+        if (!(fds.revents & POLLIN)) break;
+
+        ssize_t bytesRead = read(output_pipe, buffer, BUFFER_SIZE);
+        if (bytesRead <= 0) break;
         output.append(buffer, bytesRead);
     }
-    close(output_pipe[0]);
 
+    return output;
+}
+
+void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
     int status;
     waitpid(pid, &status, 0);
 
     if (WIFEXITED(status)) {
+        if (WEXITSTATUS(status) != 0)
+            Utils::log("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
+        
         std::string body;
         std::map<std::string, std::string> headers;
-    
+
         parseCGIOutput(output, headers, body);
-    
-        response.setBody(body);
-        Utils::log("CGI response headers:", Utils::LOG_INFO);
-        for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it) {
-            std::cout << "\t" << it->first << ": " << it->second << std::endl;
-            if (it->first == "Status") {
-                response.setStatusCode(static_cast<Http::STATUS_CODE>(Utils::stringToInt(it->second)));
-            } else {
-                response.setHeader(it->first, it->second);
-            }
+
+        _response.setBody(body);
+        for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+            if (it->first == "Status")
+                _response.setStatusCode(static_cast<Http::STATUS_CODE>(Utils::stringToInt(it->second)));
+            else
+                _response.setHeader(it->first, it->second);
         }
     } else {
-        throw ExceptionMaker("CGI process exited with error status: " + Utils::intToString(WEXITSTATUS(status)) + ": " + output);
+        throw ExceptionMaker("CGI process exited with error status" + Utils::intToString(WEXITSTATUS(status)));
     }
 }
 
-void parseCGIOutput(const std::string& output, std::map<std::string, std::string>& headers, std::string& body) {
+void CGIHandler::parseCGIOutput(const std::string& output, std::map<std::string, std::string>& headers, std::string& body) {
     size_t headerEnd = output.find("\n\n");
     if (headerEnd == std::string::npos) {
         body = output;
