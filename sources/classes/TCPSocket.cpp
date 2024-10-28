@@ -1,6 +1,5 @@
 #include <cerrno>
 #include <cstring>
-#include <limits>
 
 #include "../../includes/classes/TCPSocket.hpp"
 #include "../../includes/webserv.hpp"
@@ -44,9 +43,14 @@ TCPSocket::TCPSocket(uint32_t const& packed, uint16_t const& port,
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-std::string	TCPSocket::address()	const	throw()
+uint64_t		TCPSocket::id()	const throw()
 {
-	return (Network::iPV4PackedTos(this->_address));
+	return (this->socketToPacked(this->address(), this->port()));
+}
+
+uint32_t	TCPSocket::address()	const	throw()
+{
+	return (this->_address);
 }
 
 std::string	TCPSocket::str()	const	throw()
@@ -111,6 +115,13 @@ void	TCPSocket::badSyscallThrow()
 bool	TCPSocket::operator==(TCPSocket const & rhs)	const	throw()
 {
 	return (this->_address == rhs._address && this->_port == rhs._port);
+}
+/**************************************************************************/
+
+/****************************  STATIC MEMBERS  ****************************/
+uint64_t			TCPSocket::socketToPacked(uint32_t const& ip, uint16_t const& port)	throw()
+{
+	return ((uint64_t) ip << (sizeof(uint16_t) * 8) | port);
 }
 /**************************************************************************/
 

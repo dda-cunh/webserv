@@ -111,8 +111,9 @@ bool	ServerManager::initEpoll()	throw()
 
 void ServerManager::up()	throw()
 {
-	epoll_event			event;
-	int					n_fds;
+	epoll_event	event;
+	long		socketID;
+	int			n_fds;
 
 	if (!initEpoll())
 		syscall_kill();
@@ -129,7 +130,8 @@ void ServerManager::up()	throw()
 			{
 				if (_ep_events[i].events & EPOLLIN)
 				{
-					if (this->isServerSocket(_ep_events[i].data.fd))
+					socketID = this->isServerSocket(_ep_events[i].data.fd);
+					if (socketID)
 					{
 						int	client_fd;
 
@@ -139,6 +141,7 @@ void ServerManager::up()	throw()
 						Utils::log("New client connected", Utils::LOG_INFO);
 						event.events = EPOLLIN | EPOLLET;
 						event.data.fd = client_fd;
+						event.data.u64 = socketID;
 						if (!doEpollCtl(EPOLL_CTL_ADD, event))
 							syscall_kill();
 					}
@@ -147,6 +150,7 @@ void ServerManager::up()	throw()
 						Request req(_ep_events[i].data.fd);
 						event.events = EPOLLOUT | EPOLLET;
 						event.data.fd = _ep_events[i].data.fd;
+						event.data.u64 = _ep_events[i].data.u64;
 						Utils::log("Request received", Utils::LOG_INFO);
 						Utils::log(req.str(), Utils::LOG_INFO);
 						if (!doEpollCtl(EPOLL_CTL_MOD, event))
@@ -162,9 +166,11 @@ void ServerManager::up()	throw()
 				else if (_ep_events[i].events & EPOLLOUT)
 				{
 					RequestFeed::iterator	it;
+
 					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
+						//use _ep_events[i].data.u64 to identify the socket
 						Response response(it->second, this->_server_blocks);
 						std::string responseStr = response.getResponse();
 						send(_ep_events[i].data.fd, responseStr.c_str(),
@@ -202,12 +208,12 @@ void ServerManager::up()	throw()
 	this->down();
 }
 
-bool ServerManager::isServerSocket(int const &fd) throw()
+uint64_t ServerManager::isServerSocket(int const &fd) throw()
 {
 	for (SocketArr::size_type j = 0; j < this->_sockets.size(); j++)
 		if (fd == this->_sockets[j].fd())
-			return (true);
-	return (false);
+			return (this->_sockets[j].id());
+	return (0);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
