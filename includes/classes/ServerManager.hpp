@@ -18,13 +18,13 @@ class ServerManager
 		typedef std::map<int, Request>		RequestFeed;
 		typedef std::vector<TCPSocket>		SocketArr;
 
-		~ServerManager()											throw();
+		~ServerManager()										throw();
 
-		ServerManager(ServerBlocks const& blocks)					throw();
+		ServerManager(ServerBlocks const& blocks)				throw();
 
-		bool		initEpoll()										throw();
-		void		down()											throw();
-		void		up()											throw();
+		bool	initEpoll()										throw();
+		void	down()											throw();
+		void	up()											throw();
 	private:
 		ServerBlocks const			_server_blocks;
 
@@ -34,10 +34,10 @@ class ServerManager
 		bool						_is_up;
 		int							_ep_fd;
 
-		ServerManager & operator=(ServerManager const & rhs)		throw();
-		ServerManager(ServerManager const & src)					throw();
-		ServerManager()												throw();
+		ServerManager & operator=(ServerManager const & rhs)	throw();
+		ServerManager(ServerManager const & src)				throw();
+		ServerManager()											throw();
 
-		uint64_t	isServerSocket(int const& fd)					throw();
-		bool		doEpollCtl(int const& op, epoll_event & ev)		throw();
+		bool	doEpollCtl(int const& op, epoll_event & ev)		throw();
+		bool	isServerSocket(int const& fd)					throw();
 };

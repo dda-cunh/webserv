@@ -17,7 +17,6 @@ class TCPSocket
 		bool	operator==(TCPSocket const & rhs)	const					throw();
 
 		std::string		str()					const						throw();
-		uint64_t		id()					const						throw();
 		uint32_t		address()				const						throw();
 		uint16_t 		port()					const						throw();
 		int 			fd()					const						throw();

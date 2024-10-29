@@ -112,7 +112,6 @@ bool	ServerManager::initEpoll()	throw()
 void ServerManager::up()	throw()
 {
 	epoll_event	event;
-	long		socketID;
 	int			n_fds;
 
 	if (!initEpoll())
@@ -130,8 +129,7 @@ void ServerManager::up()	throw()
 			{
 				if (_ep_events[i].events & EPOLLIN)
 				{
-					socketID = this->isServerSocket(_ep_events[i].data.fd);
-					if (socketID)
+					if (this->isServerSocket(_ep_events[i].data.fd))
 					{
 						int	client_fd;
 
@@ -140,8 +138,8 @@ void ServerManager::up()	throw()
 							syscall_kill();
 						Utils::log("New client connected", Utils::LOG_INFO);
 						event.events = EPOLLIN | EPOLLET;
+						event.data.u64 = ((uint64_t)_ep_events[i].data.fd << 32) | client_fd;
 						event.data.fd = client_fd;
-						event.data.u64 = socketID;
 						if (!doEpollCtl(EPOLL_CTL_ADD, event))
 							syscall_kill();
 					}
@@ -149,7 +147,6 @@ void ServerManager::up()	throw()
 					{
 						Request req(_ep_events[i].data.fd);
 						event.events = EPOLLOUT | EPOLLET;
-						event.data.fd = _ep_events[i].data.fd;
 						event.data.u64 = _ep_events[i].data.u64;
 						Utils::log("Request received", Utils::LOG_INFO);
 						Utils::log(req.str(), Utils::LOG_INFO);
@@ -170,7 +167,11 @@ void ServerManager::up()	throw()
 					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						//use _ep_events[i].data.u64 to identify the socket
+						uint32_t				socket_fd;
+
+						socket_fd = (uint32_t)(event.data.u64 >> 32);
+						std::cout << "FD of Socket that got the request: " << socket_fd << '\n'; //TODO: REMOVE DEBUG
+						//use socket_fd to identify the socket inside this->_sockets
 						Response response(it->second, this->_server_blocks);
 						std::string responseStr = response.getResponse();
 						send(_ep_events[i].data.fd, responseStr.c_str(),
@@ -208,19 +209,22 @@ void ServerManager::up()	throw()
 	this->down();
 }
 
-uint64_t ServerManager::isServerSocket(int const &fd) throw()
+bool ServerManager::isServerSocket(int const &fd) throw()
 {
 	for (SocketArr::size_type j = 0; j < this->_sockets.size(); j++)
 		if (fd == this->_sockets[j].fd())
-			return (this->_sockets[j].id());
-	return (0);
+			return (true);
+	return (false);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 {
+	uint32_t	ev_fd;
+
+	ev_fd = (uint32_t)(ev.data.u64 & 0xFFFFFFFF);
 	if (this->_ep_fd == -1)
 		return (false);
-	if (epoll_ctl(this->_ep_fd, op, ev.data.fd, &ev) == -1)
+	if (epoll_ctl(this->_ep_fd, op, ev_fd, &ev) == -1)
 		return (false);
 	return (true);
 }

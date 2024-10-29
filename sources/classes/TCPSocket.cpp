@@ -43,11 +43,6 @@ TCPSocket::TCPSocket(uint32_t const& packed, uint16_t const& port,
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-uint64_t		TCPSocket::id()	const throw()
-{
-	return (this->socketToPacked(this->address(), this->port()));
-}
-
 uint32_t	TCPSocket::address()	const	throw()
 {
 	return (this->_address);
@@ -129,7 +124,7 @@ uint64_t			TCPSocket::socketToPacked(uint32_t const& ip, uint16_t const& port)	t
 
 std::ostream &	operator<<(std::ostream & o, TCPSocket const& i)	throw()
 {
-	o << "TCPSocket: " << i.fd() << " (" << i.address();
+	o << "TCPSocket: " << i.fd() << " (" << Network::iPV4PackedTos(i.address());
 	o << ":" << i.port() << ")";
 	return (o);
 }
