@@ -41,15 +41,17 @@ class	ServerLocation
 		std::string					getCgiPath(std::string ext) const;
 		std::string					getCgiRoot(void) const;
 
+		size_t						getIndexVectorSize(void) const;
+		Http::METHOD				getMethodByIndex(size_t i) const;
+		size_t						getMethodsAllowedSize(void) const;
+
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
 		StrStrMap::const_iterator	getRedirectionIttBegin(void) const;
 		StrStrMap::const_iterator	getRedirectionIttEnd(void) const;
-		Http::METHOD				getMethodByIndex(size_t i) const;
-		size_t						getMethodsAllowedSize(void) const;
-		size_t						getIndexVectorSize(void) const;
 		StrStrMap::const_iterator	getCgiPathsBegin(void) const;
 		StrStrMap::const_iterator	getCgiPathsEnd(void) const;
+
 
 	protected:											//	KEYWORDS
 

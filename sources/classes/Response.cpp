@@ -46,18 +46,14 @@ void Response::setMatchedLocation()
     ServerLocation *bestMatch = NULL;
     std::string longestMatch;
 
-    for (size_t i = 0; i < _serverBlocks.size(); ++i)
+    for (size_t j = 0; j < this->_serverConfigs.getLocationBlocksSize(); ++j)
     {
-        const ServerConfig &config = _serverBlocks[i];
-        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j)
+        ServerLocation *location = this->_serverConfigs.getLocationFromIndex(j);
+        std::string locationPath = location->getLocation();
+        if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size())
         {
-            ServerLocation *location = config.getLocationFromIndex(j);
-            std::string locationPath = location->getLocation();
-            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size())
-            {
-                longestMatch = locationPath;
-                bestMatch = location;
-            }
+            longestMatch = locationPath;
+            bestMatch = location;
         }
     }
 
@@ -77,13 +73,13 @@ Response::~Response()
 {
 }
 
-Response::Response(Request const &request, ServerBlocks const &server_blocks)
+Response::Response(Request const &request, ServerConfig const &configs)
     : _statusCode(Http::SC_OK),
       _headers(),
       _body(),
       _response(),
       _request(request),
-      _serverBlocks(server_blocks)
+      _serverConfigs(configs)
 {
     std::string body(request.body().begin(), request.body().end());
 
@@ -123,10 +119,11 @@ void Response::dispatchMethod()
 {
     if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-    else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
-        handleCGI();
+	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
+		handleCGI();
     else if (_request.method() == Http::M_GET)
-        handleGETMethod();
+    	handleStaticSite();
+//		handleGETMethod();
 }
 
 void Response::handleMethodNotAllowed()
@@ -173,6 +170,41 @@ void Response::handleCGI()
 /**
  * @brief  Serves the requested file or directory listing.
  */
+void	Response::handleStaticSite(void)
+{
+		std::string	root;
+	    std::string uri;
+
+	    root = _locationMatch->getRootDir();
+	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
+//	    std::cout << uri << std::endl;
+	    if (Directory::isDirectory(uri))
+	    {
+		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
+		    {
+		    	std::string	uriFile = Utils::concatenatePaths(uri.c_str(), this->_locationMatch->getIndexFileName(i).c_str(), NULL);
+		    	std::cout << "!!! uriFile: " << uriFile << std::endl;
+		    	if (access(uriFile.c_str(), F_OK) == 0)
+		    	{
+			    	std::cout << "!!! found uriFile: " << uriFile << std::endl;
+		    		this->readResource(uriFile);
+		    		return ;
+		    	}
+		    }	    	
+	    }
+	    if (access(uri.c_str(), F_OK) == 0)
+	    {
+    		this->readResource(uri);
+    		return ;	    	
+	    }
+	    if (!Directory::isDirectory(uri) )
+	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
+	    else if (this->_locationMatch->getAutoIndex() == false)
+	    	setStatusAndReadResource(Http::SC_FORBIDDEN);
+	//	else RESPOND WITH INDEX OF REQUESTED URI PATH
+
+}
+
 void Response::handleGETMethod()
 {
     std::string root = _locationMatch->getRootDir();

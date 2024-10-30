@@ -1,6 +1,6 @@
 #include "../../includes/classes/ServerConfig.hpp"
 
-
+/*
 ServerConfig::ServerConfig(void)
 {
 	this->_host = Network::sToIPV4Packed("127.0.0.1");
@@ -9,7 +9,7 @@ ServerConfig::ServerConfig(void)
 
 	this->_locationBlocks.push_back(new ServerLocation);
 }
-
+*/
 ServerConfig::ServerConfig(std::vector<std::string> strServerBlock)
 {
 	std::vector<std::string>	strLocationBlock;

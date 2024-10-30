@@ -167,12 +167,10 @@ void ServerManager::up()	throw()
 					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						uint32_t				socket_fd;
+						uint32_t		socket_fd	= (uint32_t)(event.data.u64 >> 32);
+						ServerConfig	vServer		= this->_getServerFromSocket(socket_fd);
 
-						socket_fd = (uint32_t)(event.data.u64 >> 32);
-						std::cout << "FD of Socket that got the request: " << socket_fd << '\n'; //TODO: REMOVE DEBUG
-						//use socket_fd to identify the socket inside this->_sockets
-						Response response(it->second, this->_server_blocks);
+						Response response(it->second, vServer);
 						std::string responseStr = response.getResponse();
 						send(_ep_events[i].data.fd, responseStr.c_str(),
 								responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
@@ -207,6 +205,31 @@ void ServerManager::up()	throw()
 		}
 	}
 	this->down();
+}
+
+//use socket_fd to identify the socket inside this->_sockets
+ServerConfig const	&ServerManager::_getServerFromSocket(uint32_t socket_fd)
+{
+	size_t	i;
+
+	i = 0;
+
+//	std::cout << "FD of Socket that got the request: " << socket_fd << std::endl;
+	
+	while (i < this->_sockets.size() /*&& this->_sockets[x].fd() != socket_fd*/)
+	{
+/*
+		std::cout << "i: " << i << std::endl;
+		std::cout << "socket fd: " << this->_sockets[i].fd() << std::endl;
+		std::cout << "Host: " << Network::iPV4PackedTos(this->_sockets[i].address() ) << std::endl;
+		std::cout << "Port: " << this->_sockets[i].port() << std::endl;
+*/
+		if (static_cast<unsigned int>(this->_sockets[i].fd() ) == socket_fd)
+			return (this->_server_blocks[i] );	//	WILL HAVE TO COUNT ON CHECKING AGAINST server_name
+		i++;
+	}
+
+	return (this->_server_blocks[0] );	//	OR THROW EXCEPTION IF NO SERVER FOUND?
 }
 
 bool ServerManager::isServerSocket(int const &fd) throw()
