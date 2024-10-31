@@ -180,6 +180,7 @@ void	Response::handleStaticSite(void)
 	    uriPath = _request.uri();
 	    uriPath.erase(0, this->_locationMatch->getLocation().size());
 	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
+
 	    if (Directory::isDirectory(uri))
 	    {
 		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
@@ -188,20 +189,20 @@ void	Response::handleStaticSite(void)
 		    	std::cout << "URI: " << uri << std::endl;
 		    	if (access(uriFile.c_str(), F_OK) == 0)
 		    	{
-		    		this->readResource(uriFile);
+			    	this->readResource(uriFile);
 		    		return ;
 		    	}
 		    }	    	
+
+		    if (this->_locationMatch->getAutoIndex() == false)
+				setStatusAndReadResource(Http::SC_FORBIDDEN);
+			else
+				readIndex(uri);
 	    }
-	    
-	    if (access(uri.c_str(), F_OK) == 0 && !Directory::isDirectory(uri) )
-    		this->readResource(uri);
-	    else if (!Directory::isDirectory(uri) )
+	    else if (access(uri.c_str(), F_OK) == 0)
+	    		this->readResource(uri);
+	    else
 	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
-	    else if (this->_locationMatch->getAutoIndex() == false)
-	    	setStatusAndReadResource(Http::SC_FORBIDDEN);
-		else
-			readIndex(uri);
 }
 
 void	Response::readIndex(const std::string &path)
@@ -226,8 +227,8 @@ void	Response::readIndex(const std::string &path)
 	}
 	webPage.append("</pre><hr></body>\n</html>");
 
-	setHeader("Content-Type", "text/html");
-	this->_body = webPage;
+	this->setHeader("Content-Type", "text/html");
+	this->setBody(webPage);
 
 }
 
