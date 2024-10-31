@@ -119,8 +119,8 @@ void Response::dispatchMethod()
 {
     if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
-		handleCGI();
+//	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
+//		handleCGI();
     else if (_request.method() == Http::M_GET)
     	handleStaticSite();
 //		handleGETMethod();
@@ -177,31 +177,56 @@ void	Response::handleStaticSite(void)
 
 	    root = _locationMatch->getRootDir();
 	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
-//	    std::cout << uri << std::endl;
 	    if (Directory::isDirectory(uri))
 	    {
 		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
 		    {
 		    	std::string	uriFile = Utils::concatenatePaths(uri.c_str(), this->_locationMatch->getIndexFileName(i).c_str(), NULL);
-		    	std::cout << "!!! uriFile: " << uriFile << std::endl;
 		    	if (access(uriFile.c_str(), F_OK) == 0)
 		    	{
-			    	std::cout << "!!! found uriFile: " << uriFile << std::endl;
 		    		this->readResource(uriFile);
 		    		return ;
 		    	}
 		    }	    	
 	    }
-	    if (access(uri.c_str(), F_OK) == 0)
+	    
+	    if (access(uri.c_str(), F_OK) == 0 && !Directory::isDirectory(uri) )
 	    {
     		this->readResource(uri);
-    		return ;	    	
 	    }
-	    if (!Directory::isDirectory(uri) )
+	    else if (!Directory::isDirectory(uri) )
 	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
 	    else if (this->_locationMatch->getAutoIndex() == false)
 	    	setStatusAndReadResource(Http::SC_FORBIDDEN);
-	//	else RESPOND WITH INDEX OF REQUESTED URI PATH
+		else
+			readIndex(uri);
+			//	RESPOND WITH INDEX OF REQUESTED URI PATH
+}
+
+void	Response::readIndex(const std::string &path)
+{
+	std::vector<std::string>	fileList;
+	std::string					webPage;
+
+	fileList = Directory::listFiles(path);
+
+	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
+	webPage.append(this->_request.uri() );
+	webPage.append("</title></head>\n<body>\n<h1>Index of ");
+	webPage.append(this->_request.uri() );
+	webPage.append("</h1><hr><pre><a href=\"../\">../</a>\n");
+	for (size_t i = 0; i < fileList.size(); i++)
+	{
+		webPage.append("<a href=\"");
+		webPage.append(fileList.at(i) );
+		webPage.append("\">");
+		webPage.append(fileList.at(i) );
+		webPage.append("</a>\n");
+	}
+	webPage.append("</pre><hr></body>\n</html>");
+
+	setHeader("Content-Type", "text/html");
+	this->_body = webPage;
 
 }
 
