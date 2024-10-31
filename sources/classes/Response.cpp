@@ -173,15 +173,19 @@ void Response::handleCGI()
 void	Response::handleStaticSite(void)
 {
 		std::string	root;
+	    std::string	uriPath;
 	    std::string uri;
 
 	    root = _locationMatch->getRootDir();
-	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
+	    uriPath = _request.uri();
+	    uriPath.erase(0, this->_locationMatch->getLocation().size());
+	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
 	    if (Directory::isDirectory(uri))
 	    {
 		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
 		    {
 		    	std::string	uriFile = Utils::concatenatePaths(uri.c_str(), this->_locationMatch->getIndexFileName(i).c_str(), NULL);
+		    	std::cout << "URI: " << uri << std::endl;
 		    	if (access(uriFile.c_str(), F_OK) == 0)
 		    	{
 		    		this->readResource(uriFile);
@@ -191,16 +195,13 @@ void	Response::handleStaticSite(void)
 	    }
 	    
 	    if (access(uri.c_str(), F_OK) == 0 && !Directory::isDirectory(uri) )
-	    {
     		this->readResource(uri);
-	    }
 	    else if (!Directory::isDirectory(uri) )
 	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
 	    else if (this->_locationMatch->getAutoIndex() == false)
 	    	setStatusAndReadResource(Http::SC_FORBIDDEN);
 		else
 			readIndex(uri);
-			//	RESPOND WITH INDEX OF REQUESTED URI PATH
 }
 
 void	Response::readIndex(const std::string &path)
