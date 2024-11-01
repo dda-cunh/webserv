@@ -119,8 +119,8 @@ void Response::dispatchMethod()
 {
     if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-//	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
-//		handleCGI();
+	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
+		handleCGI();
     else if (_request.method() == Http::M_GET)
     	handleStaticSite();
 //		handleGETMethod();
