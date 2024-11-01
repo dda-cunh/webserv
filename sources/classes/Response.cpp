@@ -61,7 +61,7 @@ void Response::setMatchedLocation()
         throw ExceptionMaker("No valid location block found for the requested URI.");
 
     _locationMatch = bestMatch;
-    Utils::log("Matched location:", Utils::LOG_INFO);
+    LOG("Matched location:", Utils::LOG_INFO);
     std::cout << *_locationMatch << std::endl;
 }
 
@@ -104,7 +104,7 @@ Response::Response(Request const &request, ServerConfig const &configs)
 
     setCommonHeaders();
     setResponse();
-    Utils::log("Final headers:", Utils::LOG_INFO);
+    LOG("Final headers:", Utils::LOG_INFO);
     std::cout << "\t" << getHeadersStr() << std::endl;
 }
 
@@ -280,7 +280,7 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
         }
         else
         {
-            Utils::log("Failed to load the internal server error page.", Utils::LOG_ERROR);
+            LOG("Failed to load the internal server error page.", Utils::LOG_ERROR);
             _body = "<html><body><h1>500 Internal Server Error</h1></body></html>";
             setHeader("Content-Type", "text/html");
         }
@@ -400,11 +400,11 @@ void Response::setCGIMatch()
             if (it->first == extension)
             {
                 _cgiMatch = CGIMatch(uri, it->second);
-                Utils::log("CCGIMatch:", Utils::LOG_INFO);
+                LOG("CCGIMatch:", Utils::LOG_INFO);
                 std::cout << _cgiMatch << std::endl;
                 return;
             }
         }
     }
-    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
+    LOG("No CGI match found for URI", Utils::LOG_INFO);
 }

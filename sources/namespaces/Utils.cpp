@@ -1,4 +1,5 @@
 #include "../../includes/webserv.hpp"
+#include <sstream>
 
 namespace Utils
 {
@@ -52,31 +53,36 @@ namespace Utils
 		return (str.substr(start, end - start));
 	}
 
-	void	log(std::string const& message, LogLevel const& level)
+	void	logImpl(std::string const& message, LogLevel const& level,
+					std::string const& file, int const& line)
 	{
-		std::string	level_str;
+		std::stringstream	level_ss;
 
+		if (!PRODUCTION)
+			level_ss << CLI_COLORS_MAGENTA << Utils::pathBaseName(file.c_str())
+						<< ':' << line  << CLI_COLORS_RESET << '\t';
 		switch (level)
 		{
 			case LOG_INFO:
 			{
-				std::cout << CLI_COLORS_GREEN "INFO\t<-- " CLI_COLORS_RESET;
-				std::cout << message << CLI_COLORS_GREEN " -->" CLI_COLORS_RESET << '\n';
-				return ;
+				level_ss << CLI_COLORS_GREEN "INFO\t<-- " CLI_COLORS_RESET;
+				level_ss << message << CLI_COLORS_GREEN " -->";
+				break ;
 			}
 			case LOG_WARNING:
 			{
-				std::cerr << CLI_COLORS_YELLOW "WARNING\t<-- " CLI_COLORS_RESET;
-				std::cerr << message << CLI_COLORS_YELLOW " -->" CLI_COLORS_RESET << '\n';
+				level_ss << CLI_COLORS_YELLOW "WARNING\t<-- " CLI_COLORS_RESET;
+				level_ss << message << CLI_COLORS_YELLOW " -->";
 				break ;
 			}
 			case LOG_ERROR:
 			{
-				std::cerr << CLI_COLORS_RED "ERROR\t<-- " CLI_COLORS_RESET;
-				std::cerr << message << CLI_COLORS_RED " -->" CLI_COLORS_RESET << '\n';
+				level_ss << CLI_COLORS_RED "ERROR\t<-- " CLI_COLORS_RESET;
+				level_ss << message << CLI_COLORS_RED " -->";
 				break ;
 			}
 		}
+		std::cout << level_ss.str() << CLI_COLORS_RESET << '\n';
 	}
 
 	std::string intToString(int const& value)
@@ -137,5 +143,26 @@ namespace Utils
 
 		va_end(args);
 		return result;
+	}
+
+	std::string	pathBaseName(char const* fullPath)
+	{
+		char const*	start;
+
+		if (!fullPath)
+			return (std::string());
+		start = fullPath;
+		while (*fullPath)
+			fullPath++;
+		while (fullPath > start)
+		{
+			if (*fullPath == '/')
+			{
+				fullPath++;
+				break ;
+			}
+			fullPath--;
+		}
+		return (std::string(fullPath));
 	}
 }

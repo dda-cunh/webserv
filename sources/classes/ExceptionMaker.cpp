@@ -18,5 +18,5 @@ const char *ExceptionMaker::what()	const	throw()
 
 void ExceptionMaker::log()
 {
-	Utils::log(_message, Utils::LOG_ERROR);
+	LOG(_message, Utils::LOG_ERROR);
 }

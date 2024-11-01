@@ -85,7 +85,7 @@ void	Request::readClient()
 		if (request.size() + chunk.size() > Request::_max_request_size)
 		{
 			this->_flag = _400; 
-			Utils::log("Request is too big", Utils::LOG_WARNING);
+			LOG("Request is too big", Utils::LOG_WARNING);
 			return ;
 		}
 		request.insert(request.end(), chunk.begin(), chunk.end());
@@ -129,7 +129,7 @@ void	Request::parseBody(ByteArr const& body)
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
 				{
 					this->_flag = _400;
-					Utils::log("Content length doesn't match body length", Utils::LOG_WARNING);
+					LOG("Content length doesn't match body length", Utils::LOG_WARNING);
 					return ;
 				}
 			}

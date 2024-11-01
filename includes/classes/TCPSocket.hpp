@@ -21,6 +21,7 @@ class TCPSocket
 		uint16_t 		port()					const						throw();
 		int 			fd()					const						throw();
 
+		uint64_t		socketToPacked(void)	const						throw();
 		void			badSyscallThrow();
 		void			disconnect()										throw();
 		void			connect();

@@ -6,23 +6,26 @@
 
 /****************************  CANNONICAL FORM  ****************************/
 TCPSocket::TCPSocket(void)	throw()
-:	_address(),
-	_port(),
-	_backlog(),
+:	_address(0),
+	_port(0),
+	_backlog(0),
 	_fd(-1)
 {}
 
 TCPSocket::TCPSocket(TCPSocket const & src)	throw()
 :	_address(src._address),
 	_port(src._port),
-	_backlog(src._backlog)
+	_backlog(src._backlog),
+	_fd(-1)
 {
 	*this = src;
 }
 
 TCPSocket & TCPSocket::operator=(TCPSocket const & rhs)	throw()
 {
-	this->_fd = rhs.fd();
+	if (rhs._fd != -1)
+		close(rhs.fd());
+	this->connect();
 	return (*this);
 }
 
@@ -79,7 +82,7 @@ void	TCPSocket::connect()
 	int					val;    
 
 	if (this->_fd != -1)
-		close (this->_fd);
+		return ;
 	if ((this->_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		this->badSyscallThrow();
 	val = 1;
@@ -104,12 +107,18 @@ void	TCPSocket::badSyscallThrow()
 	}
 	throw(ExceptionMaker(strerror(errno)));
 }
+
+uint64_t	TCPSocket::socketToPacked(void)	const	throw()
+{
+	return (TCPSocket::socketToPacked(this->address(), this->port()));
+}
 /**************************************************************************/
 
 /*****************************  OP OVERLOADS  *****************************/
 bool	TCPSocket::operator==(TCPSocket const & rhs)	const	throw()
 {
-	return (this->_address == rhs._address && this->_port == rhs._port);
+	return (socketToPacked(this->_address, this->port())
+			== socketToPacked(rhs._address, rhs.port()));
 }
 /**************************************************************************/
 
