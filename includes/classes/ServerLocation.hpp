@@ -39,10 +39,6 @@ class	ServerLocation
 		std::string					getUploadPath(void) const;
 		bool						getAutoIndex(void) const;
 
-		size_t						getIndexVectorSize(void) const;
-		Http::METHOD				getMethodByIndex(size_t i) const;
-		size_t						getMethodsAllowedSize(void) const;
-
 		IntStrMap::const_iterator	getErrPageIttBegin(void) const;
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
 		StrStrMap::const_iterator	getRedirectionIttBegin(void) const;

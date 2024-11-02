@@ -427,12 +427,12 @@ void Response::setCGIMatch()
             if (*it == extension)
             {
                 _cgiMatch = CGIMatch(uri, *it);
-                Utils::log("CCGIMatch:", Utils::LOG_INFO);
+                LOG("CCGIMatch:", Utils::LOG_INFO);
                 std::cout << _cgiMatch << std::endl;
                 return;
             }
         }
     }
-    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
+    LOG("No CGI match found for URI", Utils::LOG_INFO);
 }
 
