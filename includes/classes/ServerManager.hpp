@@ -14,9 +14,9 @@ class ServerConfig;
 class ServerManager
 {
 	public:
-		typedef std::vector<ServerConfig>	ServerBlocks;
-		typedef std::map<int, Request>		RequestFeed;
-		typedef std::vector<TCPSocket>		SocketArr;
+		typedef std::map<uint64_t, TCPSocket*>	IDSockMap;
+		typedef std::vector<ServerConfig>		ServerBlocks;
+		typedef std::map<int, Request>			RequestFeed;
 
 		~ServerManager()										throw();
 
@@ -26,18 +26,19 @@ class ServerManager
 		void	down()											throw();
 		void	up()											throw();
 	private:
-		ServerBlocks const			_server_blocks;
+		ServerBlocks const	_server_blocks;
 
-		epoll_event					_ep_events[SM_EP_EV_LEN];
-		RequestFeed					_req_feed;
-		SocketArr					_sockets;
-		bool						_is_up;
-		int							_ep_fd;
+		epoll_event			_ep_events[SM_EP_EV_LEN];
+		RequestFeed			_req_feed;
+		IDSockMap			_sockets;
+		bool				_is_up;
+		int					_ep_fd;
 
 		ServerManager & operator=(ServerManager const & rhs)	throw();
 		ServerManager(ServerManager const & src)				throw();
 		ServerManager()											throw();
 
-		bool	doEpollCtl(int const& op, epoll_event & ev)		throw();
-		bool	isServerSocket(int const& fd)					throw();
+		bool				doEpollCtl(int const& op, epoll_event & ev)		throw();
+		bool				isServerSocket(int const& fd)					throw();
+		ServerConfig const	&_getServerFromSocket(int const& socket_fd);
 };

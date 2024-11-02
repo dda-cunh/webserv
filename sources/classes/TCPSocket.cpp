@@ -1,29 +1,31 @@
 #include <cerrno>
 #include <cstring>
-#include <limits>
 
 #include "../../includes/classes/TCPSocket.hpp"
 #include "../../includes/webserv.hpp"
 
 /****************************  CANNONICAL FORM  ****************************/
 TCPSocket::TCPSocket(void)	throw()
-:	_address(),
-	_port(),
-	_backlog(),
+:	_address(0),
+	_port(0),
+	_backlog(0),
 	_fd(-1)
 {}
 
 TCPSocket::TCPSocket(TCPSocket const & src)	throw()
 :	_address(src._address),
 	_port(src._port),
-	_backlog(src._backlog)
+	_backlog(src._backlog),
+	_fd(-1)
 {
 	*this = src;
 }
 
 TCPSocket & TCPSocket::operator=(TCPSocket const & rhs)	throw()
 {
-	this->_fd = rhs.fd();
+	if (rhs._fd != -1)
+		close(rhs.fd());
+	this->connect();
 	return (*this);
 }
 
@@ -44,9 +46,9 @@ TCPSocket::TCPSocket(uint32_t const& packed, uint16_t const& port,
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
-std::string	TCPSocket::address()	const	throw()
+uint32_t	TCPSocket::address()	const	throw()
 {
-	return (Network::iPV4PackedTos(this->_address));
+	return (this->_address);
 }
 
 std::string	TCPSocket::str()	const	throw()
@@ -80,7 +82,7 @@ void	TCPSocket::connect()
 	int					val;    
 
 	if (this->_fd != -1)
-		close (this->_fd);
+		return ;
 	if ((this->_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		this->badSyscallThrow();
 	val = 1;
@@ -105,12 +107,25 @@ void	TCPSocket::badSyscallThrow()
 	}
 	throw(ExceptionMaker(strerror(errno)));
 }
+
+uint64_t	TCPSocket::socketToPacked(void)	const	throw()
+{
+	return (TCPSocket::socketToPacked(this->address(), this->port()));
+}
 /**************************************************************************/
 
 /*****************************  OP OVERLOADS  *****************************/
 bool	TCPSocket::operator==(TCPSocket const & rhs)	const	throw()
 {
-	return (this->_address == rhs._address && this->_port == rhs._port);
+	return (socketToPacked(this->_address, this->port())
+			== socketToPacked(rhs._address, rhs.port()));
+}
+/**************************************************************************/
+
+/****************************  STATIC MEMBERS  ****************************/
+uint64_t			TCPSocket::socketToPacked(uint32_t const& ip, uint16_t const& port)	throw()
+{
+	return ((uint64_t) ip << (sizeof(uint16_t) * 8) | port);
 }
 /**************************************************************************/
 
@@ -118,7 +133,7 @@ bool	TCPSocket::operator==(TCPSocket const & rhs)	const	throw()
 
 std::ostream &	operator<<(std::ostream & o, TCPSocket const& i)	throw()
 {
-	o << "TCPSocket: " << i.fd() << " (" << i.address();
+	o << "TCPSocket: " << i.fd() << " (" << Network::iPV4PackedTos(i.address());
 	o << ":" << i.port() << ")";
 	return (o);
 }

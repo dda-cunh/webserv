@@ -34,14 +34,14 @@ namespace Network
 
 		if (Utils::sCountChar(ipv4S, '.') != 3)
 		{
-			Utils::log("String isn't in IPV4", Utils::LOG_WARNING);
+			LOG("String isn't in IPV4", Utils::LOG_WARNING);
 			return (-1);
 		}
 		for (int8_t i = 0; i < 4; i++)
 		{
 			if (!std::getline(ss, octect, '.'))
 			{
-				Utils::log("String isn't in IPV4", Utils::LOG_WARNING);
+				LOG("String isn't in IPV4", Utils::LOG_WARNING);
 				return (-1);
 			}
 			try
@@ -50,7 +50,7 @@ namespace Network
 			}
 			catch (ExceptionMaker const& ex)
 			{
-				Utils::log(ex.what(), Utils::LOG_WARNING);
+				LOG(ex.what(), Utils::LOG_WARNING);
 				return (-1);
 			}
 		}

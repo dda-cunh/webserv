@@ -43,11 +43,13 @@ class	ServerLocation
 		IntStrMap::const_iterator	getErrPageIttEnd(void) const;
 		StrStrMap::const_iterator	getRedirectionIttBegin(void) const;
 		StrStrMap::const_iterator	getRedirectionIttEnd(void) const;
+
 		Http::METHOD				getMethodByIndex(size_t i) const;
 		size_t						getMethodsAllowedSize(void) const;
 		size_t						getIndexVectorSize(void) const;
 		StrArr::const_iterator		getCgiExtensionsBegin(void) const;
 		StrArr::const_iterator		getCgiExtensionsEnd(void) const;
+
 
 	protected:											//	KEYWORDS
 		std::string					_location;			//		location [PATH] {

@@ -5,6 +5,8 @@ CC 			= 	c++
 
 CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g #-fsanitize=address
 
+VAL_FLAGS	=	--leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes
+
 RM 			= 	rm -rf
 
 INC_DIR		=	includes/
@@ -74,6 +76,12 @@ fclean:			clean
 				printf '$(BROOM)\t\t\t$(SUS)\n'
 
 re:				fclean	all
+
+run:			all
+				./$(NAME) $(CONFIG)
+
+val:			
+				valgrind $(VAL_FLAGS) ./$(NAME) $(CONFIG)
 
 compiled:
 				printf "															 	\n"

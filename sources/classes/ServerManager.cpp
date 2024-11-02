@@ -2,10 +2,11 @@
 #include "../../includes/classes/Response.hpp"
 #include "../../includes/classes/Request.hpp"
 
+
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
-			Utils::log(strerror(errno), Utils::LOG_ERROR);	\
+			LOG(strerror(errno), Utils::LOG_ERROR);	\
 		this->down();										\
 		return;												\
 	}
@@ -34,6 +35,9 @@ ServerManager &ServerManager::operator=(ServerManager const &rhs)	throw()
 ServerManager::~ServerManager()	throw()
 {
 	this->down();
+	for (IDSockMap::iterator it = this->_sockets.begin();
+			it != this->_sockets.end(); it++)
+		delete it->second;
 }
 /**************************************************************************/
 
@@ -43,27 +47,30 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 		_is_up(false),
 		_ep_fd(-1)
 {
-	SocketArr::size_type	unique_i;
+	uint64_t	id;
 
 	for (ServerBlocks::size_type i = 0; i < server_blocks.size(); i++)
 	{
 		try
 		{
-			TCPSocket	socket(server_blocks[i].getHost(), server_blocks[i].getPort(), 5);
-
-			for (unique_i = 0; unique_i < this->_sockets.size(); unique_i++)
-				if (this->_sockets[unique_i] == socket)
-					break ;
-			if (unique_i == this->_sockets.size())
+			id = TCPSocket::socketToPacked(server_blocks[i].getHost(),
+											server_blocks[i].getPort());
+			if (this->_sockets.find(id) == this->_sockets.end())
 			{
-				this->_sockets.push_back(socket);
-				this->_sockets.back().connect();
-				Utils::log(this->_sockets.back().str() + std::string(" created"), Utils::LOG_INFO);
+				TCPSocket *	sock;
+
+				sock = new TCPSocket(server_blocks[i].getHost(),
+										server_blocks[i].getPort(), 5);
+				this->_sockets.insert(IDSockMap::value_type(id, sock));
+				sock->connect();
+				LOG(sock->str() + std::string(" created"),
+					Utils::LOG_INFO);
 			}
+			
 		}
 		catch (ExceptionMaker const &ex)
 		{
-			Utils::log(ex.what(), Utils::LOG_ERROR);
+			LOG(ex.what(), Utils::LOG_ERROR);
 			return ;
 		}
 	}
@@ -76,8 +83,9 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 /********************************  MEMBERS  *******************************/
 void ServerManager::down()	throw()
 {
-	for (SocketArr::size_type i = 0; i < this->_sockets.size(); i++)
-		this->_sockets[i].disconnect();
+	for (IDSockMap::iterator it = this->_sockets.begin();
+			it != this->_sockets.end(); it++)
+		it->second->disconnect();
 	if (this->_ep_fd != -1)
 	{
 		for (unsigned int i = 0; i < SM_EP_EV_LEN; i++)
@@ -86,7 +94,7 @@ void ServerManager::down()	throw()
 	}
 	this->_ep_fd = -1;
 	this->_is_up = false;
-	Utils::log("ServerManager is down", Utils::LOG_INFO);
+	LOG("ServerManager is down", Utils::LOG_INFO);
 }
 
 bool	ServerManager::initEpoll()	throw()
@@ -95,13 +103,15 @@ bool	ServerManager::initEpoll()	throw()
 	{
 		epoll_event	event;
 
+		std::memset(this->_ep_events, 0, SM_EP_EV_LEN * sizeof(epoll_event));
 		this->_ep_fd = epoll_create(SM_EP_EV_LEN);
 		if (this->_ep_fd == -1)
 			return (false);
-		for (SocketArr::size_type i = 0; i < this->_sockets.size(); i++)
+		for (IDSockMap::iterator it = this->_sockets.begin();
+			it != this->_sockets.end(); it++)
 		{
 			event.events = EPOLLIN;
-			event.data.fd = this->_sockets[i].fd();
+			event.data.fd = it->second->fd();
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
 				return (false);
 		}
@@ -111,13 +121,13 @@ bool	ServerManager::initEpoll()	throw()
 
 void ServerManager::up()	throw()
 {
-	epoll_event			event;
-	int					n_fds;
+	epoll_event	event;
+	int			n_fds;
 
 	if (!initEpoll())
 		syscall_kill();
 	this->_is_up = true;
-	Utils::log("ServerManager is up", Utils::LOG_INFO);
+	LOG("ServerManager is up", Utils::LOG_INFO);
 	while (this->_is_up)
 	{
 		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
@@ -136,8 +146,9 @@ void ServerManager::up()	throw()
 						client_fd = accept(_ep_events[i].data.fd, NULL, NULL);
 						if (client_fd == -1)
 							syscall_kill();
-						Utils::log("New client connected", Utils::LOG_INFO);
+						LOG("New client connected", Utils::LOG_INFO);
 						event.events = EPOLLIN | EPOLLET;
+						event.data.u64 = ((uint64_t)_ep_events[i].data.fd << 32) | client_fd;
 						event.data.fd = client_fd;
 						if (!doEpollCtl(EPOLL_CTL_ADD, event))
 							syscall_kill();
@@ -146,12 +157,12 @@ void ServerManager::up()	throw()
 					{
 						Request req(_ep_events[i].data.fd);
 						event.events = EPOLLOUT | EPOLLET;
-						event.data.fd = _ep_events[i].data.fd;
-						Utils::log("Request received", Utils::LOG_INFO);
-						Utils::log(req.str(), Utils::LOG_INFO);
+						event.data.u64 = _ep_events[i].data.u64;
+						LOG("Request received", Utils::LOG_INFO);
+						LOG(req.str(), Utils::LOG_INFO);
 						if (!doEpollCtl(EPOLL_CTL_MOD, event))
 						{
-							Utils::log(strerror(errno),
+							LOG(strerror(errno),
 										Utils::LOG_WARNING);
 							close(event.data.fd);
 							continue;
@@ -162,10 +173,14 @@ void ServerManager::up()	throw()
 				else if (_ep_events[i].events & EPOLLOUT)
 				{
 					RequestFeed::iterator	it;
+
 					it = this->_req_feed.find(_ep_events[i].data.fd);
 					if (it != this->_req_feed.end())
 					{
-						Response response(it->second, this->_server_blocks);
+						int				socket_fd	= (uint32_t)(event.data.u64 >> 32);
+						ServerConfig	vServer		= this->_getServerFromSocket(socket_fd);
+
+						Response response(it->second, vServer);
 						std::string responseStr = response.getResponse();
 						send(_ep_events[i].data.fd, responseStr.c_str(),
 								responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
@@ -182,39 +197,69 @@ void ServerManager::up()	throw()
 								syscall_kill();
 						}
 						this->_req_feed.erase(it);
-						Utils::log("Response sent", Utils::LOG_INFO);
+						LOG("Response sent", Utils::LOG_INFO);
 					}
 					else
 					{
 						if (_ep_events[i].data.fd != -1)
 							close(_ep_events[i].data.fd);
-						Utils::log("Couldn't find request for client",
+						LOG("Couldn't find request for client",
 									Utils::LOG_WARNING);
 					}
 				}
 			}
 			catch (ExceptionMaker const &ex)
 			{
-				Utils::log(ex.what(), Utils::LOG_WARNING);
+				LOG(ex.what(), Utils::LOG_WARNING);
 			}
 		}
 	}
 	this->down();
 }
 
+//use socket_fd to identify the socket inside this->_sockets
+ServerConfig const	&ServerManager::_getServerFromSocket(int const& socket_fd)
+{
+	size_t	i;
+
+	i = 0;
+
+//	std::cout << "FD of Socket that got the request: " << socket_fd << std::endl;
+	
+	for (IDSockMap::iterator it = this->_sockets.begin();
+			it != this->_sockets.end(); it++)
+	{
+/*
+		std::cout << "i: " << i << std::endl;
+		std::cout << "socket fd: " << this->_sockets[i].fd() << std::endl;
+		std::cout << "Host: " << Network::iPV4PackedTos(this->_sockets[i].address() ) << std::endl;
+		std::cout << "Port: " << this->_sockets[i].port() << std::endl;
+*/
+		if (it->second->fd() == socket_fd )
+			return (this->_server_blocks[i] );	//	WILL HAVE TO COUNT ON CHECKING AGAINST server_name
+		i++;
+	}
+
+	return (this->_server_blocks[0] );	//	OR THROW EXCEPTION IF NO SERVER FOUND?
+}
+
 bool ServerManager::isServerSocket(int const &fd) throw()
 {
-	for (SocketArr::size_type j = 0; j < this->_sockets.size(); j++)
-		if (fd == this->_sockets[j].fd())
+	for (IDSockMap::iterator it = this->_sockets.begin();
+			it != this->_sockets.end(); it++)
+		if (fd == it->second->fd())
 			return (true);
 	return (false);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 {
+	uint32_t	ev_fd;
+
+	ev_fd = (uint32_t)(ev.data.u64 & 0xFFFFFFFF);
 	if (this->_ep_fd == -1)
 		return (false);
-	if (epoll_ctl(this->_ep_fd, op, ev.data.fd, &ev) == -1)
+	if (epoll_ctl(this->_ep_fd, op, ev_fd, &ev) == -1)
 		return (false);
 	return (true);
 }

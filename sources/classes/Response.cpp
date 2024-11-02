@@ -46,18 +46,14 @@ void Response::setMatchedLocation()
     ServerLocation *bestMatch = NULL;
     std::string longestMatch;
 
-    for (size_t i = 0; i < _serverBlocks.size(); ++i)
+    for (size_t j = 0; j < this->_serverConfigs.getLocationBlocksSize(); ++j)
     {
-        const ServerConfig &config = _serverBlocks[i];
-        for (size_t j = 0; j < config.getLocationBlocksSize(); ++j)
+        ServerLocation *location = this->_serverConfigs.getLocationFromIndex(j);
+        std::string locationPath = location->getLocation();
+        if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size())
         {
-            ServerLocation *location = config.getLocationFromIndex(j);
-            std::string locationPath = location->getLocation();
-            if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size())
-            {
-                longestMatch = locationPath;
-                bestMatch = location;
-            }
+            longestMatch = locationPath;
+            bestMatch = location;
         }
     }
 
@@ -65,7 +61,7 @@ void Response::setMatchedLocation()
         throw ExceptionMaker("No valid location block found for the requested URI.");
 
     _locationMatch = bestMatch;
-    Utils::log("Matched location:", Utils::LOG_INFO);
+    LOG("Matched location:", Utils::LOG_INFO);
     std::cout << *_locationMatch << std::endl;
 }
 
@@ -77,13 +73,13 @@ Response::~Response()
 {
 }
 
-Response::Response(Request const &request, ServerBlocks const &server_blocks)
+Response::Response(Request const &request, ServerConfig const &configs)
     : _statusCode(Http::SC_OK),
       _headers(),
       _body(),
       _response(),
       _request(request),
-      _serverBlocks(server_blocks)
+      _serverConfigs(configs)
 {
     std::string body(request.body().begin(), request.body().end());
 
@@ -108,7 +104,7 @@ Response::Response(Request const &request, ServerBlocks const &server_blocks)
 
     setCommonHeaders();
     setResponse();
-    Utils::log("Final headers:", Utils::LOG_INFO);
+    LOG("Final headers:", Utils::LOG_INFO);
     std::cout << "\t" << getHeadersStr() << std::endl;
 }
 
@@ -123,10 +119,11 @@ void Response::dispatchMethod()
 {
     if (!_locationMatch->methodIsAllowed(_request.method()))
         handleMethodNotAllowed();
-    else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
-        handleCGI();
+	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
+		handleCGI();
     else if (_request.method() == Http::M_GET)
-        handleGETMethod();
+    	handleStaticSite();
+//		handleGETMethod();
 }
 
 void Response::handleMethodNotAllowed()
@@ -173,6 +170,94 @@ void Response::handleCGI()
 /**
  * @brief  Serves the requested file or directory listing.
  */
+void	Response::handleStaticSite(void)
+{
+		std::string	root;
+	    std::string	uriPath;
+	    std::string uri;
+
+	    root = _locationMatch->getRootDir();
+	    uriPath = _request.uri();
+	    uriPath.erase(0, this->_locationMatch->getLocation().size());
+	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
+
+	    if (Directory::isDirectory(uri))
+	    {
+		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
+		    {
+		    	std::string	uriFile = Utils::concatenatePaths(uri.c_str(), this->_locationMatch->getIndexFileName(i).c_str(), NULL);
+		    	std::cout << "URI: " << uri << std::endl;
+		    	if (access(uriFile.c_str(), F_OK) == 0)
+		    	{
+			    	this->readResource(uri);
+		    		return ;
+		    	}
+		    }	    	
+
+		    if (this->_locationMatch->getAutoIndex() == false)
+				setStatusAndReadResource(Http::SC_FORBIDDEN);
+			else
+				readIndex(uri);
+	    }
+	    else if (access(uri.c_str(), F_OK) == 0)
+	    		this->readResource(uri);
+	    else
+	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
+}
+
+void	Response::readIndex(const std::string &path)
+{
+	std::ostringstream			webPage;
+	std::vector<std::string>	fileList;
+//	std::string					webPage;
+
+	fileList = Directory::listFiles(path);
+
+
+	webPage << "<!DOCTYPE html>\n";
+	webPage << "<head>\n";
+	webPage << "<title>Index of " << this->_request.uri() << "</title>\n";
+	webPage << "</head>\n";
+	webPage << "<body>\n";
+	webPage << "<h1>Index of " << this->_request.uri() << "</h1><hr><pre><a href=\"../\">../</a>\n";
+
+	for (size_t i = 0; i < fileList.size(); i++)
+	{
+		struct stat					fileStat;
+		struct tm					*tm;
+		char						date[10];
+		std::string					filePath = path + "/" + fileList.at(i);
+
+		std::cout << "filePath: " << filePath << std::endl;
+		stat(filePath.c_str(), &fileStat);
+		tm = std::localtime(&fileStat.st_mtim.tv_sec);
+		std::strftime(date, 11, "%d-%b-%y", tm);
+		
+		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << "        " << fileStat.st_size << "\n";
+	}
+
+	webPage << "</pre><hr></body>\n</html>\n";
+/*
+	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
+	webPage.append(this->_request.uri() );
+	webPage.append("</title></head>\n<body>\n<h1>Index of ");
+	webPage.append(this->_request.uri() );
+	webPage.append("</h1><hr><pre><a href=\"../\">../</a>\n");
+	for (size_t i = 0; i < fileList.size(); i++)
+	{
+		webPage.append("<a href=\"");
+		webPage.append(fileList.at(i) );
+		webPage.append("\">");
+		webPage.append(fileList.at(i) );
+		webPage.append("</a>\n");
+	}
+	webPage.append("</pre><hr></body>\n</html>");
+*/
+
+	this->setHeader("Content-Type", "text/html");
+	this->setBody(webPage.str() );
+}
+
 void Response::handleGETMethod()
 {
     std::string root = _locationMatch->getRootDir();
@@ -221,7 +306,7 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
         }
         else
         {
-            Utils::log("Failed to load the internal server error page.", Utils::LOG_ERROR);
+            LOG("Failed to load the internal server error page.", Utils::LOG_ERROR);
             _body = "<html><body><h1>500 Internal Server Error</h1></body></html>";
             setHeader("Content-Type", "text/html");
         }
@@ -341,11 +426,12 @@ void Response::setCGIMatch()
             if (*it == extension)
             {
                 _cgiMatch = CGIMatch(uri, *it);
-                Utils::log("CCGIMatch:", Utils::LOG_INFO);
+                LOG("CCGIMatch:", Utils::LOG_INFO);
                 std::cout << _cgiMatch << std::endl;
                 return;
             }
         }
     }
-    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
+    LOG("No CGI match found for URI", Utils::LOG_INFO);
 }
+

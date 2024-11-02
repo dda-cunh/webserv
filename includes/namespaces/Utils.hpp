@@ -1,12 +1,21 @@
 #pragma once
 
-#include <string>
+#include <cstring>
 #include <sys/stat.h>
-#include <fstream>
 #include <cstdarg>
+#include <string>
+#include <fstream>
+
+#ifndef PRODUCTION
+# define PRODUCTION 0
+#endif
+
+#define LOG(message, level) logImpl(message, level, __FILE__, __LINE__)
 
 namespace	Utils
 {
+
+
 	enum LogLevel
 	{
 		LOG_INFO,
@@ -24,14 +33,16 @@ namespace	Utils
 	const char PATH_SEPARATOR = '/';
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
-	size_t					sWordCount(std::string line);
+	std::string 			concatenatePaths(const std::string basePath, ...);
+	std::string				intToString(int const& value);
 	std::string				lowerStr(std::string const&);
 	std::string				sTrim(std::string const&);
-	void					log(std::string const&, LogLevel const&);
-	std::string				intToString(int const& value);
-	int						stringToInt(const std::string& str);
+	std::string				pathBaseName(char const*);
 	std::string				getCurrentDate();
-	bool					isDirectory(std::string const& uri);
+	size_t					sWordCount(std::string line);
+	void					logImpl(std::string const&, LogLevel const&,
+									std::string const&, int const&);
 	bool 					resourceExists(std::string const &uri);
-	std::string 			concatenatePaths(const std::string basePath, ...);
+	bool					isDirectory(std::string const& uri);
+	int						stringToInt(const std::string& str);
 }

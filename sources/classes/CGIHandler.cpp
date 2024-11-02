@@ -25,7 +25,7 @@ void CGIHandler::setEnvironmentVariables() {
         _envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 
-    Utils::log("CGI process env variables:", Utils::LOG_INFO);
+    LOG("CGI process env variables:", Utils::LOG_INFO);
     for (size_t i = 0; i < _envVars.size(); ++i)
         std::cout << "\t" << _envVars[i] << std::endl;
 }
@@ -112,7 +112,7 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
 
     if (WIFEXITED(status)) {
         if (WEXITSTATUS(status) != 0)
-            Utils::log("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
+            LOG("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
         
         std::string body;
         std::map<std::string, std::string> headers;
