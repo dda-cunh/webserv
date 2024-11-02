@@ -176,6 +176,7 @@ void	Response::handleStaticSite(void)
 	    std::string	uriPath;
 	    std::string uri;
 
+
 	    root = _locationMatch->getRootDir();
 	    uriPath = _request.uri();
 	    uriPath.erase(0, this->_locationMatch->getLocation().size());
@@ -189,7 +190,7 @@ void	Response::handleStaticSite(void)
 		    	std::cout << "URI: " << uri << std::endl;
 		    	if (access(uriFile.c_str(), F_OK) == 0)
 		    	{
-			    	this->readResource(uri);
+			    	this->readResource(uriFile);
 		    		return ;
 		    	}
 		    }	    	
@@ -209,10 +210,9 @@ void	Response::readIndex(const std::string &path)
 {
 	std::ostringstream			webPage;
 	std::vector<std::string>	fileList;
-//	std::string					webPage;
+
 
 	fileList = Directory::listFiles(path);
-
 
 	webPage << "<!DOCTYPE html>\n";
 	webPage << "<head>\n";
@@ -228,31 +228,13 @@ void	Response::readIndex(const std::string &path)
 		char						date[10];
 		std::string					filePath = path + "/" + fileList.at(i);
 
-		std::cout << "filePath: " << filePath << std::endl;
 		stat(filePath.c_str(), &fileStat);
 		tm = std::localtime(&fileStat.st_mtim.tv_sec);
 		std::strftime(date, 11, "%d-%b-%y", tm);
 		
-		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << "        " << fileStat.st_size << "\n";
+		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << std::setw(20) << fileStat.st_size << "\n";
 	}
-
 	webPage << "</pre><hr></body>\n</html>\n";
-/*
-	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
-	webPage.append(this->_request.uri() );
-	webPage.append("</title></head>\n<body>\n<h1>Index of ");
-	webPage.append(this->_request.uri() );
-	webPage.append("</h1><hr><pre><a href=\"../\">../</a>\n");
-	for (size_t i = 0; i < fileList.size(); i++)
-	{
-		webPage.append("<a href=\"");
-		webPage.append(fileList.at(i) );
-		webPage.append("\">");
-		webPage.append(fileList.at(i) );
-		webPage.append("</a>\n");
-	}
-	webPage.append("</pre><hr></body>\n</html>");
-*/
 
 	this->setHeader("Content-Type", "text/html");
 	this->setBody(webPage.str() );
