@@ -97,4 +97,29 @@ namespace Directory
 		closedir(dir);
 		return files;
 	}
+
+	std::map<std::string, std::set<std::string> >	listFilesFull(const std::string &path)
+	{
+		std::map<std::string, std::set<std::string> >	files;
+		dirent *entry;
+
+		DIR *dir = opendir(path.c_str());
+
+
+		if (!dir)
+			throw ExceptionMaker("Failed to open directory: " + path);
+
+		while ( (entry = readdir(dir) ) != NULL)
+		{
+			if (std::string(entry->d_name) == "." || std::string(entry->d_name) == "..")
+				continue ;
+			if (entry->d_type == DT_DIR)
+				files["FOLDERS"].insert(entry->d_name);
+			else
+				files["FILES"].insert(entry->d_name);
+		}
+
+		closedir(dir);
+		return (files);
+	}
 }

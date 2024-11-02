@@ -208,11 +208,15 @@ void	Response::handleStaticSite(void)
 
 void	Response::readIndex(const std::string &path)
 {
-	std::ostringstream			webPage;
-	std::vector<std::string>	fileList;
+	std::ostringstream								webPage;
+	std::map<std::string, std::set<std::string> >	fileList;
+
+	struct stat										fileStat;
+	struct tm										*tm;
+	char											date[10];
 
 
-	fileList = Directory::listFiles(path);
+	fileList = Directory::listFilesFull(path);
 
 	webPage << "<!DOCTYPE html>\n";
 	webPage << "<head>\n";
@@ -221,19 +225,41 @@ void	Response::readIndex(const std::string &path)
 	webPage << "<body>\n";
 	webPage << "<h1>Index of " << this->_request.uri() << "</h1><hr><pre><a href=\"../\">../</a>\n";
 
+	for (std::set<std::string>::iterator itt = fileList["FOLDERS"].begin(); itt != fileList["FOLDERS"].end(); itt++)
+	{
+		std::string	folderPath = path + "/" + *itt;
+		
+
+		stat(folderPath.c_str(), &fileStat);
+		tm = std::localtime(&fileStat.st_mtim.tv_sec);
+		std::strftime(date, 11, "%d-%b-%y", tm);
+
+		webPage << "<a href=\"" << this->_request.uri() << "/" << *itt << "\">" << *itt << "/</a>" << std::setw(75 - (*itt).size() - 1 ) << date << std::setw(20) << "-"  << "\n";		
+	}
+
+	for (std::set<std::string>::iterator itt = fileList["FILES"].begin(); itt != fileList["FILES"].end(); itt++)
+	{
+		std::string	filePath = path + "/" + *itt;
+
+
+		stat(filePath.c_str(), &fileStat);
+		tm = std::localtime(&fileStat.st_mtim.tv_sec);
+		std::strftime(date, 11, "%d-%b-%y", tm);
+		
+		webPage << "<a href=\"" << this->_request.uri() << "/" << *itt << "\">" << *itt << "</a>" << std::setw(75 - (*itt).size() ) << date << std::setw(20) << fileStat.st_size  << "\n";
+	}
+/*
 	for (size_t i = 0; i < fileList.size(); i++)
 	{
-		struct stat					fileStat;
-		struct tm					*tm;
-		char						date[10];
 		std::string					filePath = path + "/" + fileList.at(i);
 
 		stat(filePath.c_str(), &fileStat);
 		tm = std::localtime(&fileStat.st_mtim.tv_sec);
 		std::strftime(date, 11, "%d-%b-%y", tm);
 		
-		webPage << "<a href=\"" << this->_request.uri() << "/" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << std::setw(20) << fileStat.st_size << "\n";
+		webPage << "<a href=\"" << this->_request.uri() << "/" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << std::setw(20) << fileStat.st_size  << "\n";
 	}
+*/
 	webPage << "</pre><hr></body>\n</html>\n";
 
 	this->setHeader("Content-Type", "text/html");
