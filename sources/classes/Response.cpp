@@ -207,11 +207,27 @@ void	Response::handleStaticSite(void)
 
 void	Response::readIndex(const std::string &path)
 {
+	std::ostringstream			webPage;
 	std::vector<std::string>	fileList;
-	std::string					webPage;
+//	std::string					webPage;
 
 	fileList = Directory::listFiles(path);
 
+
+	webPage << "<!DOCTYPE html>\n";
+	webPage << "<head>\n";
+	webPage << "<title>Index of " << this->_request.uri() << "</title>\n";
+	webPage << "</head>\n";
+	webPage << "<body>\n";
+	webPage << "<h1>Index of " << this->_request.uri() << "</h1><hr><pre><a href=\"../\">../</a>\n";
+
+	for (size_t i = 0; i < fileList.size(); i++)
+	{
+		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>\n";
+	}
+
+	webPage << "</pre><hr></body>\n</html>";
+/*
 	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
 	webPage.append(this->_request.uri() );
 	webPage.append("</title></head>\n<body>\n<h1>Index of ");
@@ -226,9 +242,10 @@ void	Response::readIndex(const std::string &path)
 		webPage.append("</a>\n");
 	}
 	webPage.append("</pre><hr></body>\n</html>");
+*/
 
 	this->setHeader("Content-Type", "text/html");
-	this->setBody(webPage);
+	this->setBody(webPage.str() );
 
 }
 
