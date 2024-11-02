@@ -232,7 +232,7 @@ void	Response::readIndex(const std::string &path)
 		tm = std::localtime(&fileStat.st_mtim.tv_sec);
 		std::strftime(date, 11, "%d-%b-%y", tm);
 		
-		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << std::setw(20) << fileStat.st_size << "\n";
+		webPage << "<a href=\"" << this->_request.uri() << "/" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << std::setw(20) << fileStat.st_size << "\n";
 	}
 	webPage << "</pre><hr></body>\n</html>\n";
 
