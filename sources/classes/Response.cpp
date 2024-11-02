@@ -223,7 +223,15 @@ void	Response::readIndex(const std::string &path)
 
 	for (size_t i = 0; i < fileList.size(); i++)
 	{
-		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>\n";
+		struct stat					fileStat;
+		struct tm					*tm;
+		char						date[12];
+		std::string					filePath = path + fileList.at(i);
+
+
+		stat(filePath.c_str(), &fileStat);
+		tm = std::localtime(&fileStat.st_mtim.tv_sec);
+		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << std::strftime(date, 11, "%d-%b-%Y", tm) << "        " << fileStat.st_size << "\n";
 	}
 
 	webPage << "</pre><hr></body>\n</html>";
