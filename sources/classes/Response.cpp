@@ -189,7 +189,7 @@ void	Response::handleStaticSite(void)
 		    	std::cout << "URI: " << uri << std::endl;
 		    	if (access(uriFile.c_str(), F_OK) == 0)
 		    	{
-			    	this->readResource(uriFile);
+			    	this->readResource(uri);
 		    		return ;
 		    	}
 		    }	    	
@@ -225,18 +225,18 @@ void	Response::readIndex(const std::string &path)
 	{
 		struct stat					fileStat;
 		struct tm					*tm;
-		char						date[12];
-		std::string					filePath = path + fileList.at(i);
+		char						date[10];
+		std::string					filePath = path + "/" + fileList.at(i);
 
-
+		std::cout << "filePath: " << filePath << std::endl;
 		stat(filePath.c_str(), &fileStat);
 		tm = std::localtime(&fileStat.st_mtim.tv_sec);
-		std::strftime(date, 11, "%d-%b-%Y", tm);
+		std::strftime(date, 11, "%d-%b-%y", tm);
 		
 		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << "        " << fileStat.st_size << "\n";
 	}
 
-	webPage << "</pre><hr></body>\n</html>";
+	webPage << "</pre><hr></body>\n</html>\n";
 /*
 	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
 	webPage.append(this->_request.uri() );
@@ -256,7 +256,6 @@ void	Response::readIndex(const std::string &path)
 
 	this->setHeader("Content-Type", "text/html");
 	this->setBody(webPage.str() );
-
 }
 
 void Response::handleGETMethod()
