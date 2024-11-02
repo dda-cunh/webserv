@@ -421,17 +421,18 @@ void Response::setCGIMatch()
     std::string extension = CGIMatch().findExtension(uri);
     if (!extension.empty())
     {
-        for (StrStrMap::const_iterator it = _locationMatch->getCgiPathsBegin();
-             it != _locationMatch->getCgiPathsEnd(); ++it)
+        for (StrArr::const_iterator it = _locationMatch->getCgiExtensionsBegin();
+             it != _locationMatch->getCgiExtensionsEnd(); ++it)
         {
-            if (it->first == extension)
+            if (*it == extension)
             {
-                _cgiMatch = CGIMatch(uri, it->second);
-                LOG("CCGIMatch:", Utils::LOG_INFO);
+                _cgiMatch = CGIMatch(uri, *it);
+                Utils::log("CCGIMatch:", Utils::LOG_INFO);
                 std::cout << _cgiMatch << std::endl;
                 return;
             }
         }
     }
-    LOG("No CGI match found for URI", Utils::LOG_INFO);
+    Utils::log("No CGI match found for URI", Utils::LOG_INFO);
 }
+
