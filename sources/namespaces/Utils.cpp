@@ -165,4 +165,16 @@ namespace Utils
 		}
 		return (std::string(fullPath));
 	}
+
+	uint64_t	pack32sTo64(uint32_t const& msb, uint32_t const& lsb)
+	{
+		return (((uint64_t)msb << 32) | lsb);
+	}
+
+	uint32_t	get32From64(uint64_t const& l, bool const& msb)
+	{
+		if (msb)
+			return ((uint32_t)(l >> 32));
+		return ((uint32_t)l);
+	}
 }

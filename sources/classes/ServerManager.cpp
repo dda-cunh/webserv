@@ -2,7 +2,6 @@
 #include "../../includes/classes/Response.hpp"
 #include "../../includes/classes/Request.hpp"
 
-
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
@@ -111,7 +110,7 @@ bool	ServerManager::initEpoll()	throw()
 			it != this->_sockets.end(); it++)
 		{
 			event.events = EPOLLIN;
-			event.data.fd = it->second->fd();
+			event.data.u64 = Utils::pack32sTo64(0, it->second->fd());
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
 				return (false);
 		}
@@ -121,7 +120,6 @@ bool	ServerManager::initEpoll()	throw()
 
 void ServerManager::up()	throw()
 {
-	epoll_event	event;
 	int			n_fds;
 
 	if (!initEpoll())
@@ -138,75 +136,9 @@ void ServerManager::up()	throw()
 			try
 			{
 				if (_ep_events[i].events & EPOLLIN)
-				{
-					if (this->isServerSocket(_ep_events[i].data.fd))
-					{
-						int	client_fd;
-
-						client_fd = accept(_ep_events[i].data.fd, NULL, NULL);
-						if (client_fd == -1)
-							syscall_kill();
-						LOG("New client connected", Utils::LOG_INFO);
-						event.events = EPOLLIN | EPOLLET;
-						event.data.u64 = ((uint64_t)_ep_events[i].data.fd << 32) | client_fd;
-						event.data.fd = client_fd;
-						if (!doEpollCtl(EPOLL_CTL_ADD, event))
-							syscall_kill();
-					}
-					else
-					{
-						Request req(_ep_events[i].data.fd);
-						event.events = EPOLLOUT | EPOLLET;
-						event.data.u64 = _ep_events[i].data.u64;
-						LOG("Request received", Utils::LOG_INFO);
-						LOG(req.str(), Utils::LOG_INFO);
-						if (!doEpollCtl(EPOLL_CTL_MOD, event))
-						{
-							LOG(strerror(errno),
-										Utils::LOG_WARNING);
-							close(event.data.fd);
-							continue;
-						}
-						this->_req_feed.insert(RequestFeed::value_type(_ep_events[i].data.fd, req));
-					}
-				}
+					readEvent(_ep_events[i]);
 				else if (_ep_events[i].events & EPOLLOUT)
-				{
-					RequestFeed::iterator	it;
-
-					it = this->_req_feed.find(_ep_events[i].data.fd);
-					if (it != this->_req_feed.end())
-					{
-						int				socket_fd	= (uint32_t)(event.data.u64 >> 32);
-						ServerConfig	vServer		= this->_getServerFromSocket(socket_fd);
-
-						Response response(it->second, vServer);
-						std::string responseStr = response.getResponse();
-						send(_ep_events[i].data.fd, responseStr.c_str(),
-								responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
-						if (it->second.header("connection") != "keep-alive")
-						{
-							doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
-							close(_ep_events[i].data.fd);
-						}
-						else
-						{
-							event.events = EPOLLIN | EPOLLET;
-							event.data.fd = _ep_events[i].data.fd;
-							if (!doEpollCtl(EPOLL_CTL_MOD, event))
-								syscall_kill();
-						}
-						this->_req_feed.erase(it);
-						LOG("Response sent", Utils::LOG_INFO);
-					}
-					else
-					{
-						if (_ep_events[i].data.fd != -1)
-							close(_ep_events[i].data.fd);
-						LOG("Couldn't find request for client",
-									Utils::LOG_WARNING);
-					}
-				}
+					writeEvent(_ep_events[i]);
 			}
 			catch (ExceptionMaker const &ex)
 			{
@@ -220,10 +152,6 @@ void ServerManager::up()	throw()
 //use socket_fd to identify the socket inside this->_sockets
 ServerConfig const	&ServerManager::_getServerFromSocket(int const& socket_fd)
 {
-	size_t	i;
-
-	i = 0;
-
 //	std::cout << "FD of Socket that got the request: " << socket_fd << std::endl;
 	
 	for (IDSockMap::iterator it = this->_sockets.begin();
@@ -235,32 +163,104 @@ ServerConfig const	&ServerManager::_getServerFromSocket(int const& socket_fd)
 		std::cout << "Host: " << Network::iPV4PackedTos(this->_sockets[i].address() ) << std::endl;
 		std::cout << "Port: " << this->_sockets[i].port() << std::endl;
 */
+		// 
 		if (it->second->fd() == socket_fd )
-			return (this->_server_blocks[i] );	//	WILL HAVE TO COUNT ON CHECKING AGAINST server_name
-		i++;
+		{
+			uint64_t sockPacked;
+
+			for (ServerBlocks::size_type i = 0; i < _server_blocks.size(); i++)
+			{
+				sockPacked = TCPSocket::socketToPacked(_server_blocks[i].getHost(),
+														_server_blocks[i].getPort());
+				if (sockPacked == it->second->socketToPacked())
+					return (this->_server_blocks[i]);
+			}
+		}
 	}
-
 	return (this->_server_blocks[0] );	//	OR THROW EXCEPTION IF NO SERVER FOUND?
-}
-
-bool ServerManager::isServerSocket(int const &fd) throw()
-{
-	for (IDSockMap::iterator it = this->_sockets.begin();
-			it != this->_sockets.end(); it++)
-		if (fd == it->second->fd())
-			return (true);
-	return (false);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 {
 	uint32_t	ev_fd;
 
-	ev_fd = (uint32_t)(ev.data.u64 & 0xFFFFFFFF);
+	ev_fd = Utils::get32From64(ev.data.u64, false);
 	if (this->_ep_fd == -1)
 		return (false);
 	if (epoll_ctl(this->_ep_fd, op, ev_fd, &ev) == -1)
 		return (false);
 	return (true);
+}
+
+void	ServerManager::readEvent(epoll_event & trigEv)	throw()
+{
+	if (Utils::get32From64(trigEv.data.u64, true) == 0)
+	{
+		epoll_event	reqEv;
+		int			client_fd;
+
+		client_fd = accept(trigEv.data.fd, NULL, NULL);
+		if (client_fd == -1)
+			syscall_kill();
+		LOG("New client connected", Utils::LOG_INFO);
+		reqEv.events = EPOLLIN;
+		reqEv.data.u64 = Utils::pack32sTo64(trigEv.data.fd, client_fd);
+		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
+			syscall_kill();
+	}
+	else
+	{
+		Request req(trigEv.data.fd);
+
+		trigEv.events = EPOLLOUT;
+		LOG("Request received", Utils::LOG_INFO);
+		LOG(req.str(), Utils::LOG_INFO);
+		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+		{
+			LOG(strerror(errno), Utils::LOG_WARNING);
+			close(trigEv.data.fd);
+			return ;
+		}
+		this->_req_feed.insert(
+			RequestFeed::value_type(Utils::get32From64(trigEv.data.u64, false),
+														req));
+	}
+}
+
+void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
+{
+	RequestFeed::iterator	it;
+
+	it = this->_req_feed.find(trigEv.data.fd);
+	if (it != this->_req_feed.end())
+	{
+		ServerConfig	vServer		= this->_getServerFromSocket(
+										Utils::get32From64(trigEv.data.u64, true));
+
+		Response response(it->second, vServer);
+		std::string responseStr = response.getResponse();
+		send(Utils::get32From64(trigEv.data.u64, false), responseStr.c_str(),
+				responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
+		if (it->second.header("connection") != "keep-alive")
+		{
+			doEpollCtl(EPOLL_CTL_DEL, trigEv);
+			close(Utils::get32From64(trigEv.data.u64, false));
+		}
+		else
+		{
+			trigEv.events = EPOLLIN;
+			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+				syscall_kill();
+		}
+		this->_req_feed.erase(it);
+		LOG("Response sent", Utils::LOG_INFO);
+	}
+	else
+	{
+		if (trigEv.data.fd != -1)
+			close(trigEv.data.fd);
+		LOG("Couldn't find request for client",
+					Utils::LOG_WARNING);
+	}
 }
 /**************************************************************************/

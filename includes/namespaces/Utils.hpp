@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <cstring>
 #include <sys/stat.h>
 #include <cstdarg>
@@ -39,6 +40,10 @@ namespace	Utils
 	std::string				sTrim(std::string const&);
 	std::string				pathBaseName(char const*);
 	std::string				getCurrentDate();
+	uint64_t				pack32sTo64(uint32_t const& msb,
+										uint32_t const& lsb);
+	uint32_t				get32From64(uint64_t const& l,
+										bool const& msb);
 	size_t					sWordCount(std::string line);
 	void					logImpl(std::string const&, LogLevel const&,
 									std::string const&, int const&);

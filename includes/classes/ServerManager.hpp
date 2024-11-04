@@ -38,7 +38,9 @@ class ServerManager
 		ServerManager(ServerManager const & src)				throw();
 		ServerManager()											throw();
 
-		bool				doEpollCtl(int const& op, epoll_event & ev)		throw();
-		bool				isServerSocket(int const& fd)					throw();
+		bool				doEpollCtl(int const& op,
+										epoll_event & ev)		throw();
+		void				writeEvent(epoll_event & trigEv)	throw();
+		void				readEvent(epoll_event & trigEv)		throw();
 		ServerConfig const	&_getServerFromSocket(int const& socket_fd);
 };
