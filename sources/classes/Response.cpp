@@ -168,44 +168,35 @@ void Response::handleCGI()
 }
 
 /**
- * @brief  Serves the requested file or directory listing.
+ * @brief  Serves the requested file, and index file or a directory listing.
  */
-void	Response::handleStaticSite(void)
-{
-		std::string	root;
-	    std::string	uriPath;
-	    std::string uri;
+void Response::handleStaticSite(void) {
+    std::string root = _locationMatch->getRootDir();
+    std::string uriPath = _request.uri();
+    std::string uri = (uriPath == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
 
-	    root = _locationMatch->getRootDir();
-	    uriPath = _request.uri();
-	    uriPath.erase(0, this->_locationMatch->getLocation().size());
-	    uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
+    if (uriPath != "/" && (!uriPath.empty() && uriPath[uriPath.size() - 1] == '/')) {
+        _locationMatch->getAutoIndex() ? listDirectory(uri) : setStatusAndReadResource(Http::SC_FORBIDDEN);
+        return;
+    }
 
-	    if (Directory::isDirectory(uri))
-	    {
-		    for (size_t i = 0; i < this->_locationMatch->getIndexVectorSize(); i++)
-		    {
-		    	std::string	uriFile = Utils::concatenatePaths(uri.c_str(), this->_locationMatch->getIndexFileName(i).c_str(), NULL);
-		    	std::cout << "URI: " << uri << std::endl;
-		    	if (access(uriFile.c_str(), F_OK) == 0)
-		    	{
-			    	this->readResource(uri);
-		    		return ;
-		    	}
-		    }	    	
-
-		    if (this->_locationMatch->getAutoIndex() == false)
-				setStatusAndReadResource(Http::SC_FORBIDDEN);
-			else
-				readIndex(uri);
-	    }
-	    else if (access(uri.c_str(), F_OK) == 0)
-	    		this->readResource(uri);
-	    else
-	    	setStatusAndReadResource(Http::SC_NOT_FOUND);
+    if (Directory::isDirectory(uri)) {
+        for (size_t i = 0; i < _locationMatch->getIndexVectorSize(); i++) {
+            std::string indexFile = Utils::concatenatePaths(uri.c_str(), _locationMatch->getIndexFileName(i).c_str(), NULL);
+            if (access(indexFile.c_str(), F_OK) == 0) {
+                this->readResource(indexFile);
+                return;
+            }
+        }
+        _locationMatch->getAutoIndex() ? listDirectory(uri) : setStatusAndReadResource(Http::SC_FORBIDDEN);
+    } else if (access(uri.c_str(), F_OK) == 0) {
+        this->readResource(uri);
+    } else {
+        setStatusAndReadResource(Http::SC_NOT_FOUND);
+    }
 }
 
-void	Response::readIndex(const std::string &path)
+void	Response::listDirectory(const std::string &path)
 {
 	std::ostringstream			webPage;
 	std::vector<std::string>	fileList;
@@ -256,30 +247,6 @@ void	Response::readIndex(const std::string &path)
 
 	this->setHeader("Content-Type", "text/html");
 	this->setBody(webPage.str() );
-}
-
-void Response::handleGETMethod()
-{
-    std::string root = _locationMatch->getRootDir();
-    bool autoindex = _locationMatch->getAutoIndex();
-
-    std::string uri = (_request.uri() == "/") ? root : Utils::concatenatePaths(root.c_str(), _request.uri().c_str(), NULL);
-
-    if (Directory::isDirectory(uri))
-    {
-        Directory::Result result = Directory::handleDirectory(uri, autoindex);
-        _statusCode = result.statusCode;
-        uri = _statusCode == Http::SC_OK ? result.path : _locationMatch->getErrPagePath(_statusCode);
-        readResource(uri);
-    }
-    else if (Utils::resourceExists(uri))
-    {
-        readResource(uri);
-    }
-    else
-    {
-        setStatusAndReadResource(Http::SC_NOT_FOUND);
-    }
 }
 
 void Response::readResource(const std::string &uri, bool isErrorResponse)
