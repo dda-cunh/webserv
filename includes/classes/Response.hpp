@@ -36,8 +36,7 @@ class Response {
 		CGIMatch 				_cgiMatch;
 		
 		void					dispatchMethod();
-		void					handleStaticSite();
-		void 					handleGETMethod();
+		void					handleGETMethod();
 		void					handlePOSTMethod();
 		void					handleDELETEMethod();
 		void					handleMethodNotAllowed();

@@ -69,9 +69,7 @@ void Response::setMatchedLocation()
 
 /**********************  CONSTRUCTORS / DESTRUCTORS ***********************/
 
-Response::~Response()
-{
-}
+Response::~Response() {}
 
 Response::Response(Request const &request, ServerConfig const &configs)
     : _statusCode(Http::SC_OK),
@@ -81,8 +79,6 @@ Response::Response(Request const &request, ServerConfig const &configs)
       _request(request),
       _serverConfigs(configs)
 {
-    std::string body(request.body().begin(), request.body().end());
-
     try
     {
         setMatchedLocation();
@@ -104,8 +100,6 @@ Response::Response(Request const &request, ServerConfig const &configs)
 
     setCommonHeaders();
     setResponse();
-    LOG("Final headers:", Utils::LOG_INFO);
-    std::cout << "\t" << getHeadersStr() << std::endl;
 }
 
 /**************************************************************************/
@@ -122,10 +116,12 @@ void Response::dispatchMethod()
 	else if (setCGIMatch(), !_cgiMatch.getBinary().empty())
 		handleCGI();
     else if (_request.method() == Http::M_GET)
-    	handleStaticSite();
-//		handleGETMethod();
+    	handleGETMethod();
 }
 
+/**
+ * @brief Sets status, error page and headers for the Method Not Allowed error.
+ */
 void Response::handleMethodNotAllowed()
 {
     _statusCode = Http::SC_METHOD_NOT_ALLOWED;
@@ -170,7 +166,7 @@ void Response::handleCGI()
 /**
  * @brief  Serves the requested file, and index file or a directory listing.
  */
-void Response::handleStaticSite(void) {
+void Response::handleGETMethod(void) {
     std::string root = _locationMatch->getRootDir();
     std::string uriPath = _request.uri();
     std::string uri = (uriPath == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
@@ -196,11 +192,13 @@ void Response::handleStaticSite(void) {
     }
 }
 
+/**
+ * @brief Generates a listing for the requested directory.
+ */
 void	Response::listDirectory(const std::string &path)
 {
 	std::ostringstream			webPage;
 	std::vector<std::string>	fileList;
-//	std::string					webPage;
 
 	fileList = Directory::listFiles(path);
 
@@ -228,27 +226,14 @@ void	Response::listDirectory(const std::string &path)
 	}
 
 	webPage << "</pre><hr></body>\n</html>\n";
-/*
-	webPage.append("<!DOCTYPE html>\n<head>\n</head>\n<html>\n<head><title>Index of ");
-	webPage.append(this->_request.uri() );
-	webPage.append("</title></head>\n<body>\n<h1>Index of ");
-	webPage.append(this->_request.uri() );
-	webPage.append("</h1><hr><pre><a href=\"../\">../</a>\n");
-	for (size_t i = 0; i < fileList.size(); i++)
-	{
-		webPage.append("<a href=\"");
-		webPage.append(fileList.at(i) );
-		webPage.append("\">");
-		webPage.append(fileList.at(i) );
-		webPage.append("</a>\n");
-	}
-	webPage.append("</pre><hr></body>\n</html>");
-*/
 
 	this->setHeader("Content-Type", "text/html");
 	this->setBody(webPage.str() );
 }
 
+/**
+ * @brief Reads the requested resource from the file system
+ */
 void Response::readResource(const std::string &uri, bool isErrorResponse)
 {
     try
@@ -289,6 +274,9 @@ void Response::setStatusAndReadResource(Http::STATUS_CODE statusCode, std::strin
         readResource(_locationMatch->getErrPagePath(_statusCode), true);
 }
 
+/**
+ * @brief Looks for a redirection match in the location block.
+ */
 bool Response::isRedirection()
 {
     std::string requestPath = _request.uri();
@@ -381,6 +369,9 @@ void Response::setResponse()
     _response = getHeadersStr() + _body;
 }
 
+/**
+ * @brief Matches the extension of the requested URI with the CGI extensions in the location block.
+ */
 void Response::setCGIMatch()
 {
     std::string uri = _request.uri();
@@ -401,4 +392,3 @@ void Response::setCGIMatch()
     }
     LOG("No CGI match found for URI", Utils::LOG_INFO);
 }
-
