@@ -3,7 +3,7 @@ NAME		= 	webserv
 
 CC 			= 	c++
 
-CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g #fsanitize=address
+CFLAGS		= 	-Wall -Wextra -Werror -std=c++98 -Wshadow -g -fsanitize=address
 
 VAL_FLAGS	=	--leak-check=full --show-leak-kinds=all --track-origins=yes --track-fds=yes
 
