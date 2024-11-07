@@ -1,0 +1,50 @@
+# Test HTTP requests for vscode-restclient
+
+###
+GET http://localhost:4242/cgi/error.py
+
+###
+
+POST http://localhost:4242/file_manager HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+cgi_extension=.py
+cgi_extension=.cgi
+upload_store=uploads
+
+###
+
+GET http://localhost:4242/fat_cats
+
+###
+
+DELETE http://localhost:4242/fat_cats
+
+###
+
+GET http://localhost:4242/nonexistent
+
+###
+
+GET http://localhost:4242/directory/
+
+###
+
+PUT http://localhost:4242/file_manager HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+cgi_extension=.py
+cgi_extension=.cgi
+upload_store=uploads
+
+###
+
+DELETE http://localhost:4242/file_manager
+
+###
+
+OPTIONS http://localhost:4242/
+
+###
+
+HEAD http://localhost:4242/

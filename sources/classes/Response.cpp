@@ -154,28 +154,33 @@ void Response::handleCGI()
 /**
  * @brief  Serves the requested file, and index file or a directory listing.
  */
-void Response::handleGETMethod(void) {
+void Response::handleGETMethod(void)
+{
     std::string root = _locationMatch->getRootDir();
-    std::string uriPath = _request.uri();
-    std::string uri = (uriPath == "/") ? root : Utils::concatenatePaths(root.c_str(), uriPath.c_str(), NULL);
+    std::string requestUri = _request.uri();
+    bool hasTrailingSlash = requestUri != "/" && requestUri[requestUri.size() - 1] == '/';
+    std::string uri = (requestUri == "/") ? root : Utils::concatenatePaths(root.c_str(), requestUri.c_str(), NULL);
+    bool isDir = Directory::isDirectory(uri);
 
-    if (uriPath != "/" && (!uriPath.empty() && uriPath[uriPath.size() - 1] == '/')) {
-        _locationMatch->getAutoIndex() ? listDirectory(uri) : setStatusAndReadResource(Http::SC_FORBIDDEN);
-        return;
-    }
+    if (hasTrailingSlash)
+        return _locationMatch->getAutoIndex() ? listDirectory(uri) : setStatusAndReadResource(Http::SC_FORBIDDEN);
 
-    if (Directory::isDirectory(uri)) {
-        for (size_t i = 0; i < _locationMatch->getIndexVectorSize(); i++) {
+    if (isDir)
+    {
+        for (size_t i = 0; i < _locationMatch->getIndexVectorSize(); i++)
+        {
             std::string indexFile = Utils::concatenatePaths(uri.c_str(), _locationMatch->getIndexFileName(i).c_str(), NULL);
-            if (access(indexFile.c_str(), F_OK) == 0) {
-                this->readResource(indexFile);
-                return;
-            }
+            if (access(indexFile.c_str(), F_OK) == 0)
+                return readResource(indexFile);
         }
         _locationMatch->getAutoIndex() ? listDirectory(uri) : setStatusAndReadResource(Http::SC_FORBIDDEN);
-    } else if (access(uri.c_str(), F_OK) == 0) {
-        this->readResource(uri);
-    } else {
+    }
+    else if (access(uri.c_str(), F_OK) == 0)
+    {
+        readResource(uri);
+    }
+    else
+    {
         setStatusAndReadResource(Http::SC_NOT_FOUND);
     }
 }
@@ -183,40 +188,30 @@ void Response::handleGETMethod(void) {
 /**
  * @brief Generates a listing for the requested directory.
  */
-void	Response::listDirectory(const std::string &path)
+void Response::listDirectory(const std::string &path)
 {
-	std::ostringstream			webPage;
-	std::vector<std::string>	fileList;
+    std::ostringstream webPage;
+    std::vector<std::string> fileList = Directory::listFiles(path);
 
-	fileList = Directory::listFiles(path);
+    webPage << "<!DOCTYPE html>\n<head>\n<title>Index of " << _request.uri() << "</title>\n</head>\n";
+    webPage << "<body>\n<h1>Index of " << _request.uri() << "</h1><hr><pre><a href=\"../\">../</a>\n";
 
+    for (size_t i = 0; i < fileList.size(); ++i) {
+        struct stat fileStat;
+        char date[11];
+        std::string filePath = path + "/" + fileList[i];
 
-	webPage << "<!DOCTYPE html>\n";
-	webPage << "<head>\n";
-	webPage << "<title>Index of " << this->_request.uri() << "</title>\n";
-	webPage << "</head>\n";
-	webPage << "<body>\n";
-	webPage << "<h1>Index of " << this->_request.uri() << "</h1><hr><pre><a href=\"../\">../</a>\n";
+        if (stat(filePath.c_str(), &fileStat) == 0) {
+            std::strftime(date, sizeof(date), "%d-%b-%y", std::localtime(&fileStat.st_mtime));
+            webPage << "<a href=\"" << fileList[i] << "\">" << fileList[i] << "</a>"
+                    << std::setw(60 - fileList[i].size()) << date << "  " << fileStat.st_size << "\n";
+        }
+    }
 
-	for (size_t i = 0; i < fileList.size(); i++)
-	{
-		struct stat					fileStat;
-		struct tm					*tm;
-		char						date[10];
-		std::string					filePath = path + "/" + fileList.at(i);
+    webPage << "</pre><hr></body>\n</html>\n";
 
-		std::cout << "filePath: " << filePath << std::endl;
-		stat(filePath.c_str(), &fileStat);
-		tm = std::localtime(&fileStat.st_mtim.tv_sec);
-		std::strftime(date, 11, "%d-%b-%y", tm);
-		
-		webPage << "<a href=\"" << fileList.at(i) << "\">" << fileList.at(i) << "</a>" << std::setw(75 - fileList.at(i).size() ) << date << "        " << fileStat.st_size << "\n";
-	}
-
-	webPage << "</pre><hr></body>\n</html>\n";
-
-	this->setHeader("Content-Type", "text/html");
-	this->setBody(webPage.str() );
+    setHeader("Content-Type", "text/html");
+    setBody(webPage.str());
 }
 
 /**
