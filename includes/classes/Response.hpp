@@ -36,8 +36,7 @@ class Response {
 		CGIMatch 				_cgiMatch;
 		
 		void					dispatchMethod();
-		void					handleStaticSite();
-		void 					handleGETMethod();
+		void					handleGETMethod();
 		void					handlePOSTMethod();
 		void					handleDELETEMethod();
 		void					handleMethodNotAllowed();
@@ -49,7 +48,7 @@ class Response {
 		void					setStatusAndReadResource(Http::STATUS_CODE statusCode, std::string uri = "");
 
 		void					readResource(const std::string &uri, bool isErrorResponse = false);
-		void					readIndex(const std::string &path);
+		void					listDirectory(const std::string &path);
 		std::string				getHeadersStr();
 		bool					isRedirection();
 		void					handleRedirection();
