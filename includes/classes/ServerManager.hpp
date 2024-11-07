@@ -40,6 +40,7 @@ class ServerManager
 
 		bool				doEpollCtl(int const& op,
 										epoll_event & ev)		throw();
+		bool				evU64IsSock(long const& evU64)		throw();
 		void				writeEvent(epoll_event & trigEv)	throw();
 		void				readEvent(epoll_event & trigEv)		throw();
 		ServerConfig const	&_getServerFromSocket(int const& socket_fd);

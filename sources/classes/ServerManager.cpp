@@ -158,10 +158,9 @@ ServerConfig const	&ServerManager::_getServerFromSocket(int const& socket_fd)
 			it != this->_sockets.end(); it++)
 	{
 /*
-		std::cout << "i: " << i << std::endl;
-		std::cout << "socket fd: " << this->_sockets[i].fd() << std::endl;
-		std::cout << "Host: " << Network::iPV4PackedTos(this->_sockets[i].address() ) << std::endl;
-		std::cout << "Port: " << this->_sockets[i].port() << std::endl;
+		std::cout << "socket fd: " << it->second->fd() << std::endl;
+		std::cout << "Host: " << Network::iPV4PackedTos(it->second->address() ) << std::endl;
+		std::cout << "Port: " << it->second->port() << std::endl;
 */
 		// 
 		if (it->second->fd() == socket_fd )
@@ -194,7 +193,7 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 
 void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 {
-	if (Utils::get32From64(trigEv.data.u64, true) == 0)
+	if (evU64IsSock(trigEv.data.u64))
 	{
 		epoll_event	reqEv;
 		int			client_fd;
@@ -262,5 +261,10 @@ void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
 		LOG("Couldn't find request for client",
 					Utils::LOG_WARNING);
 	}
+}
+
+bool	ServerManager::evU64IsSock(long const& evU64)	throw()
+{
+	return (Utils::get32From64(evU64, true) == 0);
 }
 /**************************************************************************/
