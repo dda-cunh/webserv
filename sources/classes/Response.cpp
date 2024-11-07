@@ -4,23 +4,16 @@
 
 /**************************  HELPERS  / DEBUG  ****************************/
 
-std::string getResourceContentType(std::string uri)
+std::string getResourceContentType(const std::string& uri)
 {
     std::string extension = uri.substr(uri.find_last_of(".") + 1);
-    if (extension == "html")
-        return "text/html";
-    if (extension == "css")
-        return "text/css";
-    if (extension == "js")
-        return "text/javascript";
-    if (extension == "jpg" || extension == "jpeg")
-        return "image/jpeg";
-    if (extension == "png")
-        return "image/png";
-    if (extension == "gif")
-        return "image/gif";
-    if (extension == "svg")
-        return "image/svg+xml";
+    if (extension == "html") return "text/html";
+    if (extension == "css") return "text/css";
+    if (extension == "js") return "text/javascript";
+    if (extension == "jpg" || extension == "jpeg") return "image/jpeg";
+    if (extension == "png") return "image/png";
+    if (extension == "gif") return "image/gif";
+    if (extension == "svg") return "image/svg+xml";
     return "text/plain";
 }
 
@@ -30,12 +23,10 @@ std::string getResourceContentType(std::string uri)
  */
 std::string Response::getHeadersStr()
 {
-    std::string responseHeaders;
-    responseHeaders += "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
+    std::string responseHeaders = "HTTP/1.1 " + Utils::intToString(_statusCode) + " " + Http::sToReasonPhrase(_statusCode) + CRLF;
     for (StrStrMap::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
         responseHeaders += it->first + ": " + it->second + CRLF;
-    responseHeaders += CRLF;
-    return responseHeaders;
+    return responseHeaders + CRLF;
 }
 
 /**
@@ -46,10 +37,10 @@ void Response::setMatchedLocation()
     ServerLocation *bestMatch = NULL;
     std::string longestMatch;
 
-    for (size_t j = 0; j < this->_serverConfigs.getLocationBlocksSize(); ++j)
+    for (size_t j = 0; j < _serverConfigs.getLocationBlocksSize(); ++j)
     {
-        ServerLocation *location = this->_serverConfigs.getLocationFromIndex(j);
-        std::string locationPath = location->getLocation();
+        ServerLocation *location = _serverConfigs.getLocationFromIndex(j);
+        const std::string& locationPath = location->getLocation();
         if (_request.uri().find(locationPath) == 0 && locationPath.size() > longestMatch.size())
         {
             longestMatch = locationPath;
@@ -57,7 +48,7 @@ void Response::setMatchedLocation()
         }
     }
 
-    if (bestMatch == NULL)
+    if (!bestMatch)
         throw ExceptionMaker("No valid location block found for the requested URI.");
 
     _locationMatch = bestMatch;
@@ -71,11 +62,8 @@ void Response::setMatchedLocation()
 
 Response::~Response() {}
 
-Response::Response(Request const &request, ServerConfig const &configs)
+Response::Response(const Request &request, const ServerConfig &configs)
     : _statusCode(Http::SC_OK),
-      _headers(),
-      _body(),
-      _response(),
       _request(request),
       _serverConfigs(configs)
 {

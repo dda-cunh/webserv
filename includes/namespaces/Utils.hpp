@@ -33,7 +33,7 @@ namespace	Utils
 	const char PATH_SEPARATOR = '/';
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
-	std::string 			concatenatePaths(const std::string basePath, ...);
+	std::string 			concatenatePaths(const std::string& basePath, ...);
 	std::string				intToString(int const& value);
 	std::string				lowerStr(std::string const&);
 	std::string				sTrim(std::string const&);
