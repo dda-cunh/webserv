@@ -79,26 +79,31 @@ Response::Response(Request const &request, ServerConfig const &configs)
       _request(request),
       _serverConfigs(configs)
 {
-    try
-    {
-        setMatchedLocation();
-    }
-    catch (ExceptionMaker &e)
-    {
-        e.log();
-        setStatusAndReadResource(Http::SC_NOT_FOUND);
-    }
-
-    if (_request.flag() == _400)
-        setStatusAndReadResource(Http::SC_BAD_REQUEST);
-    else if (_request.method() == Http::M_UNHANDLED)
-        setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
-    else if (isRedirection())
-        handleRedirection();
+	if (/*	empty request flag	*/)
+    	//	SEND EMPTY RESPONSE
     else
-        dispatchMethod();
+    {
+	    try
+	    {
+	        setMatchedLocation();
+	    }
+	    catch (ExceptionMaker &e)
+	    {
+	        e.log();
+	        setStatusAndReadResource(Http::SC_NOT_FOUND);
+	    }
 
-    setCommonHeaders();
+	    if (_request.flag() == _400)
+	        setStatusAndReadResource(Http::SC_BAD_REQUEST);
+	    else if (_request.method() == Http::M_UNHANDLED)
+	        setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
+	    else if (isRedirection())
+	        handleRedirection();
+	    else
+	        dispatchMethod();
+
+	    setCommonHeaders();
+	}
     setResponse();
 }
 
@@ -217,7 +222,7 @@ void	Response::listDirectory(const std::string &path)
 		char						date[10];
 		std::string					filePath = path + "/" + fileList.at(i);
 
-		std::cout << "filePath: " << filePath << std::endl;
+
 		stat(filePath.c_str(), &fileStat);
 		tm = std::localtime(&fileStat.st_mtim.tv_sec);
 		std::strftime(date, 11, "%d-%b-%y", tm);

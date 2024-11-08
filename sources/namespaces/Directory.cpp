@@ -27,4 +27,7 @@ namespace Directory
 		closedir(dir);
 		return files;
 	}
+
+//	COPY/PASTE listFilesFull from vservers branch
+
 }

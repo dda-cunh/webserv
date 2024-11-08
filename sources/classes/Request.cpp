@@ -92,7 +92,7 @@ void	Request::readClient()
 	} while (!chunk.empty());
 	if (request.empty())
 	{
-		this->_flag = _400;
+		this->_flag = _400;	//	USE A DEDICATED FLAG FOR REQUESTS WITH NO HTTP
 		return ;
 	}
 	request_i = 0;
