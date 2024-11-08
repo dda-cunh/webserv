@@ -90,6 +90,11 @@ void	Request::readClient()
 		}
 		request.insert(request.end(), chunk.begin(), chunk.end());
 	} while (!chunk.empty());
+	if (request.empty())
+	{
+		this->_flag = _400;
+		return ;
+	}
 	request_i = 0;
 	ss << this->seekCRLF(request, request_i);
 	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
