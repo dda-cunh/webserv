@@ -62,6 +62,7 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 										server_blocks[i].getPort(), 5);
 				this->_sockets.insert(IDSockMap::value_type(id, sock));
 				sock->connect();
+				_sockFD_confI.insert(SockFDConfMap::value_type(sock->fd(), _server_blocks[i]));
 				LOG(sock->str() + std::string(" created"),
 					Utils::LOG_INFO);
 			}
@@ -149,34 +150,14 @@ void ServerManager::up()	throw()
 	this->down();
 }
 
-//use socket_fd to identify the socket inside this->_sockets
-ServerConfig const	&ServerManager::_getServerFromSocket(int const& socket_fd)
+ServerConfig const	&ServerManager::getServerFromSocket(int const& socket_fd)
 {
-//	std::cout << "FD of Socket that got the request: " << socket_fd << std::endl;
-	
-	for (IDSockMap::iterator it = this->_sockets.begin();
-			it != this->_sockets.end(); it++)
-	{
-/*
-		std::cout << "socket fd: " << it->second->fd() << std::endl;
-		std::cout << "Host: " << Network::iPV4PackedTos(it->second->address() ) << std::endl;
-		std::cout << "Port: " << it->second->port() << std::endl;
-*/
-		// 
-		if (it->second->fd() == socket_fd )
-		{
-			uint64_t sockPacked;
+	SockFDConfMap::const_iterator	it;
 
-			for (ServerBlocks::size_type i = 0; i < _server_blocks.size(); i++)
-			{
-				sockPacked = TCPSocket::socketToPacked(_server_blocks[i].getHost(),
-														_server_blocks[i].getPort());
-				if (sockPacked == it->second->socketToPacked())
-					return (this->_server_blocks[i]);
-			}
-		}
-	}
-	return (this->_server_blocks[0] );	//	OR THROW EXCEPTION IF NO SERVER FOUND?
+	it = this->_sockFD_confI.find(socket_fd);
+	if (it != this->_sockFD_confI.end())
+		return (it->second);
+	return (_server_blocks[0]);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
@@ -220,9 +201,8 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 			close(trigEv.data.fd);
 			return ;
 		}
-		this->_req_feed.insert(
-			RequestFeed::value_type(Utils::get32From64(trigEv.data.u64, false),
-														req));
+		_req_feed.insert(RequestFeed::value_type(Utils::get32From64(trigEv.data.u64, false),
+													req));
 	}
 }
 
@@ -233,8 +213,8 @@ void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
 	it = this->_req_feed.find(trigEv.data.fd);
 	if (it != this->_req_feed.end())
 	{
-		ServerConfig	vServer		= this->_getServerFromSocket(
-										Utils::get32From64(trigEv.data.u64, true));
+		ServerConfig	vServer		= getServerFromSocket(Utils::get32From64(trigEv.data.u64,
+																				true));
 
 		Response response(it->second, vServer);
 		std::string responseStr = response.getResponse();
