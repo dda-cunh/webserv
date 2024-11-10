@@ -79,32 +79,32 @@ Response::Response(Request const &request, ServerConfig const &configs)
       _request(request),
       _serverConfigs(configs)
 {
-	if (/*	empty request flag	*/)
-    	//	SEND EMPTY RESPONSE
-    else
+	if (this->_request.flag() != _EMPTY)
     {
-	    try
-	    {
-	        setMatchedLocation();
-	    }
-	    catch (ExceptionMaker &e)
-	    {
-	        e.log();
-	        setStatusAndReadResource(Http::SC_NOT_FOUND);
-	    }
+		try
+		{
+	    	setMatchedLocation();
+		}
+		catch (ExceptionMaker &e)
+		{
+		    e.log();
+		    setStatusAndReadResource(Http::SC_NOT_FOUND);
+		}
 
-	    if (_request.flag() == _400)
-	        setStatusAndReadResource(Http::SC_BAD_REQUEST);
-	    else if (_request.method() == Http::M_UNHANDLED)
-	        setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
-	    else if (isRedirection())
-	        handleRedirection();
-	    else
-	        dispatchMethod();
+		if (_request.flag() == _400)
+		    setStatusAndReadResource(Http::SC_BAD_REQUEST);
+		else if (_request.method() == Http::M_UNHANDLED)
+		    setStatusAndReadResource(Http::SC_NOT_IMPLEMENTED);
+		else if (isRedirection())
+		    handleRedirection();
+		else
+		    dispatchMethod();
 
-	    setCommonHeaders();
+		setCommonHeaders();
+	    setResponse();
 	}
-    setResponse();
+    std::cout << "Response:" << std::endl;
+    std::cout << this->getResponse() << std::endl;
 }
 
 /**************************************************************************/

@@ -5,8 +5,8 @@
 typedef enum	e_response_flag
 {
 	NO_FLAG,
-	_400
-	//	ADD FLAG FOR EMPTY REQUESTS
+	_400,
+	_EMPTY
 }	ResponseFlag;
 
 /**
