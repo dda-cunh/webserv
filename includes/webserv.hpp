@@ -15,6 +15,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <set>
 #include <algorithm>
 
 #include "classes/ExceptionMaker.hpp"
