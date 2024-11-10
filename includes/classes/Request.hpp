@@ -5,7 +5,8 @@
 typedef enum	e_response_flag
 {
 	NO_FLAG,
-	_400
+	_400,
+	_EMPTY
 }	ResponseFlag;
 
 /**
