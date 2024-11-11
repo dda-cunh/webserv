@@ -45,5 +45,5 @@ class ServerManager
 		bool				evU64IsSock(long const& evU64)		throw();
 		void				writeEvent(epoll_event & trigEv)	throw();
 		void				readEvent(epoll_event & trigEv)		throw();
-		ServerConfig const&	getServerFromSocket(int const& socket_fd);
+		ServerConfig const	getServerFromSocket(int const& socket_fd, Request const &request);
 };

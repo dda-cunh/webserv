@@ -10,6 +10,8 @@
 		return;												\
 	}
 
+
+
 /****************************  CANNONICAL FORM  ***************************/
 ServerManager::ServerManager()	throw()
 	:	_server_blocks(),
@@ -73,6 +75,7 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 			LOG(ex.what(), Utils::LOG_ERROR);
 			return ;
 		}
+
 	}
 	if (this->_sockets.empty())
 		return ;
@@ -150,14 +153,45 @@ void ServerManager::up()	throw()
 	this->down();
 }
 
-ServerConfig const	&ServerManager::getServerFromSocket(int const& socket_fd)
+ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Request const &request)
 {
+	//	COPY ALL ip:port MATCHES TO A VECTOR
+	//	AND THEN CHECK IF ANY HAS A servername THAT MATCHES host IN request
+	//	IF NONE MATCH, SELECT FIRST FROM LIST
+	ServerBlocks	matchedConfigs;
+	std::string		serverName = request.header("host").substr(0, request.header("host").find(":") );
 	SockFDConfMap::const_iterator	it;
 
 	it = this->_sockFD_confI.find(socket_fd);
-	if (it != this->_sockFD_confI.end())
-		return (it->second);
-	return (_server_blocks[0]);
+	if (it != this->_sockFD_confI.end())	//	WHAT TO DO IF SOCKET NOT FOUND?
+	{
+		uint32_t		host = it->second.getHost();
+		uint16_t		port = it->second.getPort();
+
+		for (size_t i = 0; i < this->_server_blocks.size(); i++)
+		{
+			if (this->_server_blocks.at(i).getHost() == host && this->_server_blocks.at(i).getPort() == port)
+				matchedConfigs.push_back(this->_server_blocks.at(i) );
+		}
+//		std::cout << serverName << std::endl;
+
+		for (size_t i = 0; i < matchedConfigs.size(); i++)
+		{
+			for (size_t j = 0; j < matchedConfigs.at(i).getServerNamesSize(); j++)
+			{
+				if (matchedConfigs.at(i).getServerName(j) == serverName)
+				{
+					std::cout << "MATCHED SERVER:" << std::endl;
+					std::cout << matchedConfigs.at(i) << std::endl;
+					return (matchedConfigs.at(i) );
+				}
+			}
+		}
+		return (matchedConfigs.at(0) );
+	}
+	else
+		throw (ExceptionMaker("Could not find socket") );
+//	return (_server_blocks[0]);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
@@ -214,7 +248,7 @@ void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
 	if (it != this->_req_feed.end())
 	{
 		ServerConfig	vServer		= getServerFromSocket(Utils::get32From64(trigEv.data.u64,
-																				true));
+																				true), it->second);
 
 		Response response(it->second, vServer);
 		std::string responseStr = response.getResponse();
