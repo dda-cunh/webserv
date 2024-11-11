@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  webserver:
+    build: .
+    ports:
+      - "4242:4242"
+      - "4243:4243"
+    volumes:
+      - .:/usr/src/app  # This mounts your local code directly into the container
+    networks:
+      - webnet
+
+networks:
+  webnet:
+    driver: bridge

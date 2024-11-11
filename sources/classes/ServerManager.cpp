@@ -240,24 +240,38 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 	}
 }
 
-void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
-{
-	RequestFeed::iterator	it;
-
-	it = this->_req_feed.find(trigEv.data.fd);
+void ServerManager::writeEvent(epoll_event & trigEv) throw() {
+	RequestFeed::iterator it = this->_req_feed.find(trigEv.data.fd);
 	if (it != this->_req_feed.end())
 	{
-		ServerConfig	vServer		= getServerFromSocket(Utils::get32From64(trigEv.data.u64,
-																				true), it->second);
+		ServerConfig vServer = getServerFromSocket(Utils::get32From64(trigEv.data.u64, true), it->second);
 
 		Response response(it->second, vServer);
 		std::string responseStr = response.getResponse();
-		send(Utils::get32From64(trigEv.data.u64, false), responseStr.c_str(),
-				responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
+
+		size_t totalSent = 0;
+		size_t remaining = responseStr.length();
+		int client_fd = Utils::get32From64(trigEv.data.u64, false);
+
+		while (totalSent < responseStr.length()) {
+			ssize_t bytesSent = send(client_fd, responseStr.c_str() + totalSent, remaining, MSG_DONTWAIT | MSG_NOSIGNAL);
+			if (bytesSent == -1) {
+				if (errno == EAGAIN || errno == EWOULDBLOCK) {
+					continue;
+				} else {
+					LOG(strerror(errno), Utils::LOG_WARNING);
+					close(client_fd);
+					return;
+				}
+			}
+			totalSent += bytesSent;
+			remaining -= bytesSent;
+		}
+
 		if (it->second.header("connection") != "keep-alive")
 		{
 			doEpollCtl(EPOLL_CTL_DEL, trigEv);
-			close(Utils::get32From64(trigEv.data.u64, false));
+			close(client_fd);
 		}
 		else
 		{
@@ -272,8 +286,7 @@ void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
 	{
 		if (trigEv.data.fd != -1)
 			close(trigEv.data.fd);
-		LOG("Couldn't find request for client",
-					Utils::LOG_WARNING);
+		LOG("Couldn't find request for client", Utils::LOG_WARNING);
 	}
 }
 
