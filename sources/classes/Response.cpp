@@ -103,8 +103,8 @@ Response::Response(Request const &request, ServerConfig const &configs)
 		setCommonHeaders();
 	    setResponse();
 	}
-    std::cout << "Response:" << std::endl;
-    std::cout << this->getResponse() << std::endl;
+    std::cout << "Response headers:" << std::endl;
+    std::cout << this->getHeadersStr() << std::endl;
 }
 
 /**************************************************************************/

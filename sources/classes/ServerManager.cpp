@@ -113,8 +113,10 @@ bool	ServerManager::initEpoll()	throw()
 		for (IDSockMap::iterator it = this->_sockets.begin();
 			it != this->_sockets.end(); it++)
 		{
+			EpollData * data = new EpollData;
+			*data = (EpollData){std::string(), 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
-			event.data.u64 = Utils::pack32sTo64(0, it->second->fd());
+			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
 				return (false);
 		}
@@ -196,89 +198,104 @@ ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Requ
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 {
-	uint32_t	ev_fd;
+	EpollData *	data;
 
-	ev_fd = Utils::get32From64(ev.data.u64, false);
-	if (this->_ep_fd == -1)
+	data = u64toEpollData(ev.data.u64);
+	if (!data)
+		return (true);
+	if (data->ownFD == -1 || epoll_ctl(this->_ep_fd, op, data->ownFD, &ev) == -1)
+	{
+		delete data;
 		return (false);
-	if (epoll_ctl(this->_ep_fd, op, ev_fd, &ev) == -1)
-		return (false);
+	}
+	if (op == EPOLL_CTL_DEL)
+		delete data;
 	return (true);
 }
 
 void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 {
-	if (evU64IsSock(trigEv.data.u64))
+	EpollData *	trigData;
+	EpollData *	reqData;
+
+	trigData = u64toEpollData(trigEv.data.u64);
+	if (!trigData)
+		return ;
+	if (trigData->parentFD == 0)
 	{
 		epoll_event	reqEv;
 		int			client_fd;
 
-		client_fd = accept(trigEv.data.fd, NULL, NULL);
+		client_fd = accept(trigData->ownFD, NULL, NULL);
 		if (client_fd == -1)
 			syscall_kill();
 		LOG("New client connected", Utils::LOG_INFO);
+		reqData = new EpollData;
+		*reqData = (EpollData){std::string(), 0, trigData->ownFD, client_fd};
 		reqEv.events = EPOLLIN;
-		reqEv.data.u64 = Utils::pack32sTo64(trigEv.data.fd, client_fd);
+		reqEv.data.u64 = EpollDatatoU64(reqData);
 		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
 			syscall_kill();
 	}
 	else
 	{
-		Request req(trigEv.data.fd);
+		Request			req(trigData->ownFD);
+		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
 
+		reqData = u64toEpollData(trigEv.data.u64);
+		reqData->responseStr = Response(req, vServer).getResponse();
+		reqData->keepAlive = req.header("connection") == "keep-alive";
 		trigEv.events = EPOLLOUT;
 		LOG("Request received", Utils::LOG_INFO);
 		LOG(req.str(), Utils::LOG_INFO);
 		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 		{
 			LOG(strerror(errno), Utils::LOG_WARNING);
-			close(trigEv.data.fd);
+			close(trigData->ownFD);
 			return ;
 		}
-		_req_feed.insert(RequestFeed::value_type(Utils::get32From64(trigEv.data.u64, false),
-													req));
 	}
 }
 
-void	ServerManager::writeEvent(epoll_event & trigEv)	throw()
+void ServerManager::writeEvent(epoll_event & trigEv) throw()
 {
-	RequestFeed::iterator	it;
+	EpollData *	trigData;
+	ssize_t		bytesSent;
+	int			client_fd;
 
-	it = this->_req_feed.find(trigEv.data.fd);
-	if (it != this->_req_feed.end())
+	trigData = u64toEpollData(trigEv.data.u64);
+	if (!trigData)
+		return ;
+	client_fd = trigData->ownFD;
+	bytesSent = send(client_fd, trigData->responseStr.c_str(),
+						trigData->responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
+	if (bytesSent > 0 && (trigData->responseStr.length() - bytesSent) != 0)
 	{
-		ServerConfig	vServer		= getServerFromSocket(Utils::get32From64(trigEv.data.u64,
-																				true), it->second);
-
-		Response response(it->second, vServer);
-		std::string responseStr = response.getResponse();
-		send(Utils::get32From64(trigEv.data.u64, false), responseStr.c_str(),
-				responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
-		if (it->second.header("connection") != "keep-alive")
-		{
-			doEpollCtl(EPOLL_CTL_DEL, trigEv);
-			close(Utils::get32From64(trigEv.data.u64, false));
-		}
-		else
-		{
-			trigEv.events = EPOLLIN;
-			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
-				syscall_kill();
-		}
-		this->_req_feed.erase(it);
-		LOG("Response sent", Utils::LOG_INFO);
+		trigData->responseStr = trigData->responseStr.substr(bytesSent, trigData->responseStr.length());
+		return ;
+	}
+	if (!trigData->keepAlive)
+	{
+		doEpollCtl(EPOLL_CTL_DEL, trigEv);
+		close(client_fd);
 	}
 	else
 	{
-		if (trigEv.data.fd != -1)
-			close(trigEv.data.fd);
-		LOG("Couldn't find request for client",
-					Utils::LOG_WARNING);
+		trigEv.events = EPOLLIN;
+		trigData->responseStr = std::string();
+		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+			syscall_kill();
 	}
+	LOG("Response sent", Utils::LOG_INFO);
 }
 
-bool	ServerManager::evU64IsSock(long const& evU64)	throw()
+EpollData *	ServerManager::u64toEpollData(uint64_t const& l)	throw()
 {
-	return (Utils::get32From64(evU64, true) == 0);
+	return (reinterpret_cast<EpollData*>(l));
+}
+
+uint64_t	ServerManager::EpollDatatoU64(EpollData * data)	throw()
+{
+	return (reinterpret_cast<uint64_t>(data));
 }
 /**************************************************************************/

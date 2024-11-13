@@ -17,10 +17,11 @@ typedef enum	e_response_flag
 class Request
 {
 	public:
-		~Request();
-
+		Request & operator=(Request const & rhs);
 		Request(Request const & src);
 		Request(int const&);
+		~Request();
+		Request();
 
 		Http::VERSION const&		version()					const;
 		Http::METHOD const&			method()					const;
@@ -45,9 +46,6 @@ class Request
 		std::string					_uri;
 		StrStrMap					_headers;
 		ByteArr						_body;
-
-		Request & operator=(Request const & rhs);
-		Request();
 
 		ByteArr						getNextChunkClient();
 		void						putHeader(std::string const&,
