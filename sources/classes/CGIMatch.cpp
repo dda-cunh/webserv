@@ -6,6 +6,19 @@ CGIMatch::CGIMatch(const std::string& uri, const std::string& binary) {
 	_binary = binary;
 }
 
+CGIMatch& CGIMatch::operator=(const CGIMatch& other) {
+    if (this != &other) {
+        _basePath = other._basePath;
+        _scriptName = other._scriptName;
+        _scriptExtension = other._scriptExtension;
+        _queryString = other._queryString;
+        _pathInfo = other._pathInfo;
+        _completePath = other._completePath;
+        _binary = other._binary;
+    }
+    return *this;
+}
+
 void CGIMatch::parse(const std::string& uri) {
     size_t dotPos = uri.find('.');
     if (dotPos == std::string::npos) {
@@ -14,54 +27,58 @@ void CGIMatch::parse(const std::string& uri) {
         _scriptName.clear();
         _scriptExtension.clear();
         _pathInfo.clear();
-        _queryParameters.clear();
+        _queryString.clear();
         return;
     }
 
+    size_t queryPos = uri.find('?');
+    std::string pathPart = (queryPos != std::string::npos) ? 
+        uri.substr(0, queryPos) : uri;
+    
     size_t lastSlashBeforeDot = uri.rfind('/', dotPos);
-    size_t nextSlashAfterDot = uri.find('/', dotPos);
-
+    size_t nextSlashAfterDot = pathPart.find('/', dotPos);
+    
     _completePath = uri;
     _basePath = uri.substr(0, lastSlashBeforeDot);
-    _scriptName = uri.substr(lastSlashBeforeDot + 1, nextSlashAfterDot - lastSlashBeforeDot - 1);
-    _scriptExtension = uri.substr(dotPos, nextSlashAfterDot - dotPos);
-
+    
+    size_t scriptEndPos = (nextSlashAfterDot != std::string::npos) ? 
+        nextSlashAfterDot : 
+        ((queryPos != std::string::npos) ? queryPos : uri.length());
+    _scriptName = uri.substr(lastSlashBeforeDot + 1, scriptEndPos - lastSlashBeforeDot - 1);
+    
+    _scriptExtension = uri.substr(dotPos, scriptEndPos - dotPos);
+    
     if (nextSlashAfterDot != std::string::npos) {
-        _pathInfo = uri.substr(nextSlashAfterDot);
+        _pathInfo = pathPart.substr(nextSlashAfterDot);
     } else {
         _pathInfo.clear();
     }
-
-    _queryParameters.clear();
+    
+    extractQueryString(uri);
 }
 
-std::string CGIMatch::getScriptName() const {
-    return _scriptName;
+void CGIMatch::extractQueryString(const std::string& uri) {
+    _queryString.clear();
+    
+    size_t queryPos = uri.find('?');
+    if (queryPos != std::string::npos) {
+        _queryString = uri.substr(queryPos + 1);
+    }
 }
 
-std::string CGIMatch::getScriptExtension() const {
-    return _scriptExtension;
-}
+std::string CGIMatch::getScriptName() const {return _scriptName;}
 
-std::string CGIMatch::getBasePath() const {
-    return _basePath;
-}
+std::string CGIMatch::getScriptExtension() const {return _scriptExtension;}
 
-std::string CGIMatch::getQueryParameters() const {
-    return _queryParameters;
-}
+std::string CGIMatch::getBasePath() const {return _basePath;}
 
-std::string CGIMatch::getPathInfo() const {
-    return _pathInfo;
-}
+std::string CGIMatch::getPathInfo() const {return _pathInfo;}
 
-std::string CGIMatch::getCompletePath() const {
-    return _completePath;
-}
+std::string CGIMatch::getQueryString() const {return _queryString;}
 
-std::string CGIMatch::getBinary() const {
-	return _binary;
-}
+std::string CGIMatch::getCompletePath() const {return _completePath;}
+
+std::string CGIMatch::getBinary() const { return _binary;}
 
 std::string CGIMatch::findExtension(const std::string& uri) {
     size_t startPos = uri.find('/', 1);
@@ -70,6 +87,10 @@ std::string CGIMatch::findExtension(const std::string& uri) {
         std::string segment = uri.substr(startPos + 1, endPos - startPos - 1);
         size_t extPos = segment.find('.');
         if (extPos != std::string::npos) {
+            size_t queryPos = segment.find('?', extPos);
+            if (queryPos != std::string::npos) {
+                return segment.substr(extPos, queryPos - extPos);
+            }
             return segment.substr(extPos);
         }
         startPos = endPos;
@@ -78,12 +99,13 @@ std::string CGIMatch::findExtension(const std::string& uri) {
 }
 
 std::ostream& operator<<(std::ostream& out, const CGIMatch& cgi) {
-	out	<< std::string("\t_basePath: ") << cgi.getBasePath() << std::endl
-    	<< std::string("\t_scriptName: ") << cgi.getScriptName() << std::endl
-    	<< std::string("\t_scriptExtension: ") << cgi.getScriptExtension() << std::endl
-    	<< std::string("\t_queryParameters: ") << cgi.getQueryParameters() << std::endl
-        << std::string("\t_pathInfo: ") << cgi.getPathInfo() << std::endl                        
-    	<< std::string("\t_completePath: ") << cgi.getCompletePath() << std::endl
-		<< std::string("\t_binary: ") << cgi.getBinary() << std::endl;
+    out << "\t_basePath: " << cgi.getBasePath() << std::endl
+        << "\t_scriptName: " << cgi.getScriptName() << std::endl
+        << "\t_scriptExtension: " << cgi.getScriptExtension() << std::endl
+        << "\t_pathInfo: " << cgi.getPathInfo() << std::endl
+        << "\t_queryString: " << cgi.getQueryString() << std::endl
+        << "\t_completePath: " << cgi.getCompletePath() << std::endl
+        << "\t_binary: " << cgi.getBinary() << std::endl;
+    
     return out;
 }

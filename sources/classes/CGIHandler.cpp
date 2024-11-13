@@ -19,6 +19,7 @@ void CGIHandler::setEnvironmentVariables() {
     _envVars.push_back("PATH_INFO=" + _response.getCGIMatch().getPathInfo());
     _envVars.push_back("SCRIPT_FILENAME=" + _cgiPath);
     _envVars.push_back("UPLOAD_DIR=" + _response.getLocationMatch()->getUploadPath());
+    _envVars.push_back("QUERY_STRING=" + _response.getCGIMatch().getQueryString());
 
     if (request.method() == Http::M_POST) {
         _envVars.push_back("CONTENT_TYPE=" + request.header("Content-Type"));
