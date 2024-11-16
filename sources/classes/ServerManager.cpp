@@ -246,40 +246,24 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 	}
 	else
 	{
-		ssize_t	bytesRead;
+		if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
+			return ;
+		Request			req(trigData->reqBytes);
+		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
 
-		bytesRead = Network::nonBlockRead(trigData->ownFD, trigData->reqBytes);
-		if (bytesRead < CLIENT_CHUNK_SIZE)
+		trigData->reqBytes = ByteArr();
+		trigData->responseStr = Response(req, vServer).getResponse();
+		trigData->keepAlive = req.header("connection") == "keep-alive";
+		trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
+		LOG("Request received", Utils::LOG_INFO);
+		LOG(req.str(), Utils::LOG_INFO);
+		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 		{
-			Request			req(trigData->reqBytes);
-			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
-
-			trigData->reqBytes = ByteArr();
-			trigData->responseStr = Response(req, vServer).getResponse();
-			trigData->keepAlive = req.header("connection") == "keep-alive";
-			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
-			LOG("Request received", Utils::LOG_INFO);
-			LOG(req.str(), Utils::LOG_INFO);
-			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
-			{
-				LOG(strerror(errno), Utils::LOG_WARNING);
-				close(trigData->ownFD);
-				return ;
-			}
+			LOG(strerror(errno), Utils::LOG_WARNING);
+			close(trigData->ownFD);
+			return ;
 		}
-		
 	}
-}
-
-ssize_t	nonBlockRead(int const& clientFD, ByteArr & curr)
-{
-	unsigned char	buff[CLIENT_CHUNK_SIZE];
-	long			r;
-
-	r = recv(clientFD, buff, CLIENT_CHUNK_SIZE, MSG_DONTWAIT);
-	if (r > 0)
-		curr.assign(buff, buff + r);
-	return (r);
 }
 
 void ServerManager::writeEvent(epoll_event & trigEv) throw()
@@ -289,8 +273,7 @@ void ServerManager::writeEvent(epoll_event & trigEv) throw()
 	trigData = u64toEpollData(trigEv.data.u64);
 	if (!trigData)
 		return ;
-	Network::nonBlockWrite(trigData->ownFD, trigData->responseStr);
-	if (!trigData->responseStr.empty())
+	if (Network::nonBlockWrite(trigData->ownFD, trigData->responseStr))
 		return ;
 	if (!trigData->keepAlive)
 	{

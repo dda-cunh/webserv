@@ -13,10 +13,12 @@ namespace Network
 			return (false);
 		bytesRead = read(fd, buff, CLIENT_CHUNK_SIZE);
 		if (bytesRead > 0)
-			curr.assign(buff, buff + bytesRead);
-		if (bytesRead >= 0 && bytesRead < CLIENT_CHUNK_SIZE)
-			return (true);
-		return (false);
+		{
+			curr.insert(curr.end(), buff, buff + bytesRead);
+			if (bytesRead < CLIENT_CHUNK_SIZE)
+				return (false);
+		}
+		return (bytesRead != -1 && bytesRead != 0);
 	}
 
 	//	Return true if theres more data to be processed
@@ -30,7 +32,7 @@ namespace Network
 		bytesSent = write(fd, data.c_str(), data.length());
 		if (bytesSent > 0)
 			data = data.substr(bytesSent);
-		if (data.empty() || bytesSent == 0)
+		if (data.empty() || bytesSent == 0 || bytesSent == -1)
 			return (false);
 		return (true);
 	}
