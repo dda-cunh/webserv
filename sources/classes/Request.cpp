@@ -2,8 +2,7 @@
 
 /****************************  CANNONICAL FORM  ****************************/
 Request::Request(void)
-	:	_client_fd(-1),
-		_version(Http::V_UNHANDLED),
+	:	_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
@@ -12,7 +11,6 @@ Request::Request(void)
 {}
 
 Request::Request(Request const & src)
-	:	_client_fd(src._client_fd)
 {
 	*this = src;
 }
@@ -33,18 +31,46 @@ Request::~Request(void)
 /**************************************************************************/
 
 /*****************************  CONSTRUCTORS  *****************************/
-Request::Request(int const& clientFD)
-	:	_client_fd(clientFD),
-		_version(Http::V_UNHANDLED),
+Request::Request(ByteArr const& requestBytes)
+	:	_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
 		_uri(),
 		_headers(),
 		_body()
 {
-	if (this->_client_fd <= STDERR_FILENO)
-		throw (ExceptionMaker("Bad client FD for request"));
-	this->readClient();
+	ByteArr::size_type	request_i;
+	std::stringstream	ss;
+	std::string			token;
+	ByteArr				chunk;
+
+	if (requestBytes.empty())
+	{
+		this->_flag = _EMPTY;
+		return ;
+	}
+	request_i = 0;
+	ss << this->seekCRLF(requestBytes, request_i);
+	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
+	{
+		if (i == 0)
+			this->_method = Http::sToMethod(token);
+		else if (i == 1)
+			this->_uri = token;
+		else if (i == 2)
+			this->_version = Http::sToVersion(token);
+	}
+	ss.str(std::string());
+	while (request_i < requestBytes.size())
+	{
+		std::string	line;
+
+		line = this->seekCRLF(requestBytes, request_i);
+		if (line.empty())
+			break ;
+		this->parseHeaderLine(line);
+	}
+	this->parseBody(ByteArr(requestBytes.begin() + request_i, requestBytes.end()));
 }
 /**************************************************************************/
 
@@ -71,55 +97,6 @@ std::string	Request::seekCRLF(ByteArr const& request,
 	return (s);
 }
 
-void	Request::readClient()
-{
-	ByteArr::size_type	request_i;
-	std::stringstream	ss;
-	std::string			token;
-	ByteArr				request;
-	ByteArr				chunk;
-
-	do
-	{
-		chunk = this->getNextChunkClient();
-		if (request.size() + chunk.size() > Request::_max_request_size)
-		{
-			this->_flag = _400; 
-			LOG("Request is too big", Utils::LOG_WARNING);
-			return ;
-		}
-		request.insert(request.end(), chunk.begin(), chunk.end());
-	} while (!chunk.empty());
-	if (request.empty())
-	{
-		this->_flag = _EMPTY;
-		return ;
-	}
-	request_i = 0;
-	ss << this->seekCRLF(request, request_i);
-	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
-	{
-
-		if (i == 0)
-			this->_method = Http::sToMethod(token);
-		else if (i == 1)
-			this->_uri = token;
-		else if (i == 2)
-			this->_version = Http::sToVersion(token);
-	}
-	ss.str(std::string());
-	while (request_i < request.size())
-	{
-		std::string	line;
-
-		line = this->seekCRLF(request, request_i);
-		if (line.empty())
-			break ;
-		this->parseHeaderLine(line);
-	}
-	this->parseBody(ByteArr(request.begin() + request_i, request.end()));
-}
-
 void	Request::parseBody(ByteArr const& body)
 {
 	std::string	content_length_val;
@@ -141,19 +118,6 @@ void	Request::parseBody(ByteArr const& body)
 			this->_body = body;
 		}
 	}
-}
-
-ByteArr	Request::getNextChunkClient()
-{
-	unsigned char	buff[CLIENT_CHUNK_SIZE];
-	ByteArr			chunk;
-	long			r;
-
-	r = recv(this->clientFD(), buff, CLIENT_CHUNK_SIZE, MSG_DONTWAIT);
-	if (r <= 0)
-		return (ByteArr());
-	chunk.assign(buff, buff + r);
-	return (chunk);
 }
 
 Http::VERSION const&	Request::version()	const
@@ -179,11 +143,6 @@ std::string const&	Request::uri()	const
 Http::METHOD const&	Request::method()	const
 {
 	return (this->_method);
-}
-
-int const&	Request::clientFD()	const
-{
-	return (this->_client_fd);
 }
 
 std::string	Request::header(std::string const& header)	const

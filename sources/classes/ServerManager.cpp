@@ -1,15 +1,17 @@
 #include "../../includes/classes/ServerManager.hpp"
 #include "../../includes/classes/Response.hpp"
 #include "../../includes/classes/Request.hpp"
+#include <sys/types.h>
 
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
-			LOG(strerror(errno), Utils::LOG_ERROR);	\
+			LOG(strerror(errno), Utils::LOG_ERROR);			\
 		this->down();										\
 		return;												\
 	}
 
+#define EPOLL_CLOSED_FLAGS EPOLLRDHUP | EPOLLHUP
 
 
 /****************************  CANNONICAL FORM  ***************************/
@@ -114,7 +116,7 @@ bool	ServerManager::initEpoll()	throw()
 			it != this->_sockets.end(); it++)
 		{
 			EpollData * data = new EpollData;
-			*data = (EpollData){std::string(), 0, 0, it->second->fd()};
+			*data = (EpollData){std::string(), ByteArr(), 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
 			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
@@ -141,9 +143,14 @@ void ServerManager::up()	throw()
 		{
 			try
 			{
+				if (_ep_events[i].events & (EPOLL_CLOSED_FLAGS))
+				{
+					doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
+					continue ;
+				}
 				if (_ep_events[i].events & EPOLLIN)
 					readEvent(_ep_events[i]);
-				else if (_ep_events[i].events & EPOLLOUT)
+				if (_ep_events[i].events & EPOLLOUT)
 					writeEvent(_ep_events[i]);
 			}
 			catch (ExceptionMaker const &ex)
@@ -231,43 +238,58 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 			syscall_kill();
 		LOG("New client connected", Utils::LOG_INFO);
 		reqData = new EpollData;
-		*reqData = (EpollData){std::string(), 0, trigData->ownFD, client_fd};
-		reqEv.events = EPOLLIN;
+		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
+		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		reqEv.data.u64 = EpollDatatoU64(reqData);
 		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
 			syscall_kill();
 	}
 	else
 	{
-		Request			req(trigData->ownFD);
-		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
+		ssize_t	bytesRead;
 
-		trigData->responseStr = Response(req, vServer).getResponse();
-		trigData->keepAlive = req.header("connection") == "keep-alive";
-		trigEv.events = EPOLLOUT;
-		LOG("Request received", Utils::LOG_INFO);
-		LOG(req.str(), Utils::LOG_INFO);
-		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+		bytesRead = Network::nonBlockRead(trigData->ownFD, trigData->reqBytes);
+		if (bytesRead < CLIENT_CHUNK_SIZE)
 		{
-			LOG(strerror(errno), Utils::LOG_WARNING);
-			close(trigData->ownFD);
-			return ;
+			Request			req(trigData->reqBytes);
+			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
+
+			trigData->reqBytes = ByteArr();
+			trigData->responseStr = Response(req, vServer).getResponse();
+			trigData->keepAlive = req.header("connection") == "keep-alive";
+			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
+			LOG("Request received", Utils::LOG_INFO);
+			LOG(req.str(), Utils::LOG_INFO);
+			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+			{
+				LOG(strerror(errno), Utils::LOG_WARNING);
+				close(trigData->ownFD);
+				return ;
+			}
 		}
+		
 	}
+}
+
+ssize_t	nonBlockRead(int const& clientFD, ByteArr & curr)
+{
+	unsigned char	buff[CLIENT_CHUNK_SIZE];
+	long			r;
+
+	r = recv(clientFD, buff, CLIENT_CHUNK_SIZE, MSG_DONTWAIT);
+	if (r > 0)
+		curr.assign(buff, buff + r);
+	return (r);
 }
 
 void ServerManager::writeEvent(epoll_event & trigEv) throw()
 {
 	EpollData *	trigData;
-	ssize_t		bytesSent;
 
 	trigData = u64toEpollData(trigEv.data.u64);
 	if (!trigData)
 		return ;
-	bytesSent = send(trigData->ownFD, trigData->responseStr.c_str(),
-						trigData->responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
-	if (bytesSent > 0)
-		trigData->responseStr = trigData->responseStr.substr(bytesSent);
+	Network::nonBlockWrite(trigData->ownFD, trigData->responseStr);
 	if (!trigData->responseStr.empty())
 		return ;
 	if (!trigData->keepAlive)
@@ -277,7 +299,7 @@ void ServerManager::writeEvent(epoll_event & trigEv) throw()
 	}
 	else
 	{
-		trigEv.events = EPOLLIN;
+		trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 			syscall_kill();
 	}
