@@ -19,7 +19,7 @@ class Request
 	public:
 		Request & operator=(Request const & rhs);
 		Request(Request const & src);
-		Request(int const&);
+		Request(ByteArr const&);
 		~Request();
 		Request();
 
@@ -38,8 +38,6 @@ class Request
 		static std::string const	_no_such_header;
 
 	private:
-		int const					_client_fd;
-
 		Http::VERSION				_version;
 		Http::METHOD				_method;
 		ResponseFlag				_flag;
@@ -47,12 +45,10 @@ class Request
 		StrStrMap					_headers;
 		ByteArr						_body;
 
-		ByteArr						getNextChunkClient();
 		void						putHeader(std::string const&,
 										std::string const&);
 		void						parseHeaderLine(std::string const&);
 		void						parseBody(ByteArr const&);
-		void						readClient();
 
 		static unsigned int const	_max_request_size;
 };

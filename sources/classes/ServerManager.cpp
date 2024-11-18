@@ -1,15 +1,17 @@
 #include "../../includes/classes/ServerManager.hpp"
 #include "../../includes/classes/Response.hpp"
 #include "../../includes/classes/Request.hpp"
+#include <sys/types.h>
 
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
-			LOG(strerror(errno), Utils::LOG_ERROR);	\
+			LOG(strerror(errno), Utils::LOG_ERROR);			\
 		this->down();										\
 		return;												\
 	}
 
+#define EPOLL_CLOSED_FLAGS EPOLLRDHUP | EPOLLHUP
 
 
 /****************************  CANNONICAL FORM  ***************************/
@@ -114,7 +116,7 @@ bool	ServerManager::initEpoll()	throw()
 			it != this->_sockets.end(); it++)
 		{
 			EpollData * data = new EpollData;
-			*data = (EpollData){std::string(), 0, 0, it->second->fd()};
+			*data = (EpollData){std::string(), ByteArr(), 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
 			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
@@ -141,9 +143,14 @@ void ServerManager::up()	throw()
 		{
 			try
 			{
+				if (_ep_events[i].events & (EPOLL_CLOSED_FLAGS))
+				{
+					doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
+					continue ;
+				}
 				if (_ep_events[i].events & EPOLLIN)
 					readEvent(_ep_events[i]);
-				else if (_ep_events[i].events & EPOLLOUT)
+				if (_ep_events[i].events & EPOLLOUT)
 					writeEvent(_ep_events[i]);
 			}
 			catch (ExceptionMaker const &ex)
@@ -216,13 +223,13 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 {
 	EpollData *	trigData;
-	EpollData *	reqData;
 
 	trigData = u64toEpollData(trigEv.data.u64);
 	if (!trigData)
 		return ;
 	if (trigData->parentFD == 0)
 	{
+		EpollData *	reqData;
 		epoll_event	reqEv;
 		int			client_fd;
 
@@ -231,21 +238,23 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 			syscall_kill();
 		LOG("New client connected", Utils::LOG_INFO);
 		reqData = new EpollData;
-		*reqData = (EpollData){std::string(), 0, trigData->ownFD, client_fd};
-		reqEv.events = EPOLLIN;
+		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
+		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		reqEv.data.u64 = EpollDatatoU64(reqData);
 		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
 			syscall_kill();
 	}
 	else
 	{
-		Request			req(trigData->ownFD);
+		if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
+			return ;
+		Request			req(trigData->reqBytes);
 		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
 
-		reqData = u64toEpollData(trigEv.data.u64);
-		reqData->responseStr = Response(req, vServer).getResponse();
-		reqData->keepAlive = req.header("connection") == "keep-alive";
-		trigEv.events = EPOLLOUT;
+		trigData->reqBytes = ByteArr();
+		trigData->responseStr = Response(req, vServer).getResponse();
+		trigData->keepAlive = req.header("connection") == "keep-alive";
+		trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
 		LOG("Request received", Utils::LOG_INFO);
 		LOG(req.str(), Utils::LOG_INFO);
 		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
@@ -260,33 +269,23 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 void ServerManager::writeEvent(epoll_event & trigEv) throw()
 {
 	EpollData *	trigData;
-	ssize_t		bytesSent;
-	int			client_fd;
 
 	trigData = u64toEpollData(trigEv.data.u64);
 	if (!trigData)
 		return ;
-	client_fd = trigData->ownFD;
-	bytesSent = send(client_fd, trigData->responseStr.c_str(),
-						trigData->responseStr.length(), MSG_DONTWAIT | MSG_NOSIGNAL);
-	if (bytesSent > 0 && (trigData->responseStr.length() - bytesSent) != 0)
-	{
-		trigData->responseStr = trigData->responseStr.substr(bytesSent, trigData->responseStr.length());
+	if (Network::nonBlockWrite(trigData->ownFD, trigData->responseStr))
 		return ;
-	}
 	if (!trigData->keepAlive)
 	{
 		doEpollCtl(EPOLL_CTL_DEL, trigEv);
-		close(client_fd);
+		close(trigData->ownFD);
 	}
 	else
 	{
-		trigEv.events = EPOLLIN;
-		trigData->responseStr = std::string();
+		trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 			syscall_kill();
 	}
-	LOG("Response sent", Utils::LOG_INFO);
 }
 
 EpollData *	ServerManager::u64toEpollData(uint64_t const& l)	throw()

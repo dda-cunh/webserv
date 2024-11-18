@@ -15,6 +15,7 @@ class ServerConfig;
 typedef struct s_epoll_data
 {
 	std::string	responseStr;
+	ByteArr		reqBytes;
 	bool		keepAlive;
 	int			parentFD;
 	int			ownFD;
