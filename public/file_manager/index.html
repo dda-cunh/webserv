@@ -2,6 +2,9 @@
 <html>
 
 <head>
+
+    <script src="index.js"></script>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';"> 
     <title>Cat Manager</title>
 </head>
 
@@ -20,13 +23,12 @@
         </tbody>
     </table>
     <h2>Upload a new cat</h2>
-    <form id="upload-form" method="POST" enctype="multipart/form-data" accept-charset="UTF-8">
+    <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data" accept-charset="UTF-8">
         <label for="file">Select a cat to upload:</label>
         <input type="file" id="file" name="file" required>
         <br><br>
         <button type="submit">Upload</button>
     </form>
-    <script src="index.js"></script>
 </body>
 
 </html>
