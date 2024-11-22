@@ -89,8 +89,8 @@ std::string	Request::seekCRLF(ByteArr const& request,
 			index += 2;
 			break ;
 		}
-		if (request[index] < 32 || request[index] > 126)
-			throw (ExceptionMaker("Invalid request-line"));
+//		if (request[index] < 32 || request[index] > 126)
+//			throw (ExceptionMaker("Invalid request-line"));
 		s += request[index];
 		index++;
 	}
