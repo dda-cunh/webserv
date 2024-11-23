@@ -46,7 +46,7 @@ def handle_file_upload():
                     json_response(200, True, "File '{}' uploaded successfully.".format(filename))
                     return
         
-        raise ValueError("No valid file found in the upload data")
+        raise ValueError("No valid file found in the upload data")  #   IT'S FAILING SONEWHERE AROUND HERE
     except Exception as e:
         logging.exception("Error during file upload")
         json_response(400, False, error=str(e))
