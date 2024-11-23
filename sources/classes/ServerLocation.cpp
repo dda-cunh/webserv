@@ -7,12 +7,14 @@ ServerLocation::ServerLocation(void)
 	this->_rootDir = DEFAULT_ROOT;
 	this->_indexFiles.push_back(DEFAULT_INDEX);
 	this->_maxBodySize = DEFAULT_MAX_BODY_SIZE;
+	this->_errorPages[400] = DEFAULT_400;
+	this->_errorPages[403] = DEFAULT_403;
 	this->_errorPages[404] = DEFAULT_404;
 	this->_errorPages[405] = DEFAULT_405;
 	this->_errorPages[500] = DEFAULT_500;
-	
+	this->_errorPages[501] = DEFAULT_501;
+
 	this->_methodsAllowed.push_back(Http::M_GET);
-	this->_methodsAllowed.push_back(Http::M_POST);
 	this->_autoIndex = false;
 }
 
