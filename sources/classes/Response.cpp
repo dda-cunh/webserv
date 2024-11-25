@@ -58,18 +58,21 @@ void Response::setMatchedLocation()
     }
 
     if (bestMatch == NULL)
-        throw ExceptionMaker("No valid location block found for the requested URI.");
+        bestMatch = this->_defaultLocation;
 
     _locationMatch = bestMatch;
-    LOG("Matched location:", Utils::LOG_INFO);
-    std::cout << *_locationMatch << std::endl;
+	LOG("Matched location:", Utils::LOG_INFO);
+	std::cout << *_locationMatch << std::endl;
 }
 
 /**************************************************************************/
 
 /**********************  CONSTRUCTORS / DESTRUCTORS ***********************/
 
-Response::~Response() {}
+Response::~Response() 
+{
+	delete this->_defaultLocation;
+}
 
 Response::Response(Request const &request, ServerConfig const &configs)
     : _statusCode(Http::SC_OK),
@@ -77,7 +80,8 @@ Response::Response(Request const &request, ServerConfig const &configs)
       _body(),
       _response(),
       _request(request),
-      _serverConfigs(configs)
+      _serverConfigs(configs),
+      _defaultLocation(new ServerLocation)
 {
 	if (this->_request.flag() != _EMPTY)
     {

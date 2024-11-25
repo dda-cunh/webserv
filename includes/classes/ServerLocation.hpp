@@ -5,7 +5,7 @@
 
 
 #define DEFAULT_LOCATION "/"
-#define DEFAULT_ROOT "./test_files"
+#define DEFAULT_ROOT "./public"
 #define DEFAULT_INDEX "index.html"
 #define DEFAULT_MAX_BODY_SIZE 1000000
 

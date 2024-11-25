@@ -32,6 +32,7 @@ class Response {
 		Request					_request;
 		ServerConfig const &	_serverConfigs;
 		ServerLocation *		_locationMatch;
+		ServerLocation *		_defaultLocation;
 		std::string				_redirectionPath;
 		CGIMatch 				_cgiMatch;
 		
