@@ -149,7 +149,26 @@ void ServerManager::up()	throw()
 					continue ;
 				}
 				if (_ep_events[i].events & EPOLLIN)
-					readEvent(_ep_events[i]);
+				{
+					EpollData	*trigData;
+
+					trigData = u64toEpollData(_ep_events[i].data.u64);	
+					if (!trigData)
+						continue ;
+					if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
+						continue ;
+//				DEBUG
+					std::cout << "Bytes read:" << std::endl;
+					for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
+						std::cout << trigData->reqBytes.at(x);
+					std::cout << "========================" << std::endl;
+
+					//	CHECK IF PAYLOAD IS FULLY ASSEMBLED
+					if (payloadIncomplete(trigData->reqBytes) )
+						reassemblePayload(trigData, _ep_events, i);
+
+					readEvent(trigData, _ep_events[i]);
+				}
 				if (_ep_events[i].events & EPOLLOUT)
 					writeEvent(_ep_events[i]);
 			}
@@ -160,6 +179,113 @@ void ServerManager::up()	throw()
 		}
 	}
 	this->down();
+}
+
+bool	ServerManager::reassemblePayload(EpollData *trigData, epoll_event &ep_events, int &i)
+{
+	//	GET Content-Length
+	//	GET Boundary
+	//	PARSE 
+}
+
+bool	ServerManager::payloadIncomplete(const ByteArr &reqBytes)
+{
+	std::string			rawBytes;
+	unsigned long int	contentLength;
+	size_t				offset;
+
+	for (size_t i = 0; i < reqBytes.size(); i++)
+		rawBytes.push_back(reqBytes.at(i) );
+
+	//	FIND SUBSTRING "Content-Length:"
+	offset = rawBytes.find("Content-Length:") + 15;
+	//	READ ALL CHARACTERS UNTIL "\x0a\x20" BYTES ARE FOUND
+	for (size_t i = offset; i < rawBytes.size() && rawBytes.find("\x0a\x0d") != i; i++)
+	{
+		if (!std::isdigit(rawBytes.at(i) ) || i > 21 || (i == 21 && rawBytes.substr(offset, i) > "18446744073709551615") )
+			return (false);	//	AND RETURN 400
+	}
+
+	//	CONVERT TO INT	(RETURN 400 IF CONVERSION FAILS)
+	std::istringstream	strStream(rawBytes.substr(offset, rawBytes.find("\x0a\x0d") ) );
+	strStream >> contentLength;	//	MAX VALUE IS 18446744073709551615
+	
+	//	REMOVE HEADER CONTENT FROM rawBytes (SEP="\x0d\x0a\x0d\x0a")
+	rawBytes = rawBytes.substr(0, rawBytes.find("\x0d\x0a\x0d\x0a") );
+
+	//	CHECK IF Content-Length MATCHES THE SIZE OF rawBytes
+	if (contentLength > rawBytes.size() )
+		return (true);
+	else if (contentLength < rawBytes.size())
+		return (false);	//	AND RETURN 400
+	else
+		return (false);
+}
+
+
+void	ServerManager::readEvent(EpollData *trigData, epoll_event & trigEv)	throw()
+{
+
+
+	if (trigData->parentFD == 0)
+	{
+		EpollData *	reqData;
+		epoll_event	reqEv;
+		int			client_fd;
+
+		client_fd = accept(trigData->ownFD, NULL, NULL);
+		if (client_fd == -1)
+			syscall_kill();
+		LOG("New client connected", Utils::LOG_INFO);
+		reqData = new EpollData;
+		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
+		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
+		reqEv.data.u64 = EpollDatatoU64(reqData);
+		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
+			syscall_kill();
+	}
+	else
+	{
+		//	CHECK IF BODY SIZE = CONTENT LENGTH
+		//	IF NOT, READ FROM NEXT EVENTS UNTIL PAYLOAD IS FULLY REASSEMBLED
+		Request			req(trigData->reqBytes);
+		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
+
+		trigData->reqBytes = ByteArr();
+		trigData->responseStr = Response(req, vServer).getResponse();
+		trigData->keepAlive = req.header("connection") == "keep-alive";
+		trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
+		LOG("Request received", Utils::LOG_INFO);
+		LOG(req.str(), Utils::LOG_INFO);
+		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+		{
+			LOG(strerror(errno), Utils::LOG_WARNING);
+			close(trigData->ownFD);
+			return ;
+		}
+	}
+}
+
+void ServerManager::writeEvent(epoll_event & trigEv) throw()
+{
+	EpollData *	trigData;
+
+	trigData = u64toEpollData(trigEv.data.u64);
+	if (!trigData)
+		return ;
+	if (Network::nonBlockWrite(trigData->ownFD, trigData->responseStr))
+		return ;
+	if (!trigData->keepAlive)
+	{
+		doEpollCtl(EPOLL_CTL_DEL, trigEv);
+		close(trigData->ownFD);
+	}
+	else
+	{
+		trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
+		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+			syscall_kill();
+	}
 }
 
 ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Request const &request)
@@ -220,73 +346,6 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 	return (true);
 }
 
-void	ServerManager::readEvent(epoll_event & trigEv)	throw()
-{
-	EpollData *	trigData;
-
-	trigData = u64toEpollData(trigEv.data.u64);
-	if (!trigData)
-		return ;
-	if (trigData->parentFD == 0)
-	{
-		EpollData *	reqData;
-		epoll_event	reqEv;
-		int			client_fd;
-
-		client_fd = accept(trigData->ownFD, NULL, NULL);
-		if (client_fd == -1)
-			syscall_kill();
-		LOG("New client connected", Utils::LOG_INFO);
-		reqData = new EpollData;
-		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
-		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
-		reqEv.data.u64 = EpollDatatoU64(reqData);
-		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
-			syscall_kill();
-	}
-	else
-	{
-		if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
-			return ;
-		Request			req(trigData->reqBytes);
-		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
-
-		trigData->reqBytes = ByteArr();
-		trigData->responseStr = Response(req, vServer).getResponse();
-		trigData->keepAlive = req.header("connection") == "keep-alive";
-		trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
-		LOG("Request received", Utils::LOG_INFO);
-		LOG(req.str(), Utils::LOG_INFO);
-		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
-		{
-			LOG(strerror(errno), Utils::LOG_WARNING);
-			close(trigData->ownFD);
-			return ;
-		}
-	}
-}
-
-void ServerManager::writeEvent(epoll_event & trigEv) throw()
-{
-	EpollData *	trigData;
-
-	trigData = u64toEpollData(trigEv.data.u64);
-	if (!trigData)
-		return ;
-	if (Network::nonBlockWrite(trigData->ownFD, trigData->responseStr))
-		return ;
-	if (!trigData->keepAlive)
-	{
-		doEpollCtl(EPOLL_CTL_DEL, trigEv);
-		close(trigData->ownFD);
-	}
-	else
-	{
-		trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
-		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
-			syscall_kill();
-	}
-}
 
 EpollData *	ServerManager::u64toEpollData(uint64_t const& l)	throw()
 {

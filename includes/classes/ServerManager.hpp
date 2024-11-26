@@ -53,6 +53,7 @@ class ServerManager
 		EpollData *			u64toEpollData(uint64_t const& l)	throw();
 		uint64_t			EpollDatatoU64(EpollData * d)		throw();
 		void				writeEvent(epoll_event & trigEv)	throw();
-		void				readEvent(epoll_event & trigEv)		throw();
+		void				readEvent(EpollData *trigData, epoll_event & trigEv)		throw();
 		ServerConfig const	getServerFromSocket(int const& socket_fd, Request const &request);
+		bool				payloadIncomplete(const ByteArr &reqBytes);
 };
