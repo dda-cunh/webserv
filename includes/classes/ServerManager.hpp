@@ -56,4 +56,5 @@ class ServerManager
 		void				readEvent(EpollData *trigData, epoll_event & trigEv)		throw();
 		ServerConfig const	getServerFromSocket(int const& socket_fd, Request const &request);
 		bool				payloadIncomplete(const ByteArr &reqBytes);
+		void				reassemblePayload(EpollData *trigData, epoll_event *ep_events, int &i, int &n_fds);
 };

@@ -165,7 +165,7 @@ void ServerManager::up()	throw()
 
 					//	CHECK IF PAYLOAD IS FULLY ASSEMBLED
 					if (payloadIncomplete(trigData->reqBytes) )
-						reassemblePayload(trigData, _ep_events, i);
+						reassemblePayload(trigData, _ep_events, i, n_fds);
 
 					readEvent(trigData, _ep_events[i]);
 				}
@@ -181,11 +181,39 @@ void ServerManager::up()	throw()
 	this->down();
 }
 
-bool	ServerManager::reassemblePayload(EpollData *trigData, epoll_event &ep_events, int &i)
+static unsigned long int	get_content_length(std::string rawBytes)
+{
+	unsigned long int	result;
+	std::stringstream	strStream;
+	std::string			strNumber = rawBytes.substr(rawBytes.find("Content-Length: ") + 16, rawBytes.substr(rawBytes.find("Content-Length: ") + 16).find(" ") );
+	
+	strStream << strNumber;
+	strStream >> result;
+
+	return (result);
+}
+
+void	ServerManager::reassemblePayload(EpollData *trigData, epoll_event *ep_events, int &i, int &n_fds)
 {
 	//	GET Content-Length
+	std::string			rawBytes;
+	std::string			body;
+	unsigned long int	contentLength;
+	std::string			boundary;
+
+	for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
+		rawBytes.push_back(trigData->reqBytes.at(x) );
+
+	contentLength = get_content_length(rawBytes);
 	//	GET Boundary
-	//	PARSE 
+//	boundary = get_boundary(rawBytes);
+	//	MOVE BODY TO DIFFERENT BUFFER
+//	body = get_body(rawBytes);
+	//	KEEP CALLING epoll_wait AND READ ALL EVENTS
+	//	WHEN AN EVENT HAS RECEIVED BYTES FOR THIS PAYLOAD,
+	//	APPEND TO BUFFER
+
+//	trigData->reqBytes = rawBytes;
 }
 
 bool	ServerManager::payloadIncomplete(const ByteArr &reqBytes)
