@@ -89,8 +89,8 @@ std::string	Request::seekCRLF(ByteArr const& request,
 			index += 2;
 			break ;
 		}
-		if (request[index] < 32 || request[index] > 126)
-			throw (ExceptionMaker("Invalid request-line"));
+//		if (request[index] < 32 || request[index] > 126)
+//			throw (ExceptionMaker("Invalid request-line"));
 		s += request[index];
 		index++;
 	}
@@ -105,17 +105,22 @@ void	Request::parseBody(ByteArr const& body)
 	{
 		if (this->header("content-type") != Request::_no_such_header)
 		{
+			std::cout << "Debug: Content-Type header found" << std::endl;
 			content_length_val = this->header("content-length");
+			std::cout << "content_length_val: " << content_length_val << std::endl;
 			if (content_length_val != Request::_no_such_header)
 			{
+				std::cout << "Debug: Content-Length header found" << std::endl;
 				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
 				{
+					std::cout << "Debug: Content length doesn't match body length" << std::endl;
 					this->_flag = _400;
 					LOG("Content length doesn't match body length", Utils::LOG_WARNING);
 					return ;
 				}
 			}
 			this->_body = body;
+			std::cout << "Debug: Body set successfully" << std::endl;
 		}
 	}
 }
