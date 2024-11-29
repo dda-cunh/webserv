@@ -190,30 +190,13 @@ static unsigned long int	get_content_length(std::string rawBytes)
 	return (result);
 }
 
-static std::string	get_boundary(std::string rawBytes)
+static std::string	get_boundary(const std::string rawBytes)
 {
 	std::string	result;
 
 	result = rawBytes.substr(rawBytes.find("boundary=") + 9, rawBytes.npos);
 
 	return (result.substr(0, result.find("\x0d\x0a") ) );
-}
-
-static std::string	get_headers(std::string rawBytes, std::string boundary)
-{
-	std::string	tmp;
-	std::string	result;
-
-	tmp = rawBytes;
-
-	while (tmp.find(boundary) != tmp.npos)
-	{
-		result = tmp.substr(0, tmp.find(boundary) + boundary.size() );
-		tmp = tmp.substr(tmp.find(boundary) + tmp.substr(tmp.find(boundary), tmp.npos).find("\x0d\x0a"), tmp.npos);
-	}
-	result = tmp.substr(0, tmp.find("\x0d\x0a\x0d\x0a") );
-
-	return (result);
 }
 
 void	ServerManager::reassemblePayload(EpollData *trigData, epoll_event *ep_events, int &i, int &n_fds)
@@ -227,17 +210,29 @@ void	ServerManager::reassemblePayload(EpollData *trigData, epoll_event *ep_event
 	for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
 		rawBytes.push_back(trigData->reqBytes.at(x) );
 
+//	std::cout << "Raw bytes:" << std::endl;
+//	std::cout << rawBytes << std::endl;
+
 	//	GET Boundary
 	boundary = get_boundary(rawBytes);
 	//	MOVE BODY AND HEADERS TO DIFFERENT BUFFERS
-	headers = get_headers(rawBytes, boundary);
+	headers = rawBytes.substr(0, rawBytes.rfind("\x0d\x0a\x0d\x0a") );
 	body = rawBytes.substr(rawBytes.rfind("\x0d\x0a\x0d\x0a"), rawBytes.npos);
 	//	GET Content-Length
 	contentLength = get_content_length(rawBytes);
 	
+//	std::cout << "Content length: " << contentLength << std::endl;
+//	std::cout << "Headers:" << std::endl;
+//	std::cout << headers << std::endl;
+
+
 	//	DEBUG: PRINT CONTENT BEFORE PROCEEDING
-	while (contentLength < body.size() )
+	while (contentLength > body.size() )
 	{
+		std::cout << "Content length: " << contentLength << std::endl;
+		std::cout << "Body size: " << body.size() << std::endl;
+		std::cout << "=================================" << std::endl;
+//	WTF IS GOING ON?!?!?!?!????!???!!?
 		for (; i < n_fds; i++)
 		{
 			//	READ BYTES FROM NEXT EVENT
@@ -259,12 +254,17 @@ void	ServerManager::reassemblePayload(EpollData *trigData, epoll_event *ep_event
 			syscall_kill();
 	}
 
-//	trigData->reqBytes = headers + body;
 	trigData->reqBytes.clear();
 	for (size_t x = 0; x < headers.size(); x++)
 		trigData->reqBytes.push_back(headers.at(x) );
 	for (size_t x = 0; x < body.size(); x++)
 		trigData->reqBytes.push_back(body.at(x) );
+
+//	...	DOES THE PAYLOAD NEED TO BE SANITIZED FURTHER?
+	std::cout << "Bytes in Request:" << std::endl;
+	for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
+		std::cout << trigData->reqBytes.at(x);
+	std::cout << "================================" << std::endl;
 
 	(void)ep_events;
 }
@@ -287,11 +287,7 @@ bool	ServerManager::payloadIncomplete(const ByteArr &reqBytes)
 
 
 	if (rawBytes.empty() )
-	{
-		std::cout << "ITS EMPTY" << std::endl;
 		return (false);
-	}
-//	std::cout << "stringStream: " << rawBytes << std::endl;
 	//	FIND SUBSTRING "Content-Length:"
 	offset = rawBytes.find("Content-Length: ") + 16;
 	if (offset == rawBytes.npos)
@@ -314,7 +310,7 @@ bool	ServerManager::payloadIncomplete(const ByteArr &reqBytes)
 	//	CHECK IF Content-Length MATCHES THE SIZE OF rawBytes
 	if (contentLength > rawBytes.size() )
 		return (true);
-	else if (contentLength < rawBytes.size() )	//	IT'S FUCKING UP HERE NOW...
+	else if (contentLength < rawBytes.size() )
 		return (false);	//	AND RETURN 400
 	else
 		return (false);
