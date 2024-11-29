@@ -157,15 +157,12 @@ void ServerManager::up()	throw()
 						continue ;
 					if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
 						continue ;
-//				DEBUG
-					std::cout << "Bytes read:" << std::endl;
-					for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
-						std::cout << trigData->reqBytes.at(x);
-					std::cout << "========================" << std::endl;
 
+					std::cout << "ENTERING PATHCED CODE" << std::endl;
 					//	CHECK IF PAYLOAD IS FULLY ASSEMBLED
 					if (payloadIncomplete(trigData->reqBytes) )
 						reassemblePayload(trigData, _ep_events, i, n_fds);
+					std::cout << "EXITING PATHCED CODE" << std::endl;
 
 					readEvent(trigData, _ep_events[i]);
 				}
@@ -193,58 +190,131 @@ static unsigned long int	get_content_length(std::string rawBytes)
 	return (result);
 }
 
+static std::string	get_boundary(std::string rawBytes)
+{
+	std::string	result;
+
+	result = rawBytes.substr(rawBytes.find("boundary=") + 9, rawBytes.npos);
+
+	return (result.substr(0, result.find("\x0d\x0a") ) );
+}
+
+static std::string	get_headers(std::string rawBytes, std::string boundary)
+{
+	std::string	tmp;
+	std::string	result;
+
+	tmp = rawBytes;
+
+	while (tmp.find(boundary) != tmp.npos)
+	{
+		result = tmp.substr(0, tmp.find(boundary) + boundary.size() );
+		tmp = tmp.substr(tmp.find(boundary) + tmp.substr(tmp.find(boundary), tmp.npos).find("\x0d\x0a"), tmp.npos);
+	}
+	result = tmp.substr(0, tmp.find("\x0d\x0a\x0d\x0a") );
+
+	return (result);
+}
+
 void	ServerManager::reassemblePayload(EpollData *trigData, epoll_event *ep_events, int &i, int &n_fds)
 {
-	//	GET Content-Length
+	std::string			boundary;
 	std::string			rawBytes;
+	std::string			headers;
 	std::string			body;
 	unsigned long int	contentLength;
-	std::string			boundary;
 
 	for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
 		rawBytes.push_back(trigData->reqBytes.at(x) );
 
-	contentLength = get_content_length(rawBytes);
 	//	GET Boundary
-//	boundary = get_boundary(rawBytes);
-	//	MOVE BODY TO DIFFERENT BUFFER
-//	body = get_body(rawBytes);
-	//	KEEP CALLING epoll_wait AND READ ALL EVENTS
-	//	WHEN AN EVENT HAS RECEIVED BYTES FOR THIS PAYLOAD,
-	//	APPEND TO BUFFER
+	boundary = get_boundary(rawBytes);
+	//	MOVE BODY AND HEADERS TO DIFFERENT BUFFERS
+	headers = get_headers(rawBytes, boundary);
+	body = rawBytes.substr(rawBytes.rfind("\x0d\x0a\x0d\x0a"), rawBytes.npos);
+	//	GET Content-Length
+	contentLength = get_content_length(rawBytes);
+	
+	//	DEBUG: PRINT CONTENT BEFORE PROCEEDING
+	while (contentLength < body.size() )
+	{
+		for (; i < n_fds; i++)
+		{
+			//	READ BYTES FROM NEXT EVENT
+			if (_ep_events[i].events & EPOLLIN)
+			{
+				trigData = u64toEpollData(_ep_events[i].data.u64);
+				if (!trigData)
+					continue ;
+				if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
+					continue ;
 
-//	trigData->reqBytes = rawBytes;
+				for (unsigned long int x = 0; x < trigData->reqBytes.size(); x++)
+					body.push_back(trigData->reqBytes.at(x) );	
+			}
+		}
+		//	DO epoll_wait AGAIN
+		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
+		if (n_fds == -1)
+			syscall_kill();
+	}
+
+//	trigData->reqBytes = headers + body;
+	trigData->reqBytes.clear();
+	for (size_t x = 0; x < headers.size(); x++)
+		trigData->reqBytes.push_back(headers.at(x) );
+	for (size_t x = 0; x < body.size(); x++)
+		trigData->reqBytes.push_back(body.at(x) );
+
+	(void)ep_events;
 }
 
+//	FROM LOG:
+//	boundary=---------------------------35196067102076158560146832845
+
+
+//	WE REALLY FUCKED UP HERE...
+//	START FROM SCRATCH, BUT THIS TIME USE WIRESHARK CAPTURES TO CHECK RESPONSE BYTES
 bool	ServerManager::payloadIncomplete(const ByteArr &reqBytes)
 {
 	std::string			rawBytes;
+	std::string			strContentLength;
 	unsigned long int	contentLength;
 	size_t				offset;
 
 	for (size_t i = 0; i < reqBytes.size(); i++)
 		rawBytes.push_back(reqBytes.at(i) );
 
-	//	FIND SUBSTRING "Content-Length:"
-	offset = rawBytes.find("Content-Length:") + 15;
-	//	READ ALL CHARACTERS UNTIL "\x0a\x20" BYTES ARE FOUND
-	for (size_t i = offset; i < rawBytes.size() && rawBytes.find("\x0a\x0d") != i; i++)
+
+	if (rawBytes.empty() )
 	{
-		if (!std::isdigit(rawBytes.at(i) ) || i > 21 || (i == 21 && rawBytes.substr(offset, i) > "18446744073709551615") )
+		std::cout << "ITS EMPTY" << std::endl;
+		return (false);
+	}
+//	std::cout << "stringStream: " << rawBytes << std::endl;
+	//	FIND SUBSTRING "Content-Length:"
+	offset = rawBytes.find("Content-Length: ") + 16;
+	if (offset == rawBytes.npos)
+		return (false);
+	//	READ ALL CHARACTERS UNTIL "\x0a\x20" BYTES ARE FOUND
+	for (size_t i = offset; i < rawBytes.size() && (rawBytes.at(i) != '\x0d' && rawBytes.at(i + 1) != '\x0a'); i++)
+	{
+		if (!std::isdigit(rawBytes.at(i) ) || i > offset + 21 || (i == offset + 21 && rawBytes.substr(offset, i) > "18446744073709551615") )
 			return (false);	//	AND RETURN 400
 	}
 
-	//	CONVERT TO INT	(RETURN 400 IF CONVERSION FAILS)
-	std::istringstream	strStream(rawBytes.substr(offset, rawBytes.find("\x0a\x0d") ) );
-	strStream >> contentLength;	//	MAX VALUE IS 18446744073709551615
+	//	CONVERT TO UL INT	(RETURN 400 IF CONVERSION FAILS)
+	strContentLength = rawBytes.substr(rawBytes.find("Content-Length: ") + 16, rawBytes.npos);
+	std::istringstream	strStream(strContentLength);
+	strStream >> contentLength;	//	MAX VALUE IS 18446744073709551615, CHECK FOR THIS!!!
 	
 	//	REMOVE HEADER CONTENT FROM rawBytes (SEP="\x0d\x0a\x0d\x0a")
-	rawBytes = rawBytes.substr(0, rawBytes.find("\x0d\x0a\x0d\x0a") );
+	rawBytes = rawBytes.erase(0, rawBytes.rfind("\x0d\x0a\x0d\x0a") );
 
 	//	CHECK IF Content-Length MATCHES THE SIZE OF rawBytes
 	if (contentLength > rawBytes.size() )
 		return (true);
-	else if (contentLength < rawBytes.size())
+	else if (contentLength < rawBytes.size() )	//	IT'S FUCKING UP HERE NOW...
 		return (false);	//	AND RETURN 400
 	else
 		return (false);
