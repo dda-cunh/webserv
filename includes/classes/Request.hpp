@@ -50,5 +50,4 @@ class Request
 		void						parseHeaderLine(std::string const&);
 		void						parseBody(ByteArr const&);
 
-		static unsigned int const	_max_request_size;
 };

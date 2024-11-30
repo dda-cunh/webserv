@@ -49,6 +49,11 @@ Request::Request(ByteArr const& requestBytes)
 		this->_flag = _EMPTY;
 		return ;
 	}
+	if (requestBytes.size() >= MAX_REQUEST_SIZE)
+	{
+		this->_flag = _400;
+		return ;
+	}
 	request_i = 0;
 	ss << this->seekCRLF(requestBytes, request_i);
 	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
@@ -89,8 +94,8 @@ std::string	Request::seekCRLF(ByteArr const& request,
 			index += 2;
 			break ;
 		}
-//		if (request[index] < 32 || request[index] > 126)
-//			throw (ExceptionMaker("Invalid request-line"));
+		if (request[index] < 32 || request[index] > 126)
+			throw (ExceptionMaker("Invalid request-line"));
 		s += request[index];
 		index++;
 	}
@@ -194,7 +199,6 @@ void	Request::parseHeaderLine(std::string const& headerLine)
 /**************************************************************************/
 
 /*****************************  STATIC MEMBERS  ***************************/
-unsigned int const	Request::_max_request_size = CLIENT_CHUNK_SIZE * 2000;
 std::string const	Request::_no_such_header = std::string();
 /**************************************************************************/
 

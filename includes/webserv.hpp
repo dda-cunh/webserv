@@ -51,8 +51,7 @@ typedef std::map<int, std::string>				IntStrMap;
 typedef std::vector<unsigned char>				ByteArr;
 typedef std::vector<std::string>				StrArr;
 
-#define CLIENT_CHUNK_SIZE						4096
-
+#define MAX_REQUEST_SIZE						8192000
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
