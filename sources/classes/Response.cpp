@@ -126,6 +126,10 @@ void Response::dispatchMethod()
 		handleCGI();
     else if (_request.method() == Http::M_GET)
     	handleGETMethod();
+    else if (_request.method() == Http::M_POST)
+        handlePOSTMethod();
+    else if (_request.method() == Http::M_DELETE)
+        handleDELETEMethod();
 }
 
 /**
@@ -199,6 +203,17 @@ void Response::handleGETMethod(void) {
     } else {
         setStatusAndReadResource(Http::SC_NOT_FOUND);
     }
+}
+
+//  IMPLEMENT THESE!!!
+void    Response::handlePOSTMethod(void)
+{
+
+}
+
+void    Response::handleDELETEMethod(void)
+{
+
 }
 
 /**
