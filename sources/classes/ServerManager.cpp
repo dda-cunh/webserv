@@ -225,7 +225,7 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 	return (true);
 }
 
-void	ServerManager::readEvent(epoll_event & trigEv)	throw()
+void	ServerManager::readEvent(epoll_event & trigEv)
 {
 	EpollData *	trigData;
 
@@ -251,7 +251,7 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 	}
 	else
 	{
-		unsigned char	buff[MAX_REQUEST_SIZE];
+		unsigned char	*buff = new unsigned char[MAX_REQUEST_SIZE];
 		long			bytesRead;
 
 		bytesRead = read(trigData->ownFD, buff, MAX_REQUEST_SIZE);
@@ -278,10 +278,11 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 			LOG(strerror(errno), Utils::LOG_WARNING);
 			doEpollCtl(EPOLL_CTL_DEL, trigEv);
 		}
+		delete[] buff;
 	}
 }
 
-void ServerManager::writeEvent(epoll_event & trigEv) throw()
+void ServerManager::writeEvent(epoll_event & trigEv)
 {
 	EpollData *	trigData;
 	ssize_t		bytesSent;
