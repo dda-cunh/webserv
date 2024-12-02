@@ -1,13 +1,24 @@
 #include "../../includes/classes/Request.hpp"
+#include <string>
+
+#define FLAG_REQ(flag)								\
+	{												\
+			this->_parsing_stage = REQ_PARSED_BODY;	\
+			this->_flag = _400;						\
+			return ;								\
+	}
 
 /****************************  CANNONICAL FORM  ****************************/
 Request::Request(void)
-	:	_version(Http::V_UNHANDLED),
+	:	_parsing_stage(REQ_PARSED_NONE),
+		_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
+		_parse_feed(),
+		_body(),
 		_uri(),
 		_headers(),
-		_body()
+		_content_len(0)
 {}
 
 Request::Request(Request const & src)
@@ -17,9 +28,11 @@ Request::Request(Request const & src)
 
 Request & Request::operator=(Request const & rhs)
 {
+	this->_parsing_stage = rhs.parsingStage();
 	this->_version = rhs.version();
 	this->_method = rhs.method();
 	this->_flag = rhs.flag();
+	this->_parse_feed = rhs._parse_feed;
 	this->_uri = rhs.uri();
 	this->_headers = rhs._headers;
 	this->_body = rhs.body();
@@ -30,104 +43,118 @@ Request::~Request(void)
 {}
 /**************************************************************************/
 
-/*****************************  CONSTRUCTORS  *****************************/
-Request::Request(ByteArr const& requestBytes)
-	:	_version(Http::V_UNHANDLED),
-		_method(Http::M_UNHANDLED),
-		_flag(NO_FLAG),
-		_uri(),
-		_headers(),
-		_body()
-{
-	ByteArr::size_type	request_i;
-	std::stringstream	ss;
-	std::string			token;
-	ByteArr				chunk;
-
-	if (requestBytes.empty())
-	{
-		this->_flag = _EMPTY;
-		return ;
-	}
-	if (requestBytes.size() >= MAX_REQUEST_SIZE)
-	{
-		this->_flag = _400;
-		return ;
-	}
-	request_i = 0;
-	ss << this->seekCRLF(requestBytes, request_i);
-	for (int i = 0; i < 3 && std::getline(ss, token, ' '); i++)
-	{
-		if (i == 0)
-			this->_method = Http::sToMethod(token);
-		else if (i == 1)
-			this->_uri = token;
-		else if (i == 2)
-			this->_version = Http::sToVersion(token);
-	}
-	ss.str(std::string());
-	while (request_i < requestBytes.size())
-	{
-		std::string	line;
-
-		line = this->seekCRLF(requestBytes, request_i);
-		if (line.empty())
-			break ;
-		this->parseHeaderLine(line);
-	}
-	this->parseBody(ByteArr(requestBytes.begin() + request_i, requestBytes.end()));
-}
-/**************************************************************************/
-
 /********************************  MEMBERS  *******************************/
-std::string	Request::seekCRLF(ByteArr const& request,
-	ByteArr::size_type & index)
+void	Request::doParse(std::string requestBytes)
 {
-	std::string s;
+	std::stringstream	request_ss(this->_parse_feed + requestBytes);
+	std::string			line;
 
-	while (index < request.size())
+	this->_parse_feed = std::string();
+	if (this->_parsing_stage ==  REQ_PARSED_BODY)
+		return ;
+	if (this->_parsing_stage == REQ_PARSED_NONE)
 	{
-		if (index + 1 < request.size()
-			&& request[index] == '\r'
-			&& request[index + 1] == '\n')
+		std::stringstream	firstLine_ss;
+		std::string			token;
+
+		if (requestBytes.empty())
+			FLAG_REQ(_EMPTY);
+		if (!this->getCRLF(request_ss, line))
+			FLAG_REQ(_400);
+		firstLine_ss << line;
+		for (int i = 0; i < 3 && std::getline(firstLine_ss, token, ' '); i++)
 		{
-			index += 2;
-			break ;
+			if (i == 0)
+				this->_method = Http::sToMethod(token);
+			else if (i == 1)
+				this->_uri = token;
+			else if (i == 2)
+				this->_version = Http::sToVersion(token);
 		}
-		if (request[index] < 32 || request[index] > 126)
-			throw (ExceptionMaker("Invalid request-line"));
-		s += request[index];
-		index++;
+		if (this->_method == Http::M_UNHANDLED
+			|| this->_version == Http::V_UNHANDLED)
+			FLAG_REQ(_400);
+		this->_parsing_stage = REQ_PARSED_FIRST_LINE;
 	}
-	return (s);
+	if (this->_parsing_stage == REQ_PARSED_FIRST_LINE)
+	{
+		while (true)
+		{
+			if (!this->getCRLF(request_ss, line))
+			{
+				request_ss.str(line);
+				break ;
+			}
+			if (line.empty())
+			{
+				this->_parsing_stage = REQ_PARSED_HEADERS;
+				break ;
+			}
+			else 
+				this->parseHeaderLine(line);
+		}
+		if (this->_parsing_stage == REQ_PARSED_HEADERS)
+		{
+			if (this->header("content-length") != Request::_no_such_header)
+				this->_content_len = std::strtoul(this->header("content-length").c_str(),
+													NULL, 10);
+			if (this->header("transfer-encoding") != Request::_no_such_header)
+			{
+				if (this->_content_len > 0)
+					FLAG_REQ(_400);
+				if (this->header("transfer-encoding") == "chunked")
+					this->_content_len = TRANSFER_ENCODING_CHUNKED;
+				else
+					FLAG_REQ(_400);
+			}
+		}
+	}
+	if (this->_parsing_stage == REQ_PARSED_HEADERS)
+	{
+		if (this->parseBody(request_ss.str()))
+			this->_parsing_stage = REQ_PARSED_BODY;
+	}
+	this->_parse_feed = request_ss.str();
 }
 
-void	Request::parseBody(ByteArr const& body)
+std::istream &	Request::getCRLF(std::istream & input, std::string & output)
 {
-	std::string	content_length_val;
+	char		curr;
 
-	if (this->method() == Http::M_POST)
+	output.clear();
+	while (input.get(curr))
 	{
-		if (this->header("content-type") != Request::_no_such_header)
+		if (curr == '\n' && !output.empty() && output[output.length() - 1] == '\r')
 		{
-			std::cout << "Debug: Content-Type header found" << std::endl;
-			content_length_val = this->header("content-length");
-			std::cout << "content_length_val: " << content_length_val << std::endl;
-			if (content_length_val != Request::_no_such_header)
-			{
-				std::cout << "Debug: Content-Length header found" << std::endl;
-				if (std::strtoul(content_length_val.c_str(), NULL, 10) != body.size())
-				{
-					std::cout << "Debug: Content length doesn't match body length" << std::endl;
-					this->_flag = _400;
-					LOG("Content length doesn't match body length", Utils::LOG_WARNING);
-					return ;
-				}
-			}
-			this->_body = body;
-			std::cout << "Debug: Body set successfully" << std::endl;
+			output = output.substr(0, output.length() - 1);
+			break;
+		}
+		output += curr;
+	}
+	return input;
+}
+
+bool	Request::parseBody(std::string const& body)
+{
+	if (this->method() != Http::M_GET)
+	{
+		if (this->_content_len > 0)
+		{
+			this->_body += body;
+			if (this->_body.length() < (unsigned long)this->_content_len)
+				return (false);
+		}
+		else if (this->_content_len == TRANSFER_ENCODING_CHUNKED)
+		{
+			// TODO:
 		}
 	}
+	return (true);
+}
+
+ReqParsedStage const&	Request::parsingStage()	const
+{
+	return (this->_parsing_stage);
 }
 
 Http::VERSION const&	Request::version()	const
@@ -135,7 +162,7 @@ Http::VERSION const&	Request::version()	const
 	return (this->_version);
 }
 
-ByteArr const&	Request::body()	const
+std::string const&	Request::body()	const
 {
 	return (this->_body);
 }

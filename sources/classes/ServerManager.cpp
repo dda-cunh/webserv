@@ -117,7 +117,7 @@ bool	ServerManager::initEpoll()	throw()
 			it != this->_sockets.end(); it++)
 		{
 			EpollData * data = new EpollData;
-			*data = (EpollData){std::string(), ByteArr(), 0, 0, it->second->fd()};
+			*data = (EpollData){std::string(), NULL, 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
 			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
@@ -219,6 +219,8 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 		return (false);
 	if (op == EPOLL_CTL_DEL)
 	{
+		if (data->req)
+			delete data->req;
 		delete data;
 		close(fd);
 	}
@@ -243,7 +245,7 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 			syscall_kill();
 		LOG("New client connected", Utils::LOG_INFO);
 		reqData = new EpollData;
-		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
+		*reqData = (EpollData){std::string(), NULL, 0, trigData->ownFD, client_fd};
 		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		reqEv.data.u64 = EpollDatatoU64(reqData);
 		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
@@ -251,34 +253,38 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 	}
 	else
 	{
-		unsigned char	*buff = new unsigned char[MAX_REQUEST_SIZE];
-		long			bytesRead;
+		ssize_t bytesRead;
+		char	buff[CHUNK_SIZE];
 
-		bytesRead = read(trigData->ownFD, buff, MAX_REQUEST_SIZE);
-		if (bytesRead >= 0)
+		bytesRead = read(trigData->ownFD, buff, CHUNK_SIZE);
+		if (bytesRead == 0)
+			doEpollCtl(EPOLL_CTL_DEL, trigEv);
+		else if (bytesRead > 0)
 		{
-			trigData->reqBytes.insert(trigData->reqBytes.end(), buff, buff + bytesRead);
-			Request			req(trigData->reqBytes);
-			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
-
-			trigData->reqBytes = ByteArr();
-			trigData->responseStr = Response(req, vServer).getResponse();
-			trigData->keepAlive = req.header("connection") == "keep-alive";
-			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
+			if (!trigData->req)
+				trigData->req = new Request;
+			trigData->req->doParse(std::string(buff, bytesRead));
+			if (trigData->req->parsingStage() != REQ_PARSED_BODY)
+				return ;
 			LOG("Request received", Utils::LOG_INFO);
-			LOG(req.str(), Utils::LOG_INFO);
+			LOG(trigData->req->str(), Utils::LOG_INFO);
+			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, *trigData->req);
+			trigData->responseStr = Response(*trigData->req, vServer).getResponse();
+			trigData->keepAlive = trigData->req->header("connection") == "keep-alive";
+			delete trigData->req;
+			trigData->req = NULL;
+			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
 			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 			{
 				LOG(strerror(errno), Utils::LOG_WARNING);
 				doEpollCtl(EPOLL_CTL_DEL, trigEv);
 			}
 		}
-		else if (bytesRead == -1)
+		else
 		{
 			LOG(strerror(errno), Utils::LOG_WARNING);
 			doEpollCtl(EPOLL_CTL_DEL, trigEv);
 		}
-		delete[] buff;
 	}
 }
 

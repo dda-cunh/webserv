@@ -8,7 +8,6 @@
 
 #include <string>
 
-typedef std::vector<unsigned char>	ByteArr;
 class Socket;
 
 namespace Network
