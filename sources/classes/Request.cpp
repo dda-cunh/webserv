@@ -44,12 +44,28 @@ Request::~Request(void)
 /**************************************************************************/
 
 /********************************  MEMBERS  *******************************/
+std::istream &	Request::getCRLF(std::istream & input, std::string & output)
+{
+	char		curr;
+
+	output.clear();
+	while (input.get(curr))
+	{
+		if (curr == '\n' && !output.empty() && output[output.length() - 1] == '\r')
+		{
+			output = output.substr(0, output.length() - 1);
+			break;
+		}
+		output += curr;
+	}
+	return input;
+}
+
 void	Request::doParse(std::string requestBytes)
 {
 	std::stringstream	request_ss(this->_parse_feed + requestBytes);
 	std::string			line;
 
-	this->_parse_feed = std::string();
 	if (this->_parsing_stage ==  REQ_PARSED_BODY)
 		return ;
 	if (this->_parsing_stage == REQ_PARSED_NONE)
@@ -82,7 +98,7 @@ void	Request::doParse(std::string requestBytes)
 		{
 			if (!this->getCRLF(request_ss, line))
 			{
-				request_ss.str(line);
+				this->_parse_feed = line;
 				break ;
 			}
 			if (line.empty())
@@ -110,28 +126,8 @@ void	Request::doParse(std::string requestBytes)
 		}
 	}
 	if (this->_parsing_stage == REQ_PARSED_HEADERS)
-	{
 		if (this->parseBody(request_ss.str()))
 			this->_parsing_stage = REQ_PARSED_BODY;
-	}
-	this->_parse_feed = request_ss.str();
-}
-
-std::istream &	Request::getCRLF(std::istream & input, std::string & output)
-{
-	char		curr;
-
-	output.clear();
-	while (input.get(curr))
-	{
-		if (curr == '\n' && !output.empty() && output[output.length() - 1] == '\r')
-		{
-			output = output.substr(0, output.length() - 1);
-			break;
-		}
-		output += curr;
-	}
-	return input;
 }
 
 bool	Request::parseBody(std::string const& body)
