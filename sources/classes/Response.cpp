@@ -219,7 +219,7 @@ void    Response::handleDELETEMethod(void)
     std::string    resource = root + "/" + uriPath;
 
     if (access(resource.c_str(), F_OK) != 0)
-    //  FILE DOES NOT EXIST: RETURN 404
+        setStatusAndReadResource(Http::SC_NOT_FOUND);
 
     if (Directory::isDirectory(resource) )
     //  IS DIRECTORY: RETURN 409
@@ -227,7 +227,7 @@ void    Response::handleDELETEMethod(void)
 //  TRY TO DELETE RESOURCE
     if (std::remove(resource.c_str() ) != 0)
     //  PERMISSION ERROR: RETURN 403
-        
+
 //  RETURN 204 IF RESOURCE GOT DELETED
 
 }
