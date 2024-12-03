@@ -46,13 +46,11 @@ class	Socket;
 /**************************************************************************/
 
 
-typedef std::map<std::string, std::string>		StrStrMap;
-typedef std::map<int, std::string>				IntStrMap;
-typedef std::vector<unsigned char>				ByteArr;
-typedef std::vector<std::string>				StrArr;
+typedef std::map<std::string, std::string>	StrStrMap;
+typedef std::map<int, std::string>			IntStrMap;
+typedef std::vector<std::string>			StrArr;
 
-#define CLIENT_CHUNK_SIZE						4096
-
+#define CHUNK_SIZE							4096
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
