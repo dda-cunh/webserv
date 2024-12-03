@@ -1,6 +1,7 @@
 #include "../../includes/classes/ServerManager.hpp"
 #include "../../includes/classes/Response.hpp"
 #include "../../includes/classes/Request.hpp"
+#include <sys/epoll.h>
 #include <sys/types.h>
 
 #define syscall_kill()										\
@@ -116,7 +117,7 @@ bool	ServerManager::initEpoll()	throw()
 			it != this->_sockets.end(); it++)
 		{
 			EpollData * data = new EpollData;
-			*data = (EpollData){std::string(), ByteArr(), 0, 0, it->second->fd()};
+			*data = (EpollData){std::string(), NULL, 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
 			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
@@ -206,21 +207,27 @@ ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Requ
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 {
 	EpollData *	data;
+	int			fd;
 
 	data = u64toEpollData(ev.data.u64);
 	if (!data)
 		return (true);
-	if (data->ownFD == -1 || epoll_ctl(this->_ep_fd, op, data->ownFD, &ev) == -1)
-	{
-		delete data;
+	fd = data->ownFD;
+	if (fd == -1)
 		return (false);
-	}
+	if (epoll_ctl(this->_ep_fd, op, fd, &ev) == -1)
+		return (false);
 	if (op == EPOLL_CTL_DEL)
+	{
+		if (data->req)
+			delete data->req;
 		delete data;
+		close(fd);
+	}
 	return (true);
 }
 
-void	ServerManager::readEvent(epoll_event & trigEv)	throw()
+void	ServerManager::readEvent(epoll_event & trigEv)
 {
 	EpollData *	trigData;
 
@@ -238,7 +245,7 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 			syscall_kill();
 		LOG("New client connected", Utils::LOG_INFO);
 		reqData = new EpollData;
-		*reqData = (EpollData){std::string(), ByteArr(), 0, trigData->ownFD, client_fd};
+		*reqData = (EpollData){std::string(), NULL, 0, trigData->ownFD, client_fd};
 		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
 		reqEv.data.u64 = EpollDatatoU64(reqData);
 		if (!doEpollCtl(EPOLL_CTL_ADD, reqEv))
@@ -246,45 +253,71 @@ void	ServerManager::readEvent(epoll_event & trigEv)	throw()
 	}
 	else
 	{
-		if (Network::nonBlockRead(trigData->ownFD, trigData->reqBytes))
-			return ;
-		Request			req(trigData->reqBytes);
-		ServerConfig	vServer = getServerFromSocket(trigData->parentFD, req);
+		ssize_t bytesRead;
+		char	buff[CHUNK_SIZE];
 
-		trigData->reqBytes = ByteArr();
-		trigData->responseStr = Response(req, vServer).getResponse();
-		trigData->keepAlive = req.header("connection") == "keep-alive";
-		trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
-		LOG("Request received", Utils::LOG_INFO);
-		LOG(req.str(), Utils::LOG_INFO);
-		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+		bytesRead = read(trigData->ownFD, buff, CHUNK_SIZE);
+		if (bytesRead == 0)
+			doEpollCtl(EPOLL_CTL_DEL, trigEv);
+		else if (bytesRead > 0)
+		{
+			if (!trigData->req)
+				trigData->req = new Request;
+			trigData->req->doParse(std::string(buff, bytesRead));
+			if (trigData->req->parsingStage() != REQ_PARSED_BODY)
+				return ;
+			LOG("Request received", Utils::LOG_INFO);
+			LOG(trigData->req->str(), Utils::LOG_INFO);
+			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, *trigData->req);
+			trigData->responseStr = Response(*trigData->req, vServer).getResponse();
+			trigData->keepAlive = trigData->req->header("connection") == "keep-alive";
+			delete trigData->req;
+			trigData->req = NULL;
+			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
+			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+			{
+				LOG(strerror(errno), Utils::LOG_WARNING);
+				doEpollCtl(EPOLL_CTL_DEL, trigEv);
+			}
+		}
+		else
 		{
 			LOG(strerror(errno), Utils::LOG_WARNING);
-			close(trigData->ownFD);
-			return ;
+			doEpollCtl(EPOLL_CTL_DEL, trigEv);
 		}
 	}
 }
 
-void ServerManager::writeEvent(epoll_event & trigEv) throw()
+void ServerManager::writeEvent(epoll_event & trigEv)
 {
 	EpollData *	trigData;
+	ssize_t		bytesSent;
 
 	trigData = u64toEpollData(trigEv.data.u64);
 	if (!trigData)
 		return ;
-	if (Network::nonBlockWrite(trigData->ownFD, trigData->responseStr))
+	if (trigData->ownFD < 0)
 		return ;
-	if (!trigData->keepAlive)
+	bytesSent = write(trigData->ownFD, trigData->responseStr.c_str(), 
+						trigData->responseStr.length());
+	if (bytesSent >= 0)
 	{
-		doEpollCtl(EPOLL_CTL_DEL, trigEv);
-		close(trigData->ownFD);
+		trigData->responseStr = trigData->responseStr.substr(bytesSent);
+		if (!trigData->responseStr.empty())
+			return ;
+		if (!trigData->keepAlive)
+			doEpollCtl(EPOLL_CTL_DEL, trigEv);
+		else
+		{
+			trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
+			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
+				syscall_kill();
+		}
 	}
-	else
+	else if (bytesSent == -1)
 	{
-		trigEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
-		if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
-			syscall_kill();
+		LOG(strerror(errno), Utils::LOG_WARNING);
+		doEpollCtl(EPOLL_CTL_DEL, trigEv);
 	}
 }
 
