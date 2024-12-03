@@ -216,20 +216,16 @@ void    Response::handleDELETEMethod(void)
 {
     std::string    root = _locationMatch->getRootDir();
     std::string    uriPath = _request.uri().substr(_locationMatch->getLocation().size(), _request.uri().npos);
-    std::string    resource = root + "/" + uriPath;
+    std::string    resource = root + uriPath;
 
     if (access(resource.c_str(), F_OK) != 0)
         setStatusAndReadResource(Http::SC_NOT_FOUND);
-
-    if (Directory::isDirectory(resource) )
-    //  IS DIRECTORY: RETURN 409
-
-//  TRY TO DELETE RESOURCE
-    if (std::remove(resource.c_str() ) != 0)
-    //  PERMISSION ERROR: RETURN 403
-
-//  RETURN 204 IF RESOURCE GOT DELETED
-
+    else if (Directory::isDirectory(resource) )
+        setStatusAndReadResource(Http::SC_CONFLICT);
+    else if (std::remove(resource.c_str() ) != 0)
+        setStatusAndReadResource(Http::SC_FORBIDDEN);
+    else
+        setStatusAndReadResource(Http::SC_NO_CONTENT);
 }
 
 /**
