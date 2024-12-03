@@ -206,6 +206,7 @@ void Response::handleGETMethod(void) {
 }
 
 //  IMPLEMENT THESE!!!
+//  TEST WITH NGINX FIRST
 void    Response::handlePOSTMethod(void)
 {
 
@@ -213,6 +214,21 @@ void    Response::handlePOSTMethod(void)
 
 void    Response::handleDELETEMethod(void)
 {
+    std::string    root = _locationMatch->getRootDir();
+    std::string    uriPath = _request.uri().substr(_locationMatch->getLocation().size(), _request.uri().npos);
+    std::string    resource = root + "/" + uriPath;
+
+    if (access(resource.c_str(), F_OK) != 0)
+    //  FILE DOES NOT EXIST: RETURN 404
+
+    if (Directory::isDirectory(resource) )
+    //  IS DIRECTORY: RETURN 409
+
+//  TRY TO DELETE RESOURCE
+    if (std::remove(resource.c_str() ) != 0)
+    //  PERMISSION ERROR: RETURN 403
+        
+//  RETURN 204 IF RESOURCE GOT DELETED
 
 }
 
