@@ -11,6 +11,7 @@
 /****************************  CANNONICAL FORM  ****************************/
 Request::Request(void)
 	:	_parsing_stage(REQ_PARSED_NONE),
+		_chunk_len(0),
 		_version(Http::V_UNHANDLED),
 		_method(Http::M_UNHANDLED),
 		_flag(NO_FLAG),
@@ -66,6 +67,7 @@ void	Request::doParse(std::string requestBytes)
 	std::stringstream	request_ss(this->_parse_feed + requestBytes);
 	std::string			line;
 
+	this->_parse_feed.clear();
 	if (this->_parsing_stage ==  REQ_PARSED_BODY)
 		return ;
 	if (this->_parsing_stage == REQ_PARSED_NONE)
@@ -126,23 +128,53 @@ void	Request::doParse(std::string requestBytes)
 		}
 	}
 	if (this->_parsing_stage == REQ_PARSED_HEADERS)
-		if (this->parseBody(request_ss.str()))
+	{
+		if (this->parseBody(request_ss))
 			this->_parsing_stage = REQ_PARSED_BODY;
+	}
 }
 
-bool	Request::parseBody(std::string const& body)
+bool	Request::parseBody(std::stringstream & bodyBytes)
 {
 	if (this->method() != Http::M_GET)
 	{
 		if (this->_content_len > 0)
 		{
-			this->_body += body;
+			this->_body += bodyBytes.str().substr(bodyBytes.tellg());
 			if (this->_body.length() < (unsigned long)this->_content_len)
 				return (false);
 		}
 		else if (this->_content_len == TRANSFER_ENCODING_CHUNKED)
 		{
-			// TODO:
+			std::string	line;
+
+			if (!getCRLF(bodyBytes, line))
+			{
+				this->_parse_feed = line;
+				return (false);
+			}
+			if (this->_chunk_len == 0)
+			{
+				if (line == "0")
+					return (true);
+				std::cout << "chunk_len: " << line << std::endl;
+				this->_chunk_len = std::strtoul(line.c_str(), NULL, 16);
+			}
+			if (!getCRLF(bodyBytes, line))
+			{
+				this->_parse_feed = line;
+				return (false);
+			}
+			std::cout << "chunk_len: " << this->_chunk_len << std::endl;
+			std::cout << "line: " << line << std::endl;
+			this->_body += line;
+			this->_chunk_len -= line.length();
+			if (this->_chunk_len != 0)
+			{
+				this->_flag = _400;
+				return (true);
+			}
+			return (false);
 		}
 	}
 	return (true);

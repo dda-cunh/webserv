@@ -50,6 +50,7 @@ class Request
 
 	private:
 		ReqParsedStage				_parsing_stage;
+		unsigned long				_chunk_len;
 		Http::VERSION				_version;
 		Http::METHOD				_method;
 		ResponseFlag				_flag;
@@ -62,6 +63,6 @@ class Request
 		void						putHeader(std::string const&,
 										std::string const&);
 		void						parseHeaderLine(std::string const&);
-		bool						parseBody(std::string const&);
+		bool						parseBody(std::stringstream &);
 
 };
