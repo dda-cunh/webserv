@@ -11,6 +11,7 @@ ServerLocation::ServerLocation(void)
 	this->_errorPages[403] = DEFAULT_403;
 	this->_errorPages[404] = DEFAULT_404;
 	this->_errorPages[405] = DEFAULT_405;
+	this->_errorPages[409] = DEFAULT_409;
 	this->_errorPages[500] = DEFAULT_500;
 	this->_errorPages[501] = DEFAULT_501;
 
@@ -318,6 +319,15 @@ void	ServerLocation::_setErrorPages(std::vector<std::string> strLocationBlock, I
 		else
 			errorPages[405] = ConfigParser::defaultErrorPages[405];
 	}
+
+	if (errorPages.find(409) == errorPages.end() )
+	{
+		if (ConfigParser::defaultErrorPages.find(409) == ConfigParser::defaultErrorPages.end() )
+			errorPages[409] = DEFAULT_409;
+		else
+			errorPages[409] = ConfigParser::defaultErrorPages[409];
+	}
+
 
 	if (errorPages.find(500) == errorPages.end() )
 	{

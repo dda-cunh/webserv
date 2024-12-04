@@ -233,7 +233,7 @@ void    Response::handleDELETEMethod(void)
  */
 void	Response::listDirectory(const std::string &path)
 {
-	std::ostringstream			webPage;
+	std::ostringstream			                    webPage;
 	std::map<std::string, std::set<std::string> >	fileList;
 
 	struct stat										fileStat;
