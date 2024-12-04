@@ -126,8 +126,8 @@ void Response::dispatchMethod()
 		handleCGI();
     else if (_request.method() == Http::M_GET)
     	handleGETMethod();
-    else if (_request.method() == Http::M_POST)
-        handlePOSTMethod();
+//    else if (_request.method() == Http::M_POST)
+//        handlePOSTMethod();
     else if (_request.method() == Http::M_DELETE)
         handleDELETEMethod();
 }
@@ -205,13 +205,12 @@ void Response::handleGETMethod(void) {
     }
 }
 
-//  IMPLEMENT THESE!!!
-//  TEST WITH NGINX FIRST
+/*
 void    Response::handlePOSTMethod(void)
 {
 
 }
-
+*/
 void    Response::handleDELETEMethod(void)
 {
     std::string    root = _locationMatch->getRootDir();
