@@ -225,7 +225,7 @@ void    Response::handleDELETEMethod(void)
     else if (std::remove(resource.c_str() ) != 0)
         setStatusAndReadResource(Http::SC_FORBIDDEN);
     else
-        setStatusAndReadResource(Http::SC_NO_CONTENT);
+        setStatusCode(Http::SC_NO_CONTENT);
 }
 
 /**
