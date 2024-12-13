@@ -126,10 +126,8 @@ void Response::dispatchMethod()
 		handleCGI();
     else if (_request.method() == Http::M_GET)
     	handleGETMethod();
-//    else if (_request.method() == Http::M_POST)
-//        handlePOSTMethod();
-    else if (_request.method() == Http::M_DELETE)
-        handleDELETEMethod();
+    else if (_request.method() == Http::M_POST || _request.method() == Http::M_DELETE)
+        handlePOSTAndDELETEMethods();
 }
 
 /**
@@ -205,23 +203,19 @@ void Response::handleGETMethod(void) {
     }
 }
 
-/*
-void    Response::handlePOSTMethod(void)
-{
-
-}
-*/
-void    Response::handleDELETEMethod(void)
+void    Response::handlePOSTAndDELETEMethods(void)
 {
     std::string    root = _locationMatch->getRootDir();
     std::string    uriPath = _request.uri().substr(_locationMatch->getLocation().size(), _request.uri().npos);
-    std::string    resource = root + uriPath;
+    std::string    resource = root + "/" + uriPath;   //  CHECK IF THIS IS RIGHT
+
+    std::cout << "Resource: " << resource << std::endl;
 
     if (access(resource.c_str(), F_OK) != 0)
         setStatusAndReadResource(Http::SC_NOT_FOUND);
     else if (Directory::isDirectory(resource) )
         setStatusAndReadResource(Http::SC_CONFLICT);
-    else if (std::remove(resource.c_str() ) != 0)
+    else if (_request.method() == Http::M_DELETE && std::remove(resource.c_str() ) != 0)
         setStatusAndReadResource(Http::SC_FORBIDDEN);
     else
         setStatusCode(Http::SC_NO_CONTENT);
