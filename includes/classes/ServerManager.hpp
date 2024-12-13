@@ -4,6 +4,7 @@
 #include "TCPSocket.hpp"
 #include "ServerConfig.hpp"
 #include "Request.hpp"
+#include "Session.hpp"
 //#include "ServerLocation.hpp"
 
 #include <sys/epoll.h>
@@ -38,11 +39,11 @@ class ServerManager
 	private:
 		ServerBlocks const	_server_blocks;
 
-		SockFDConfMap		_sockFD_confI;
-		epoll_event			_ep_events[SM_EP_EV_LEN];
-		IDSockMap			_sockets;
-		bool				_is_up;
-		int					_ep_fd;
+		SockFDConfMap			_sockFD_confI;
+		epoll_event				_ep_events[SM_EP_EV_LEN];
+		IDSockMap				_sockets;
+		bool					_is_up;
+		int						_ep_fd;
 
 		ServerManager & operator=(ServerManager const & rhs)	throw();
 		ServerManager(ServerManager const & src)				throw();

@@ -138,6 +138,10 @@ void ServerManager::up()	throw()
 	while (this->_is_up)
 	{
 		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
+
+		//	SAVE SESSIONS TO PERSISTENT STORAGE (ADD SETTING FOR THAT IN CONFIGS)
+		//	CHECK SESSION TIMERS
+		
 		if (n_fds == -1)
 			syscall_kill();
 		for (int i = 0; i < n_fds; i++)
@@ -263,12 +267,20 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 		{
 			if (!trigData->req)
 				trigData->req = new Request;
+
 			trigData->req->doParse(std::string(buff, bytesRead));
 			if (trigData->req->parsingStage() != REQ_PARSED_BODY)
 				return ;
 			LOG("Request received", Utils::LOG_INFO);
 			LOG(trigData->req->str(), Utils::LOG_INFO);
+
+			//	CHECK SESSION HERE
+			//	(INTERCHANGEABLE BETWEEN VIRTUAL SERVERS, BUT ONLY IF DOMAINS MATCH)
+
 			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, *trigData->req);
+			Session	currentSession = this->getCurrentSession(trigData->req->header("Cookie"), vServer);
+			
+			//	PASS SESSION AS ARG FOR RESPONSE
 			trigData->responseStr = Response(*trigData->req, vServer).getResponse();
 			trigData->keepAlive = trigData->req->header("connection") == "keep-alive";
 			delete trigData->req;
