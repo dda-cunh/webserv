@@ -5,6 +5,8 @@
 
 #include "../../includes/namespaces/Utils.hpp"
 
+#define LOGFEED								LogFeed::getInstance()
+
 /**
  * @class LogFeed
  * @brief Singleton class for logging messages.

@@ -27,10 +27,10 @@ void CGIHandler::setEnvironmentVariables() {
         _envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 
-    LogFeed::getInstance().buff("CGI process env variables:", Utils::LOG_INFO);
+    LOGFEED.buff("CGI process env variables:", Utils::LOG_INFO);
     for (size_t i = 0; i < _envVars.size(); ++i)
         envVars += "\t" +_envVars[i] + '\n';
-    LogFeed::getInstance().buff(envVars, Utils::LOG_INFO);
+    LOGFEED.buff(envVars, Utils::LOG_INFO);
 }
 
 void CGIHandler::createPipes() {
@@ -115,7 +115,7 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
 
     if (WIFEXITED(status)) {
         if (WEXITSTATUS(status) != 0)
-            LogFeed::getInstance().buff("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
+            LOGFEED.buff("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
         
         std::string body;
         std::map<std::string, std::string> headers;

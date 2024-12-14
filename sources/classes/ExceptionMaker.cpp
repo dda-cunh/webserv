@@ -19,5 +19,5 @@ const char *ExceptionMaker::what()	const	throw()
 
 void ExceptionMaker::log()
 {
-	LogFeed::getInstance().buff(_message, Utils::LOG_ERROR);
+	LOGFEED.buff(_message, Utils::LOG_ERROR);
 }
