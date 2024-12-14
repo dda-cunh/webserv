@@ -85,12 +85,29 @@ std::string	SessionManager::urlEncode(std::string &value)
 			|| value.at(i) == '.' || value.at(i) == '~')
 			result << value.at(i);
 		else
-		{
-			//	ENCODE
-		}
+			result << "%" << static_cast<int>(value.at(i) );
 	}
 
 	return (result.str() );
+}
+
+static unsigned char	sHtoC(std::string hexVal)
+{
+	const char		*vals = "0123456789ABCDEF";
+	unsigned char	result = 0;
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 16; j++)
+		{
+			if (hexVal.at(i) == vals[j])
+			{
+				result += j;
+				if (i == 0)
+					result = result << 4;
+			}
+		}
+	}
 }
 
 std::string	SessionManager::urlDecode(std::string &value)
@@ -103,9 +120,7 @@ std::string	SessionManager::urlDecode(std::string &value)
 			result << value.at(i);
 		else
 		{
-			//	DECODE
-			std::string	hexVal(value.substr(++i, 2) );
-			result << 
+			result << sHtoC(value.substr(++i, 2) );
 			i++;
 		}
 	}
