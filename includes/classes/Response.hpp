@@ -38,8 +38,7 @@ class Response {
 		
 		void					dispatchMethod();
 		void					handleGETMethod();
-		void					handlePOSTMethod();
-		void					handleDELETEMethod();
+		void					handlePOSTAndDELETEMethods();
 		void					handleMethodNotAllowed();
 		void					handleCGI();
 

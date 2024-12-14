@@ -13,6 +13,7 @@
 #define DEFAULT_403 "./assets/error_pages/403.html"
 #define DEFAULT_404 "./assets/error_pages/404.html"
 #define DEFAULT_405 "./assets/error_pages/405.html"
+#define DEFAULT_409 "./assets/error_pages/409.html"
 #define DEFAULT_500 "./assets/error_pages/500.html"
 #define DEFAULT_501 "./assets/error_pages/501.html"
 
