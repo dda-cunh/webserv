@@ -139,7 +139,6 @@ void ServerManager::up()	throw()
 	{
 		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
 
-		//	SAVE SESSIONS TO PERSISTENT STORAGE (ADD SETTING FOR THAT IN CONFIGS?)
 		//	CHECK SESSION TIMERS
 		
 		if (n_fds == -1)
@@ -278,10 +277,10 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 			//	(INTERCHANGEABLE BETWEEN VIRTUAL SERVERS, BUT ONLY IF DOMAINS MATCH)
 
 			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, *trigData->req);
-			Session	currentSession = this->getCurrentSession(trigData->req->header("Cookie"), vServer);
+			Session			currentSession = SessionManager::getCurrentSession(*trigData->req, trigData->req->header("Cookie"), vServer);
 			
 			//	PASS SESSION AS ARG FOR RESPONSE
-			trigData->responseStr = Response(*trigData->req, vServer).getResponse();
+			trigData->responseStr = Response(*trigData->req, vServer, currentSession).getResponse();
 			trigData->keepAlive = trigData->req->header("connection") == "keep-alive";
 			delete trigData->req;
 			trigData->req = NULL;

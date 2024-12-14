@@ -4,7 +4,7 @@
 #include "TCPSocket.hpp"
 #include "ServerConfig.hpp"
 #include "Request.hpp"
-#include "Session.hpp"
+#include "SessionManager.hpp"
 //#include "ServerLocation.hpp"
 
 #include <sys/epoll.h>

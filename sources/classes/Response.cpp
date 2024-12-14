@@ -74,14 +74,16 @@ Response::~Response()
 	delete this->_defaultLocation;
 }
 
-Response::Response(Request const &request, ServerConfig const &configs)
+//  INCLUDE SESSION COOKIE IN RESPONSE HEADER IF SESSION IS NEW
+Response::Response(Request const &request, ServerConfig const &configs, Session const &session)
     : _statusCode(Http::SC_OK),
       _headers(),
       _body(),
       _response(),
       _request(request),
       _serverConfigs(configs),
-      _defaultLocation(new ServerLocation)
+      _defaultLocation(new ServerLocation),
+      _session(session)
 {
 	if (this->_request.flag() != _EMPTY)
     {

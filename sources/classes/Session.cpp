@@ -1,20 +1,21 @@
 #include "../../includes/classes/Session.hpp"
 
-Session::t_cookie	&operator=(const struct s_cookie &cookie)
+//	FFFFFFFUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUCK!!!!!!!!
+t_cookie	&Session::operator=(const t_cookie &lhCookie, const t_cookie &rhCookie)
 {
-	this->value = cookie.value;
-	//	expires
-	//	max_age
-	//	domain
-	path = "/";
-	this->secure = cookie.secure;
-	this->httpOnly = cookie.httpOnly;
-	this->extension = cookie.extension;
+	lhCookie.name = rhCookie.name;
+	lhCookie.value = rhCookie.value;
+	lhCookie.expires_maxage = rhCookie.expires_maxage;
+	lhCookie.domain = rhCookie.domain;
+	lhCookie.path = rhCookie.path;
+	lhCookie.secure = rhCookie.secure;
+	lhCookie.httpOnly = rhCookie.httpOnly;
+	lhCookie.extension = rhCookie.extension;
 
-	return (this);
+	return (lhCookie);
 }
 
-//	HUH... MAYBE THIS WON'T BE NEEDED ATER ALL?
+//	HUH... MAYBE THIS CONSTRUCTOR WON'T BE NEEDED ATER ALL?
 Session::Session(void)
 {
 	//	GENERATE SESSION ID COOKIE
@@ -36,9 +37,11 @@ static std::string	gen_session_id(void)
 	return (result);
 }
 
-static std::string	set_cookie_domain(ServerConfig &vServer, std::string &requestURI)
+static std::string	set_cookie_domain(ServerConfig &vServer, std::string requestHost)
 {
-
+	//	IF vServer._serverNames IS EMPTY, RETURN requestHost
+	//	ELSE, CHECK IF requestHost MATCHES ANY serverName AND RETURN MATCH
+	//	REUTRN serverName._serverNames.at(0) IF NO MATCH IS FOUND
 }
 
 Session::Session(const Request &request, const ServerConfig &vServer)
@@ -47,7 +50,7 @@ Session::Session(const Request &request, const ServerConfig &vServer)
 	this->_sessionCookie.name = "SessionID";
 	this->_sessionCookie.value = gen_session_id();
 	this->_sessionCookie.expires_maxage = "Session";
-	this->_sessionCookie.domain = set_cookie_domain(vServer, request.uri() );
+	this->_sessionCookie.domain = set_cookie_domain(vServer, request.header("Host") );
 	this->_sessionCookie.path = "/";
 	this->_sessionCookie.secure = false;
 	this->_sessionCookie.httpOnly = true;
@@ -55,14 +58,14 @@ Session::Session(const Request &request, const ServerConfig &vServer)
 	this->_sessionStarted = false;	//	SET TO TRUE AFTER SENDING COOKIE
 	this->_modified = true;			//	IS THIS REALLY NEEDED?
 
-	//	SEARCH FOR OTHER COOKIES IN REQUEST HEADER & ADD TO _cookies
+	SessionManager::cookieCutter(request.header("Cookie"), this->_cookies);
 }
 
 Session	&Session::operator=(const Session &session)
 {
 	this->_cookies.clear();
 
-	for (std::map<std::string, t_cookie>::const_iterator itt = session.cookiesBegin(); itt != session.cookiesEnd(); itt++)
+	for (StrStrMap::const_iterator itt = session.cookiesBegin(); itt != session.cookiesEnd(); itt++)
 		this->_cookies[itt->first] = itt->second;
 
 	return (*this);
@@ -95,10 +98,5 @@ StrStrMap::const_iterator	Session::cookiesEnd(void) const
 
 void	Session::setCookie(std::string key, std::string val)
 {
-	this->_cookies[key] = SessionManager::urlEncode(val);
-}
-
-void	Session::parseClientCookies(std::string clientCookies)
-{
-
+	this->_cookies[key] = SessionManager::urlDecode(val);
 }

@@ -3,9 +3,9 @@
 std::vector<Session>	SessionManager::_activeSessions;
 
 
-Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig &vServer)
+Session	&SessionManager::getCurrentSession(Request &request, std::string cookieDough, ServerConfig &vServer)
 {
-	Session		newSession(trigData->req, vServer);
+	Session		newSession(request, vServer);
 	std::string	strSessionID;
 	StrStrMap	clientCookies;
 
@@ -22,7 +22,7 @@ Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig
 
 	if (strSessionID == "")
 	{
-		_activeSessions.push_back(newSession);
+		activeSessions.push_back(newSession);	//	THIS MUST BE A WRAPPER THAT ADDS NEW SESSION IN RAM & SAVES TO DISK RIGHT AWAY
 		return (_activeSessions.at(_activeSessions.size() - 1) );
 	}
 
@@ -30,7 +30,7 @@ Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig
 	size_t i = 0;
 	while (i < _activeSessions.size() )
 	{
-		if (_activeSessions.at(i).getCookie("session_id").value == strSessionID)
+		if (_activeSessions.at(i).getCookie("session_id") == strSessionID)
 		{
 			newSession = _activeSessions.at(i);
 			break ;
@@ -74,7 +74,7 @@ void	SessionManager::cookieCutter(std::string cookieDough, StrStrMap &clientCook
 	}
 }
 
-std::string	SessionManager::urlEncode(std::string &value)
+std::string	SessionManager::urlEncode(const std::string value)
 {
 	std::ostringstream	result;
 
@@ -108,9 +108,11 @@ static unsigned char	sHtoC(std::string hexVal)
 			}
 		}
 	}
+
+	return (result);
 }
 
-std::string	SessionManager::urlDecode(std::string &value)
+std::string	SessionManager::urlDecode(const std::string value)
 {
 	std::ostringstream	result;
 
