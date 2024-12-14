@@ -14,6 +14,7 @@ Session::t_cookie	&operator=(const struct s_cookie &cookie)
 	return (this);
 }
 
+//	HUH... MAYBE THIS WON'T BE NEEDED ATER ALL?
 Session::Session(void)
 {
 	//	GENERATE SESSION ID COOKIE
@@ -26,7 +27,7 @@ Session::Session(const Session &session)
 		*this = session;
 }
 
-static std::string	genSessionID(void)
+static std::string	gen_session_id(void)
 {
 	std::string 	result;
 	//	CLOCK TIME + RANDOM VAL
@@ -35,19 +36,24 @@ static std::string	genSessionID(void)
 	return (result);
 }
 
+static std::string	set_cookie_domain(ServerConfig &vServer, std::string &requestURI)
+{
+
+}
+
 Session::Session(const Request &request, const ServerConfig &vServer)
 {
 	//	GENERATE SESSION ID COOKIE FROM REQUEST
 	this->_sessionCookie.name = "SessionID";
-	this->_sessionCookie.value = /*	GENERATE WITH FUNCTION	*/;
-	this->_sessionCookie.expires_maxage = /*	FIGURE IT OUT	*/;
-	this->_sessionCookie.domain = /*	ASSIGN WITH FUNCTION	*/;
+	this->_sessionCookie.value = gen_session_id();
+	this->_sessionCookie.expires_maxage = "Session";
+	this->_sessionCookie.domain = set_cookie_domain(vServer, request.uri() );
 	this->_sessionCookie.path = "/";
 	this->_sessionCookie.secure = false;
 	this->_sessionCookie.httpOnly = true;
 
 	this->_sessionStarted = false;	//	SET TO TRUE AFTER SENDING COOKIE
-	this->_modified = true;
+	this->_modified = true;			//	IS THIS REALLY NEEDED?
 
 	//	SEARCH FOR OTHER COOKIES IN REQUEST HEADER & ADD TO _cookies
 }
@@ -89,7 +95,7 @@ StrStrMap::const_iterator	Session::cookiesEnd(void) const
 
 void	Session::setCookie(std::string key, std::string val)
 {
-	this->_cookies[key] = val;
+	this->_cookies[key] = SessionManager::urlEncode(val);
 }
 
 void	Session::parseClientCookies(std::string clientCookies)

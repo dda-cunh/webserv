@@ -6,8 +6,10 @@
 class	SessionManager
 {
 	public:
-		static Session	&getCurrentSession(std::string clientCookies, ServerConfig &vServer);
-
+		static Session		&getCurrentSession(std::string clientCookies, ServerConfig &vServer);
+		static void			cookieCutter(std::string cookieDough, StrStrMap &clientCookies);
+		static std::string	urlEncode(std::string &value);
+		static std::string	urlDecode(std::string &value);
 		//	static void saveToDisk(Session &session);
 		//	static void	loadFromDisk(std::string sessionID);
 
@@ -15,5 +17,5 @@ class	SessionManager
 		SessionManager();
 		~SessionManager();
 
-		std::vector<Session>	_activeSessions;	
+		static std::vector<Session>	_activeSessions;	
 };

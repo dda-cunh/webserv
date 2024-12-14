@@ -139,7 +139,7 @@ void ServerManager::up()	throw()
 	{
 		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
 
-		//	SAVE SESSIONS TO PERSISTENT STORAGE (ADD SETTING FOR THAT IN CONFIGS)
+		//	SAVE SESSIONS TO PERSISTENT STORAGE (ADD SETTING FOR THAT IN CONFIGS?)
 		//	CHECK SESSION TIMERS
 		
 		if (n_fds == -1)

@@ -42,8 +42,6 @@ class	Session
 		void						setCookie(std::string key, std::string val);
 		void						setModifiedStatus(bool status);
 
-		void						parseClientCookies(std::string clientCookies);
-
 
 	private:
 		t_cookie	_sessionCookie;

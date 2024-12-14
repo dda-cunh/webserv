@@ -2,12 +2,7 @@
 
 std::vector<Session>	SessionManager::_activeSessions;
 
-static void	cookie_cutter(std::string &cookieDough, StrStrMap &clientCookies)
-{
-	//	DONT FORGET TO EXCLUDE SESSION COOKIE!!!
-}
 
-//	PROB GONNA HAVE TO FIX SOME OF THIS LOGIC TO ACCOMODATE HOST CHECK
 Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig &vServer)
 {
 	Session		newSession(trigData->req, vServer);
@@ -47,9 +42,7 @@ Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig
 		_activeSessions.push_back(newSession);
 
 
-	//	PARSE COOKIES FROM cookieDough AND ASSIGN THEM TO THE SESSION COOKIES
-	//	DO THIS IN ANOTHER FUNCTION
-	cookie_cutter(cookieDough, clientCookies);
+	cookieCutter(cookieDough, clientCookies);
 	for (StrStrMap::const_iterator itt = clientCookies.begin(); itt != clientCookies.end(); itt++)
 		_activeSessions.at(i).setCookie(itt->first, itt->second);
 
@@ -57,4 +50,65 @@ Session	&SessionManager::getCurrentSession(std::string cookieDough, ServerConfig
 		_activeSessions.at(i).setModifiedStatus(true);
 
 	return (_activeSessions.at(i) );		
+}
+
+void	SessionManager::cookieCutter(std::string cookieDough, StrStrMap &clientCookies)
+{
+	std::string	strCookie;
+	std::string	cookieKey;
+	std::string	cookieVal;
+
+
+	while (!cookieDough.empty() )
+	{
+		strCookie = cookieDough.substr(0, cookieDough.find(";") - 1);
+		cookieKey = strCookie.substr(0, strCookie.find("=") );
+		
+		if (cookieKey != "session_id")
+		{
+			cookieVal = urlDecode(strCookie.substr(strCookie.find("=") + 1, strCookie.npos) );
+			clientCookies[cookieKey] = cookieVal;
+		}
+
+		cookieDough.erase(0, cookieDough.find(";") + 1);
+	}
+}
+
+std::string	SessionManager::urlEncode(std::string &value)
+{
+	std::ostringstream	result;
+
+	for (size_t i = 0; i < value.size(); i++)
+	{
+		if (std::isalnum(value.at(i) ) \
+			|| value.at(i) == '-' || value.at(i) == '_' \
+			|| value.at(i) == '.' || value.at(i) == '~')
+			result << value.at(i);
+		else
+		{
+			//	ENCODE
+		}
+	}
+
+	return (result.str() );
+}
+
+std::string	SessionManager::urlDecode(std::string &value)
+{
+	std::ostringstream	result;
+
+	for (size_t i = 0; i < value.size(); i++)
+	{
+		if (value.at(i) != '%')
+			result << value.at(i);
+		else
+		{
+			//	DECODE
+			std::string	hexVal(value.substr(++i, 2) );
+			result << 
+			i++;
+		}
+	}
+
+	return (result.str() );
 }
