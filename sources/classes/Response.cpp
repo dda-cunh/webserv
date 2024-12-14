@@ -61,8 +61,8 @@ void Response::setMatchedLocation()
         bestMatch = this->_defaultLocation;
 
     _locationMatch = bestMatch;
-	LOG("Matched location:", Utils::LOG_INFO);
-	std::cout << *_locationMatch << std::endl;
+	// LogFeed::getInstance().buff("Matched location:", Utils::LOG_INFO);
+	// std::cout << *_locationMatch << std::endl; // make .str method to use with LogFeed
 }
 
 /**************************************************************************/
@@ -107,8 +107,8 @@ Response::Response(Request const &request, ServerConfig const &configs)
 		setCommonHeaders();
 	    setResponse();
 	}
-    std::cout << "Response headers:" << std::endl;
-    std::cout << this->getHeadersStr() << std::endl;
+    LogFeed::getInstance().buff("Response headers:", Utils::LOG_INFO);
+    LogFeed::getInstance().buff(this->getHeadersStr(), Utils::LOG_INFO);
 }
 
 /**************************************************************************/
@@ -280,7 +280,7 @@ void Response::readResource(const std::string &uri, bool isErrorResponse)
         }
         else
         {
-            LOG("Failed to load the internal server error page.", Utils::LOG_ERROR);
+            LogFeed::getInstance().buff("Failed to load the internal server error page.", Utils::LOG_ERROR);
             _body = "<html><body><h1>500 Internal Server Error</h1></body></html>";
             setHeader("Content-Type", "text/html");
         }
@@ -406,11 +406,11 @@ void Response::setCGIMatch()
             if (*it == extension)
             {
                 _cgiMatch = CGIMatch(uri, *it);
-                LOG("CCGIMatch:", Utils::LOG_INFO);
-                std::cout << _cgiMatch << std::endl;
+                // LogFeed::getInstance().buff("CCGIMatch:", Utils::LOG_INFO);
+                // std::cout << _cgiMatch << std::endl; // make .str method to use with LogFeed
                 return;
             }
         }
     }
-    LOG("No CGI match found for URI", Utils::LOG_INFO);
+    LogFeed::getInstance().buff("No CGI match found for URI", Utils::LOG_INFO);
 }

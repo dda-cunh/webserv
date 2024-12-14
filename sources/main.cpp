@@ -24,7 +24,7 @@ int	main(int ac, char **av)
 	}
 	catch (ExceptionMaker const &exception)
 	{
-		LOG(exception.what(), Utils::LOG_ERROR);
+		LogFeed::getInstance().buff(exception.what(), Utils::LOG_ERROR);
 		return (1);
 	}
 

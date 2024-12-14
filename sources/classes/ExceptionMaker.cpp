@@ -1,4 +1,5 @@
 #include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/LogFeed.hpp"
 
 ExceptionMaker::~ExceptionMaker()	throw()
 {
@@ -18,5 +19,5 @@ const char *ExceptionMaker::what()	const	throw()
 
 void ExceptionMaker::log()
 {
-	LOG(_message, Utils::LOG_ERROR);
+	LogFeed::getInstance().buff(_message, Utils::LOG_ERROR);
 }

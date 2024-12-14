@@ -73,15 +73,6 @@ void	ConfigParser::parseConfigs(const char *path, ServerBlocks &configs)
 		throw (ExceptionMaker("Configuration file is empty") );
 
 	_validateConfigs(configs);
-
-//	THIS IS FOR DEBUGGING ONLY
-
-	for (size_t i = 0; i < configs.size(); i++)
-	{
-		std::cout << configs.at(i) << std::endl;
-		std::cout << "=============================" << std::endl;
-	}
-
 }
 
 

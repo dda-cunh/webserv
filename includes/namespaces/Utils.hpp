@@ -11,8 +11,6 @@
 # define PRODUCTION 0
 #endif
 
-#define LOG(message, level) logImpl(message, level, __FILE__, __LINE__)
-
 namespace	Utils
 {
 
@@ -35,6 +33,7 @@ namespace	Utils
 
 	std::string::size_type	sCountChar(std::string const&, char const&);
 	std::string 			concatenatePaths(const std::string basePath, ...);
+	std::string				logify(std::string const&, LogLevel const&);
 	std::string				intToString(int const& value);
 	std::string				lowerStr(std::string const&);
 	std::string				sTrim(std::string const&);
@@ -45,8 +44,6 @@ namespace	Utils
 	uint32_t				get32From64(uint64_t const& l,
 										bool const& msb);
 	size_t					sWordCount(std::string line);
-	void					logImpl(std::string const&, LogLevel const&,
-									std::string const&, int const&);
 	bool 					resourceExists(std::string const &uri);
 	bool					isDirectory(std::string const& uri);
 	int						stringToInt(const std::string& str);

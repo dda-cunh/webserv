@@ -30,7 +30,8 @@ SRC			=	$(addprefix $(SRC_DIR),	main.cpp \
                                                 ServerConfig.cpp \
                                                 ServerLocation.cpp \
                                                 CGIHandler.cpp \
-                                                CGIMatch.cpp) \
+                                                CGIMatch.cpp \
+												LogFeed.cpp) \
                     $(addprefix $(NAMES_DIR),	Utils.cpp \
                                                 Http.cpp \
                                                 Network.cpp \
