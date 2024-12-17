@@ -3,11 +3,12 @@
 #include "../../includes/classes/Request.hpp"
 #include <sys/epoll.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
-			LOG(strerror(errno), Utils::LOG_ERROR);			\
+			LOGFEED.buff(strerror(errno), Utils::LOG_ERROR);			\
 		this->down();										\
 		return;												\
 	}
@@ -68,14 +69,14 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 				this->_sockets.insert(IDSockMap::value_type(id, sock));
 				sock->connect();
 				_sockFD_confI.insert(SockFDConfMap::value_type(sock->fd(), _server_blocks[i]));
-				LOG(sock->str() + std::string(" created"),
+				LOGFEED.buff(sock->str() + std::string(" created"),
 					Utils::LOG_INFO);
 			}
 			
 		}
 		catch (ExceptionMaker const &ex)
 		{
-			LOG(ex.what(), Utils::LOG_ERROR);
+			LOGFEED.buff(ex.what(), Utils::LOG_ERROR);
 			return ;
 		}
 
@@ -100,7 +101,7 @@ void ServerManager::down()	throw()
 	}
 	this->_ep_fd = -1;
 	this->_is_up = false;
-	LOG("ServerManager is down", Utils::LOG_INFO);
+	LOGFEED.buff("ServerManager is down", Utils::LOG_INFO);
 }
 
 bool	ServerManager::initEpoll()	throw()
@@ -108,6 +109,7 @@ bool	ServerManager::initEpoll()	throw()
 	if (this->_ep_fd == -1)
 	{
 		epoll_event	event;
+		EpollData *	data;
 
 		std::memset(this->_ep_events, 0, SM_EP_EV_LEN * sizeof(epoll_event));
 		this->_ep_fd = epoll_create(SM_EP_EV_LEN);
@@ -116,13 +118,19 @@ bool	ServerManager::initEpoll()	throw()
 		for (IDSockMap::iterator it = this->_sockets.begin();
 			it != this->_sockets.end(); it++)
 		{
-			EpollData * data = new EpollData;
+			data = new EpollData;
 			*data = (EpollData){std::string(), NULL, 0, 0, it->second->fd()};
 			event.events = EPOLLIN;
 			event.data.u64 = EpollDatatoU64(data);
 			if (!doEpollCtl(EPOLL_CTL_ADD, event))
 				return (false);
 		}
+		data = new EpollData;
+		*data = (EpollData){std::string(), NULL, 0, 0, STDOUT_FILENO};
+		event.events = EPOLLOUT;
+		event.data.u64 = EpollDatatoU64(data);
+		if (!doEpollCtl(EPOLL_CTL_ADD, event))
+			return (false);
 	}
 	return (true);
 }
@@ -134,7 +142,7 @@ void ServerManager::up()	throw()
 	if (!initEpoll())
 		syscall_kill();
 	this->_is_up = true;
-	LOG("ServerManager is up", Utils::LOG_INFO);
+	LOGFEED.buff("ServerManager is up", Utils::LOG_INFO);
 	while (this->_is_up)
 	{
 		n_fds = epoll_wait(this->_ep_fd, _ep_events, SM_EP_EV_LEN, -1);
@@ -156,7 +164,7 @@ void ServerManager::up()	throw()
 			}
 			catch (ExceptionMaker const &ex)
 			{
-				LOG(ex.what(), Utils::LOG_WARNING);
+				LOGFEED.buff(ex.what(), Utils::LOG_WARNING);
 			}
 		}
 	}
@@ -183,16 +191,14 @@ ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Requ
 			if (this->_server_blocks.at(i).getHost() == host && this->_server_blocks.at(i).getPort() == port)
 				matchedConfigs.push_back(this->_server_blocks.at(i) );
 		}
-//		std::cout << serverName << std::endl;
-
 		for (size_t i = 0; i < matchedConfigs.size(); i++)
 		{
 			for (size_t j = 0; j < matchedConfigs.at(i).getServerNamesSize(); j++)
 			{
 				if (matchedConfigs.at(i).getServerName(j) == serverName)
 				{
-					std::cout << "MATCHED SERVER:" << std::endl;
-					std::cout << matchedConfigs.at(i) << std::endl;
+					// std::cout << "MATCHED SERVER:" << std::endl;
+					// std::cout << matchedConfigs.at(i) << std::endl; // make .str method to use with LogFeed
 					return (matchedConfigs.at(i) );
 				}
 			}
@@ -201,7 +207,6 @@ ServerConfig const	ServerManager::getServerFromSocket(int const& socket_fd, Requ
 	}
 	else
 		throw (ExceptionMaker("Could not find socket") );
-//	return (_server_blocks[0]);
 }
 
 bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
@@ -243,7 +248,7 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 		client_fd = accept(trigData->ownFD, NULL, NULL);
 		if (client_fd == -1)
 			syscall_kill();
-		LOG("New client connected", Utils::LOG_INFO);
+		LOGFEED.buff("New client connected", Utils::LOG_INFO);
 		reqData = new EpollData;
 		*reqData = (EpollData){std::string(), NULL, 0, trigData->ownFD, client_fd};
 		reqEv.events = EPOLLIN | EPOLL_CLOSED_FLAGS;
@@ -266,8 +271,8 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 			trigData->req->doParse(std::string(buff, bytesRead));
 			if (trigData->req->parsingStage() != REQ_PARSED_BODY)
 				return ;
-			LOG("Request received", Utils::LOG_INFO);
-			LOG(trigData->req->str(), Utils::LOG_INFO);
+			LOGFEED.buff("Request received", Utils::LOG_INFO);
+			LOGFEED.buff(trigData->req->str(), Utils::LOG_INFO);
 			ServerConfig	vServer = getServerFromSocket(trigData->parentFD, *trigData->req);
 			trigData->responseStr = Response(*trigData->req, vServer).getResponse();
 			trigData->keepAlive = trigData->req->header("connection") == "keep-alive";
@@ -276,13 +281,13 @@ void	ServerManager::readEvent(epoll_event & trigEv)
 			trigEv.events = EPOLLOUT | EPOLL_CLOSED_FLAGS;
 			if (!doEpollCtl(EPOLL_CTL_MOD, trigEv))
 			{
-				LOG(strerror(errno), Utils::LOG_WARNING);
+				LOGFEED.buff(strerror(errno), Utils::LOG_WARNING);
 				doEpollCtl(EPOLL_CTL_DEL, trigEv);
 			}
 		}
 		else
 		{
-			LOG(strerror(errno), Utils::LOG_WARNING);
+			LOGFEED.buff(strerror(errno), Utils::LOG_WARNING);
 			doEpollCtl(EPOLL_CTL_DEL, trigEv);
 		}
 	}
@@ -298,6 +303,11 @@ void ServerManager::writeEvent(epoll_event & trigEv)
 		return ;
 	if (trigData->ownFD < 0)
 		return ;
+	if (trigData->ownFD == STDOUT_FILENO)
+	{
+		LOGFEED.log();
+		return ;
+	}
 	bytesSent = write(trigData->ownFD, trigData->responseStr.c_str(), 
 						trigData->responseStr.length());
 	if (bytesSent >= 0)
@@ -316,7 +326,7 @@ void ServerManager::writeEvent(epoll_event & trigEv)
 	}
 	else if (bytesSent == -1)
 	{
-		LOG(strerror(errno), Utils::LOG_WARNING);
+		LOGFEED.buff(strerror(errno), Utils::LOG_WARNING);
 		doEpollCtl(EPOLL_CTL_DEL, trigEv);
 	}
 }

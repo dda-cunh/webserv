@@ -157,7 +157,6 @@ bool	Request::parseBody(std::stringstream & bodyBytes)
 			{
 				if (line == "0")
 					return (true);
-				std::cout << "chunk_len: " << line << std::endl;
 				this->_chunk_len = std::strtoul(line.c_str(), NULL, 16);
 			}
 			if (!getCRLF(bodyBytes, line))
@@ -165,8 +164,6 @@ bool	Request::parseBody(std::stringstream & bodyBytes)
 				this->_parse_feed = line;
 				return (false);
 			}
-			std::cout << "chunk_len: " << this->_chunk_len << std::endl;
-			std::cout << "line: " << line << std::endl;
 			this->_body += line;
 			this->_chunk_len -= line.length();
 			if (this->_chunk_len != 0)

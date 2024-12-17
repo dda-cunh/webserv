@@ -53,14 +53,10 @@ namespace Utils
 		return (str.substr(start, end - start));
 	}
 
-	void	logImpl(std::string const& message, LogLevel const& level,
-					std::string const& file, int const& line)
+	std::string	logify(std::string const& message, LogLevel const& level)
 	{
 		std::stringstream	level_ss;
 
-		if (!PRODUCTION)
-			level_ss << CLI_COLORS_MAGENTA << Utils::pathBaseName(file.c_str())
-						<< ':' << line  << CLI_COLORS_RESET << '\t';
 		switch (level)
 		{
 			case LOG_INFO:
@@ -82,7 +78,7 @@ namespace Utils
 				break ;
 			}
 		}
-		std::cout << level_ss.str() << CLI_COLORS_RESET << '\n';
+		return (level_ss.str() + CLI_COLORS_RESET + '\n');
 	}
 
 	std::string intToString(int const& value)

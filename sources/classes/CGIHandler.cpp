@@ -14,6 +14,7 @@ CGIHandler::~CGIHandler() {
 }
 
 void CGIHandler::setEnvironmentVariables() {
+    std::string envVars;
     const Request& request = _response.getRequest();
     _envVars.push_back("REQUEST_METHOD=" + Http::methodToString(request.method()));
     _envVars.push_back("PATH_INFO=" + _response.getCGIMatch().getPathInfo());
@@ -26,9 +27,10 @@ void CGIHandler::setEnvironmentVariables() {
         _envVars.push_back("CONTENT_LENGTH=" + request.header("Content-Length"));
     }
 
-    LOG("CGI process env variables:", Utils::LOG_INFO);
+    LOGFEED.buff("CGI process env variables:", Utils::LOG_INFO);
     for (size_t i = 0; i < _envVars.size(); ++i)
-        std::cout << "\t" << _envVars[i] << std::endl;
+        envVars += "\t" +_envVars[i] + '\n';
+    LOGFEED.buff(envVars, Utils::LOG_INFO);
 }
 
 void CGIHandler::createPipes() {
@@ -113,7 +115,7 @@ void CGIHandler::handleCGIOutput(const std::string& output, pid_t pid) {
 
     if (WIFEXITED(status)) {
         if (WEXITSTATUS(status) != 0)
-            LOG("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
+            LOGFEED.buff("CGI process exited with error status " + Utils::intToString(WEXITSTATUS(status)), Utils::LOG_WARNING);
         
         std::string body;
         std::map<std::string, std::string> headers;

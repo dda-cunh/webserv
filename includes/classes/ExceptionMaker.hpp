@@ -4,8 +4,6 @@
 # include <exception>
 # include <string>
 
-#include "../webserv.hpp"
-
 class ExceptionMaker : public std::exception
 {
 	public:

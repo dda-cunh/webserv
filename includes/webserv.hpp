@@ -25,6 +25,8 @@
 #include "namespaces/Directory.hpp"
 #include "namespaces/ErrorPages.hpp"
 
+#include "classes/LogFeed.hpp"
+
 /********************************  CLASSES  *******************************/
 class	ExceptionMaker;
 
