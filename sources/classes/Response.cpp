@@ -205,9 +205,7 @@ void Response::handleGETMethod(void) {
 
 void    Response::handlePOSTAndDELETEMethods(void)
 {
-    std::string    root = _locationMatch->getRootDir();
-    std::string    uriPath = _request.uri().substr(_locationMatch->getLocation().size(), _request.uri().npos);
-    std::string    resource = root + "/" + uriPath;   //  CHECK IF THIS IS RIGHT
+    std::string    resource = _locationMatch->getRootDir() + "/" + _request.uri();
 
     if (access(resource.c_str(), F_OK) != 0)
         setStatusAndReadResource(Http::SC_NOT_FOUND);
