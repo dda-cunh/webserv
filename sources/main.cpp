@@ -24,7 +24,8 @@ int	main(int ac, char **av)
 	}
 	catch (ExceptionMaker const &exception)
 	{
-		LOGFEED.buff(exception.what(), Utils::LOG_ERROR);
+		std::cout << "Error: " << exception.what() << std::endl;
+//		LOGFEED.buff(exception.what(), Utils::LOG_ERROR);
 		return (1);
 	}
 

@@ -413,6 +413,7 @@ void Response::setResponse()
 void Response::setCGIMatch()
 {
     std::string uri = _request.uri();
+    
     std::string extension = CGIMatch().findExtension(uri);
     if (!extension.empty())
     {
