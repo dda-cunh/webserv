@@ -1,7 +1,7 @@
 FROM gcc:latest
 RUN useradd -m myuser
 WORKDIR /usr/src/app
-COPY . .
+COPY ../ ./
 RUN apt-get update && \
     apt-get install -y locales make && \
     rm -rf /var/lib/apt/lists/*
