@@ -9,16 +9,7 @@
 #define DEFAULT_INDEX "index.html"
 #define DEFAULT_MAX_BODY_SIZE 1000000
 
-#define DEFAULT_400 "./assets/error_pages/400.html"
-#define DEFAULT_403 "./assets/error_pages/403.html"
-#define DEFAULT_404 "./assets/error_pages/404.html"
-#define DEFAULT_405 "./assets/error_pages/405.html"
-#define DEFAULT_409 "./assets/error_pages/409.html"
-#define DEFAULT_500 "./assets/error_pages/500.html"
-#define DEFAULT_501 "./assets/error_pages/501.html"
-
 #define DEFAULT_AUTO_INDEX false
-
 
 class	ServerLocation
 {

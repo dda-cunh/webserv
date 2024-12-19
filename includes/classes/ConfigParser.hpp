@@ -1,11 +1,8 @@
 #pragma once
 
 #include "ServerManager.hpp"
-#include "SyntaxChecker.hpp"
-
 
 typedef std::vector<ServerConfig>	ServerBlocks;
-
 
 class	ConfigParser
 {
@@ -13,8 +10,6 @@ class	ConfigParser
 		static void		parseConfigs(const char *path, ServerBlocks &configs);
 
 		static void		strToVecSplit(std::string line, std::vector<std::string> &strVector);
-  
-  
 
 		static std::string				defaultRoot;
 		static std::vector<std::string>	defaultIndex;
@@ -26,9 +21,6 @@ class	ConfigParser
 		static bool						defaultAutoIndex;
 		static StrArr					defaultCgiExtensions;
 
-
-
-
 	private:
 		ConfigParser(void);
 		~ConfigParser(void);
@@ -37,5 +29,5 @@ class	ConfigParser
 		static void	_overrideDefaults(void);
 		static void	_validateConfigs(const ServerBlocks configs);
 
-  		static std::vector<std::string>	_strServerBlock;
+		static std::vector<std::string>	_strServerBlock;
 };

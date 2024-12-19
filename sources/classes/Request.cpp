@@ -1,5 +1,9 @@
+#include <sstream>
+#include <cstdlib>
+
+#include "../../includes/namespaces/Utils.hpp"
+
 #include "../../includes/classes/Request.hpp"
-#include <string>
 
 #define FLAG_REQ(flag)								\
 	{												\

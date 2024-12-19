@@ -1,12 +1,6 @@
 #pragma once
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <cerrno>
-#include <poll.h>
+
 #include "../webserv.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
 
 class CGIHandler
 {

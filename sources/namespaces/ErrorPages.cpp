@@ -1,4 +1,5 @@
-#include "../../includes/webserv.hpp"
+#include "../../includes/namespaces/ErrorPages.hpp"
+#include "../../includes/namespaces/Http.hpp"
 
 namespace ErrorPages
 {

@@ -1,4 +1,22 @@
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <cstring>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <ctime>
+
+#include "../../includes/namespaces/Directory.hpp"
+#include "../../includes/namespaces/Utils.hpp"
+
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/ServerLocation.hpp"
+#include "../../includes/classes/ServerConfig.hpp"
+#include "../../includes/classes/CGIHandler.hpp"
 #include "../../includes/classes/Response.hpp"
+#include "../../includes/classes/LogFeed.hpp"
+
 
 /**************************************************************************/
 

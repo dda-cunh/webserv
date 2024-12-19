@@ -1,7 +1,5 @@
 #pragma once
 
-#define CRLF	"\r\n"
-
 #include <string>
 
 namespace Http

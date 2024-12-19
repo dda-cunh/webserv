@@ -1,20 +1,20 @@
-#include "../../includes/classes/ServerLocation.hpp"
+#include <algorithm>
+#include <sstream>
 
+#include "../../includes/namespaces/ErrorPages.hpp"
+#include "../../includes/namespaces/Utils.hpp"
+
+#include "../../includes/classes/ServerLocation.hpp"
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/SyntaxChecker.hpp"
 
 ServerLocation::ServerLocation(void)
+:	_errorPages(ErrorPages::getDefaultErrorPages())
 {
 	this->_location = DEFAULT_LOCATION;
 	this->_rootDir = DEFAULT_ROOT;
 	this->_indexFiles.push_back(DEFAULT_INDEX);
 	this->_maxBodySize = DEFAULT_MAX_BODY_SIZE;
-	this->_errorPages[400] = DEFAULT_400;
-	this->_errorPages[403] = DEFAULT_403;
-	this->_errorPages[404] = DEFAULT_404;
-	this->_errorPages[405] = DEFAULT_405;
-	this->_errorPages[409] = DEFAULT_409;
-	this->_errorPages[500] = DEFAULT_500;
-	this->_errorPages[501] = DEFAULT_501;
-
 	this->_methodsAllowed.push_back(Http::M_GET);
 	this->_autoIndex = false;
 }
@@ -285,64 +285,6 @@ void	ServerLocation::_setErrorPages(std::vector<std::string> strLocationBlock, I
 				throw (ExceptionMaker("Multiple settings for the same error page in location context") );
 			errorPages[errCode] = line.substr(line.find_last_of(" \t") + 1);
 		}
-	}
-
-
-	if (errorPages.find(400) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(400) == ConfigParser::defaultErrorPages.end() )
-			errorPages[400] = DEFAULT_400;
-		else
-			errorPages[400] = ConfigParser::defaultErrorPages[400];
-	}
-
-	if (errorPages.find(403) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(403) == ConfigParser::defaultErrorPages.end() )
-			errorPages[403] = DEFAULT_403;
-		else
-			errorPages[403] = ConfigParser::defaultErrorPages[403];
-	}
-
-	if (errorPages.find(404) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(404) == ConfigParser::defaultErrorPages.end() )
-			errorPages[404] = DEFAULT_404;
-		else
-			errorPages[404] = ConfigParser::defaultErrorPages[404];
-	}
-
-	if (errorPages.find(405) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(405) == ConfigParser::defaultErrorPages.end() )
-			errorPages[405] = DEFAULT_405;
-		else
-			errorPages[405] = ConfigParser::defaultErrorPages[405];
-	}
-
-	if (errorPages.find(409) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(409) == ConfigParser::defaultErrorPages.end() )
-			errorPages[409] = DEFAULT_409;
-		else
-			errorPages[409] = ConfigParser::defaultErrorPages[409];
-	}
-
-
-	if (errorPages.find(500) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(500) == ConfigParser::defaultErrorPages.end() )
-			errorPages[500] = DEFAULT_500;
-		else
-			errorPages[500] = ConfigParser::defaultErrorPages[500];
-	}
-
-	if (errorPages.find(501) == errorPages.end() )
-	{
-		if (ConfigParser::defaultErrorPages.find(501) == ConfigParser::defaultErrorPages.end() )
-			errorPages[501] = DEFAULT_501;
-		else
-			errorPages[501] = ConfigParser::defaultErrorPages[501];
 	}
 }
 

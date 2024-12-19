@@ -1,4 +1,9 @@
-#include "../../includes/webserv.hpp"
+#include <sys/stat.h>
+#include <dirent.h>
+
+#include "../../includes/classes/ExceptionMaker.hpp"
+
+#include "../../includes/namespaces/Directory.hpp"
 
 namespace Directory
 {

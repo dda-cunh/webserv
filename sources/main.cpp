@@ -1,11 +1,10 @@
+#include <iostream>
+
 #include "../includes/classes/ServerManager.hpp"
 #include "../includes/classes/ConfigParser.hpp"
+#include "../includes/classes/ExceptionMaker.hpp"
 #include "../includes/webserv.hpp"
 
-#define DEFAULT_CONFIG_PATH "test_files/configs/default.conf"
-
-//TODO: IMPLEMENT PROJECT MAIN
-//TEST MAIN
 int	main(int ac, char **av)
 {
 	ServerManager::ServerBlocks	blocks;
@@ -15,8 +14,11 @@ int	main(int ac, char **av)
 		configPath = av[1];
 	else if (ac == 1)
 		configPath = DEFAULT_CONFIG_PATH;
-	//else
-		
+	else
+	{
+		std::cerr << "Usage: ./webserv [config_file]" << '\n';
+		return (1);
+	}
 
 	try
 	{
@@ -24,10 +26,10 @@ int	main(int ac, char **av)
 	}
 	catch (ExceptionMaker const &exception)
 	{
-		LOGFEED.buff(exception.what(), Utils::LOG_ERROR);
+		std::cerr << exception.what() << '\n';
 		return (1);
 	}
 
-	ServerManager server(blocks);
+	ServerManager	server(blocks);
 	return (0);
 }
