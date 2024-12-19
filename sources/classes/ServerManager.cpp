@@ -1,9 +1,17 @@
-#include "../../includes/classes/ServerManager.hpp"
-#include "../../includes/classes/Response.hpp"
-#include "../../includes/classes/Request.hpp"
+#include <sys/socket.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
+
+#include <cstring>
+
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/ServerManager.hpp"
+#include "../../includes/classes/Response.hpp"
+#include "../../includes/classes/Request.hpp"
+#include "../../includes/classes/LogFeed.hpp"
+
 
 #define syscall_kill()										\
 	{														\

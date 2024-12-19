@@ -1,5 +1,7 @@
 #include "../../includes/classes/CGIMatch.hpp"
 
+CGIMatch::CGIMatch()
+{}
 
 CGIMatch::CGIMatch(const std::string& uri, const std::string& binary) {
     parse(uri);

@@ -29,6 +29,5 @@ class LogFeed
 		void				buff(std::string const & msg, Level l)	throw();
 		void				buff(char const * msg, Level l)			throw();
 		void				log()									throw();
-
-	
+		void				dump()									throw();
 };

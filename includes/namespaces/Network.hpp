@@ -1,14 +1,7 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/types.h>
 #include <stdint.h>
-#include <vector>
-
 #include <string>
-
-class Socket;
 
 namespace Network
 {

@@ -1,3 +1,12 @@
+#include <algorithm>
+#include <sstream>
+
+#include "../../includes/namespaces/Network.hpp"
+#include "../../includes/namespaces/Utils.hpp"
+
+#include "../../includes/classes/ServerLocation.hpp"
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/SyntaxChecker.hpp"
 #include "../../includes/classes/ServerConfig.hpp"
 
 /*

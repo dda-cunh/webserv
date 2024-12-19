@@ -1,4 +1,18 @@
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <poll.h>
+
+#include <sstream>
+#include <cstring>
+#include <cerrno>
+
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/ServerLocation.hpp"
 #include "../../includes/classes/CGIHandler.hpp"
+#include "../../includes/classes/Response.hpp"
+#include "../../includes/classes/Request.hpp"
+#include "../../includes/classes/LogFeed.hpp"
 
 CGIHandler::CGIHandler(Response& response, const std::string& cgiPath)
     : _response(response), _cgiPath(cgiPath) {

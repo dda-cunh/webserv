@@ -1,8 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-
-#include <ostream>
+#include <string>
 
 class TCPSocket
 {

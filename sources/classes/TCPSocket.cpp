@@ -1,8 +1,15 @@
-#include <cerrno>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include <sstream>
 #include <cstring>
 
+#include "../../includes/namespaces/Network.hpp"
+
+#include "../../includes/classes/ExceptionMaker.hpp"
 #include "../../includes/classes/TCPSocket.hpp"
-#include "../../includes/webserv.hpp"
 
 /****************************  CANNONICAL FORM  ****************************/
 TCPSocket::TCPSocket(void)	throw()

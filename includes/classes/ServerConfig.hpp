@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../webserv.hpp"
-#include "ServerLocation.hpp"
+#include <stdint.h>
 
+#include <vector>
+#include <string>
 
 #define DEFAULT_HOST "127.0.0.1"
 #define DEFAULT_PORT 1024

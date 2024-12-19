@@ -1,7 +1,5 @@
-#ifndef EXCEPTIONMAKER_HPP
-# define EXCEPTIONMAKER_HPP
+#pragma once
 
-# include <exception>
 # include <string>
 
 class ExceptionMaker : public std::exception
@@ -18,5 +16,3 @@ class ExceptionMaker : public std::exception
 	protected:
 		std::string	_message;
 };
-
-#endif

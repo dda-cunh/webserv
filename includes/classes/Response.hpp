@@ -1,14 +1,11 @@
 #pragma once
 
 #include "../webserv.hpp"
-#include "Request.hpp"
-#include "ServerConfig.hpp"
-#include "ServerLocation.hpp"
-#include "CGIHandler.hpp"
-#include "CGIMatch.hpp"
 
-#include <vector>
-#include <algorithm>
+#include "../namespaces/Http.hpp"
+
+#include "Request.hpp"
+#include "CGIMatch.hpp"
 
 class Response {
 	public:
