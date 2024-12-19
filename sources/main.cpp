@@ -3,6 +3,7 @@
 #include "../includes/classes/ServerManager.hpp"
 #include "../includes/classes/ConfigParser.hpp"
 #include "../includes/classes/ExceptionMaker.hpp"
+#include "../includes/classes/LogFeed.hpp"
 #include "../includes/webserv.hpp"
 
 int	main(int ac, char **av)
@@ -31,5 +32,6 @@ int	main(int ac, char **av)
 	}
 
 	ServerManager	server(blocks);
+	LOGFEED.dump();
 	return (0);
 }
