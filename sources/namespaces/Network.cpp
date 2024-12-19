@@ -1,4 +1,12 @@
-#include "../../includes/webserv.hpp"
+#include <sstream>
+#include <cstdlib>
+
+#include "../../includes/namespaces/Network.hpp"
+#include "../../includes/namespaces/Utils.hpp"
+
+#include "../../includes/classes/ExceptionMaker.hpp"
+#include "../../includes/classes/LogFeed.hpp"
+
 
 namespace Network
 {

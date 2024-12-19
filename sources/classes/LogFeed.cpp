@@ -26,9 +26,14 @@ void	LogFeed::buff(char const* msg, Level l)	throw()
 
 void	LogFeed::log(void)	throw()
 {
-	if (!this->_feed.empty())
-	{
-		write(STDOUT_FILENO, this->_feed.front().c_str(), this->_feed.front().length());
-		this->_feed.pop();
-	}
+	if (this->_feed.empty())
+		return ;
+	write(STDOUT_FILENO, this->_feed.front().c_str(), this->_feed.front().length());
+	this->_feed.pop();
+}
+
+void	LogFeed::dump(void)	throw()
+{
+	while (!this->_feed.empty())
+		this->log();
 }

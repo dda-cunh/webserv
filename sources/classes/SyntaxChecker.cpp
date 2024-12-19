@@ -1,11 +1,16 @@
+#include <sstream>
+#include <cstdlib>
+
+#include "../../includes/namespaces/Utils.hpp"
+
+#include "../../includes/classes/ExceptionMaker.hpp"
 #include "../../includes/classes/SyntaxChecker.hpp"
 
 std::vector<std::string>	SyntaxChecker::_strLocationBlock;
 const std::string			SyntaxChecker::_directivesList[] = {"server", "listen", "server_name", "location",\
 																"root", "index", "client_max_body_size", "error_page",\
 																"rewrite", "allow_methods", "upload_store", \
-																"autoindex", "cgi_extension" \
-																""};
+																"autoindex", "cgi_extension",""};
 
 
 std::string	SyntaxChecker::strParseLine(std::string line)

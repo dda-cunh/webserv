@@ -30,11 +30,26 @@ The configuration file is similar to the server part of the NGINX configuration 
     Support for POST and GET methods
     Uploading files
 
-webserv does not use any external libraries.
+Here is an example of a configuration file:
+
+```
+server {
+	listen 127.0.0.1:1024;
+
+	root /var/www/html;
+
+	server_name _;
+
+	location /
+	{
+		autoindex on;
+	}
+}
+```
 
 ## Getting Started
 
-To compile webserv, you will need a C++98 compiler. You can then compile the program using the following command:
+To compile webserv, you will need C++98 compiler and GNU make. You can then compile the program using the following command:
 
     make
 

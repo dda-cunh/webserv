@@ -1,7 +1,7 @@
 FROM gcc:latest
 RUN useradd -m myuser
 WORKDIR /usr/src/app
-COPY . .
+COPY ../ ./
 RUN apt-get update && \
     apt-get install -y locales make && \
     rm -rf /var/lib/apt/lists/*
@@ -10,4 +10,4 @@ RUN mkdir -p /usr/src/app/temp && \
     chmod -R 777 /usr/src/app/temp
 RUN ls -lR /usr/src/app/temp
 USER myuser
-CMD ["sh", "-c", "make re && ./webserv test_files/configs/test.conf"]
+CMD ["sh", "-c", "make re && ./webserv configs/test.conf"]

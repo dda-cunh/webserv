@@ -1,11 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <cstring>
-#include <sys/stat.h>
-#include <cstdarg>
 #include <string>
-#include <fstream>
 
 #ifndef PRODUCTION
 # define PRODUCTION 0

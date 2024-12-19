@@ -1,58 +1,33 @@
 #pragma once
 
-#include <sys/epoll.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#include <iostream>
-#include <iomanip>
-#include <cstring>
 #include <string>
-#include <cstdlib>
-#include <ctime>
-#include <sstream>
 #include <vector>
 #include <map>
-#include <set>
-#include <algorithm>
 
-#include "classes/ExceptionMaker.hpp"
-#include "namespaces/Network.hpp"
-#include "namespaces/Utils.hpp"
-#include "namespaces/Http.hpp"
-#include "namespaces/Directory.hpp"
-#include "namespaces/ErrorPages.hpp"
+#define DEFAULT_CONFIG_PATH	"configs/default.conf"
+#define CHUNK_SIZE			4096
+#define CRLF				"\r\n"
 
-#include "classes/LogFeed.hpp"
-
-/********************************  CLASSES  *******************************/
-class	ExceptionMaker;
-
-/*
-	@ServerManager
-	WAIT FOR ACCEPT
-	PLACE CLIENT_FD ON EPOLL FOR READ
-	GET REQUEST INSTANCE
-	PLACE CLIENT_FD ON EPOLL FOR WRITE
-	SEND RESPONSE
-*/
-class	CGIMatch;
-class	ServerManager;
-class	ServerConfig;
-class	ServerLocation;
-class	Response;
-class	Request;
-class	Socket;
-/**************************************************************************/
-
-
+/******************************  CONTAINERS  ******************************/
 typedef std::map<std::string, std::string>	StrStrMap;
 typedef std::map<int, std::string>			IntStrMap;
 typedef std::vector<std::string>			StrArr;
+/**************************************************************************/
 
-#define CHUNK_SIZE							4096
+/********************************  CLASSES  *******************************/
+class	ExceptionMaker;
+class	ServerLocation;
+class	SyntaxChecker;
+class	ServerManager;
+class	ConfigParser;
+class	ServerConfig;
+class	CGIHandler;
+class	TCPSocket;
+class	CGIMatch;
+class	Response;
+class	LogFeed;
+class	Request;
+/**************************************************************************/
 
 /******************************  CLI_COLORS  ******************************/
 #define CLI_COLORS_MAGENTA	"\033[35m"
