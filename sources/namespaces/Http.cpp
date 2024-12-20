@@ -1,4 +1,5 @@
-#include "../../includes/webserv.hpp"
+#include "../../includes/namespaces/Utils.hpp"
+#include "../../includes/namespaces/Http.hpp"
 
 namespace Http
 {

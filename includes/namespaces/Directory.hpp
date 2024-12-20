@@ -1,9 +1,13 @@
 #pragma once
 
-#include <string>
-#include <dirent.h>
 
-#include "../webserv.hpp"
+#include <vector>
+#include <string>
+#include <map>
+#include <set>
+
+#include "../namespaces/Http.hpp"
+
 
 namespace Directory
 {

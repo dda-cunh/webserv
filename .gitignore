@@ -4,6 +4,6 @@ temp/
 webserv
 TODO.md
 notes.cpp
-/public/file_manager/uploads/*
-!/public/file_manager/uploads/.keep
+/web/public/file_manager/uploads/*
+!/web/public/file_manager/uploads/.keep
 *.log

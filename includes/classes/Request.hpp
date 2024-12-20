@@ -2,6 +2,8 @@
 
 #include "../webserv.hpp"
 
+#include "../namespaces/Http.hpp"
+
 #define TRANSFER_ENCODING_CHUNKED -1
 
 typedef enum	e_response_flag
