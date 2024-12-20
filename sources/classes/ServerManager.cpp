@@ -27,7 +27,7 @@ namespace SigIntHandler
 #define syscall_kill()										\
 	{														\
 		if (errno != 0)										\
-			LOGFEED.buff(strerror(errno), Utils::LOG_ERROR);			\
+			LOGFEED.buff(strerror(errno), Utils::LOG_ERROR);\
 		this->down();										\
 		return;												\
 	}
@@ -109,13 +109,23 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 /********************************  MEMBERS  *******************************/
 void ServerManager::down()	throw()
 {
+	epoll_event	ev;
+
 	if (this->_ep_fd != -1)
-		for (unsigned int i = 0; i < SM_EP_EV_LEN; i++)
-			doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
+	{
+		for (EpollDataMap::iterator it = _ep_data_map.begin();
+				it != _ep_data_map.end(); it++)
+		{
+			ev.events = EPOLLIN;
+			ev.data.u64 = EpollDatatoU64(it->second);
+			doEpollCtl(EPOLL_CTL_DEL, ev);
+		}
+		close(this->_ep_fd);
+		this->_ep_fd = -1;
+	}
 	for (IDSockMap::iterator it = this->_sockets.begin();
 			it != this->_sockets.end(); it++)
 		it->second->disconnect();
-	this->_ep_fd = -1;
 	this->_is_up = false;
 	LOGFEED.buff("ServerManager is down", Utils::LOG_INFO);
 }
@@ -244,15 +254,15 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 		return (false);
 	if (op == EPOLL_CTL_DEL)
 	{
+		_ep_data_map.erase(fd);
 		if (data->req)
-		{
 			delete data->req;
-			data->req = NULL;
-		}
 		delete data;
 		data = NULL;
 		close(fd);
 	}
+	else if (op == EPOLL_CTL_ADD)
+		_ep_data_map[fd] = data;
 	return (true);
 }
 
