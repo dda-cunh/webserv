@@ -1,6 +1,7 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
+#include <signal.h>
 #include <unistd.h>
 #include <errno.h>
 
@@ -12,6 +13,16 @@
 #include "../../includes/classes/Request.hpp"
 #include "../../includes/classes/LogFeed.hpp"
 
+namespace SigIntHandler
+{
+    bool    g_sigIntSet;
+
+	void handler(int sig)
+    {
+        if (sig == SIGINT)
+            g_sigIntSet = !g_sigIntSet;
+    }
+};
 
 #define syscall_kill()										\
 	{														\
@@ -98,15 +109,12 @@ ServerManager::ServerManager(ServerBlocks const& server_blocks)	throw()
 /********************************  MEMBERS  *******************************/
 void ServerManager::down()	throw()
 {
+	if (this->_ep_fd != -1)
+		for (unsigned int i = 0; i < SM_EP_EV_LEN; i++)
+			doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
 	for (IDSockMap::iterator it = this->_sockets.begin();
 			it != this->_sockets.end(); it++)
 		it->second->disconnect();
-	if (this->_ep_fd != -1)
-	{
-		for (unsigned int i = 0; i < SM_EP_EV_LEN; i++)
-			doEpollCtl(EPOLL_CTL_DEL, _ep_events[i]);
-		close(this->_ep_fd);
-	}
 	this->_ep_fd = -1;
 	this->_is_up = false;
 	LOGFEED.buff("ServerManager is down", Utils::LOG_INFO);
@@ -150,6 +158,8 @@ void ServerManager::up()	throw()
 	if (!initEpoll())
 		syscall_kill();
 	this->_is_up = true;
+	if (signal(SIGINT, SigIntHandler::handler) == SIG_ERR)
+		syscall_kill();
 	LOGFEED.buff("ServerManager is up", Utils::LOG_INFO);
 	while (this->_is_up)
 	{
@@ -175,6 +185,8 @@ void ServerManager::up()	throw()
 				LOGFEED.buff(ex.what(), Utils::LOG_WARNING);
 			}
 		}
+		std::memset(this->_ep_events, 0, SM_EP_EV_LEN * sizeof(epoll_event));
+		this->_is_up = !SigIntHandler::g_sigIntSet;
 	}
 	this->down();
 }
@@ -233,8 +245,12 @@ bool ServerManager::doEpollCtl(int const &op, epoll_event &ev)	throw()
 	if (op == EPOLL_CTL_DEL)
 	{
 		if (data->req)
+		{
 			delete data->req;
+			data->req = NULL;
+		}
 		delete data;
+		data = NULL;
 		close(fd);
 	}
 	return (true);
