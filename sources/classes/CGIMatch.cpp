@@ -84,6 +84,9 @@ std::string CGIMatch::getBinary() const { return _binary;}
 
 std::string CGIMatch::findExtension(const std::string& uri) {
     size_t startPos = uri.find('/', 1);
+    if (startPos == std::string::npos) {
+        startPos = 0;
+    }
     while (startPos != std::string::npos) {
         size_t endPos = uri.find('/', startPos + 1);
         std::string segment = uri.substr(startPos + 1, endPos - startPos - 1);

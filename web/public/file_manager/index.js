@@ -12,9 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     <tr>
                         <td>${file.name}</td>
                         <td>${file.size}</td>
-                        <td><button onclick="deleteFile('${file.name}')">Delete</button></td>
+                        <td><button class="delete-button" data-filename="${file.name}">Delete</button></td>
                     </tr>
                 `).join('');
+                attachDeleteHandlers();
             } else {
                 console.error("Error fetching files:", result.error);
             }
@@ -23,7 +24,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    window.deleteFile = async (fileName) => {
+    const attachDeleteHandlers = () => {
+        const deleteButtons = document.querySelectorAll(".delete-button");
+        deleteButtons.forEach(button => {
+            button.addEventListener("click", () => {
+                const fileName = button.getAttribute("data-filename");
+                deleteFile(fileName);
+            });
+        });
+    };
+
+    const deleteFile = async (fileName) => {
         try {
             const response = await fetch(`/file_manager/file_handler.cgi/${encodeURIComponent(fileName)}`, { method: "DELETE" });
             const result = await response.json();
