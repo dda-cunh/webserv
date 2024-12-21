@@ -32,8 +32,7 @@ namespace SigIntHandler
 		return;												\
 	}
 
-#define EPOLL_CLOSED_FLAGS EPOLLRDHUP | EPOLLHUP
-
+#define EPOLL_CLOSED_FLAGS	EPOLLRDHUP | EPOLLHUP
 
 /****************************  CANNONICAL FORM  ***************************/
 ServerManager::ServerManager()	throw()
@@ -113,9 +112,11 @@ void ServerManager::down()	throw()
 
 	if (this->_ep_fd != -1)
 	{
-		for (EpollDataMap::iterator it = _ep_data_map.begin();
-				it != _ep_data_map.end(); it++)
+		EpollDataMap::iterator	it;
+
+		while (!_ep_data_map.empty())
 		{
+			it = _ep_data_map.begin();
 			ev.events = EPOLLIN;
 			ev.data.u64 = EpollDatatoU64(it->second);
 			doEpollCtl(EPOLL_CTL_DEL, ev);
