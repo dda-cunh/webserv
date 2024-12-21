@@ -27,6 +27,7 @@ class ServerManager
 		typedef std::map<uint64_t, TCPSocket*>	IDSockMap;
 		typedef std::map<int, ServerConfig>		SockFDConfMap;
 		typedef std::vector<ServerConfig>		ServerBlocks;
+		typedef std::map<int, EpollData*>		EpollDataMap;
 
 		~ServerManager()										throw();
 
@@ -38,11 +39,12 @@ class ServerManager
 	private:
 		ServerBlocks const	_server_blocks;
 
-		SockFDConfMap		_sockFD_confI;
-		epoll_event			_ep_events[SM_EP_EV_LEN];
-		IDSockMap			_sockets;
-		bool				_is_up;
-		int					_ep_fd;
+		SockFDConfMap	_sockFD_confI;
+		EpollDataMap	_ep_data_map;
+		epoll_event		_ep_events[SM_EP_EV_LEN];
+		IDSockMap		_sockets;
+		bool			_is_up;
+		int				_ep_fd;
 
 		ServerManager & operator=(ServerManager const & rhs)	throw();
 		ServerManager(ServerManager const & src)				throw();
